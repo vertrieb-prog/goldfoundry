@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // src/app/api/copier/connect/route.ts
 import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";

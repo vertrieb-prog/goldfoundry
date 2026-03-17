@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // src/app/api/admin/overview/route.ts — Admin Dashboard Overview Stats
 import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";

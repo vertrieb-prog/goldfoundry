@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // src/app/api/cron/profit-settlement/route.ts
 import { runMonthlySettlement } from "@/lib/profit/profit-engine";
 import { NextResponse } from "next/server";

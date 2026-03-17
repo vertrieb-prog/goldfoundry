@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // src/app/api/seo/generate/route.ts
 import { runDailySEOPipeline } from "@/lib/seo/seo-agent";
 import { NextResponse } from "next/server";

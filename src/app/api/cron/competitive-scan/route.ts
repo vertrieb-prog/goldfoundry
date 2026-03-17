@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // src/app/api/cron/competitive-scan/route.ts
 import { runCompetitiveScan } from "@/lib/intel/competitive-agent";
 import { NextResponse } from "next/server";

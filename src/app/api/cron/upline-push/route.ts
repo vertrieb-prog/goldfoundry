@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // src/app/api/cron/upline-push/route.ts
 import { runDailyUplinePush } from "@/lib/mlm/upline-push";
 import { NextResponse } from "next/server";

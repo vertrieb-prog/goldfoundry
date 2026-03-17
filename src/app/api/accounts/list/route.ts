@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // src/app/api/accounts/list/route.ts — List user's tracking accounts
 import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";

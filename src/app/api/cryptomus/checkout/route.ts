@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // src/app/api/cryptomus/checkout/route.ts
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { createCryptomusInvoice } from "@/lib/payments/cryptomus-client";

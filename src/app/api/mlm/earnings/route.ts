@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // src/app/api/mlm/earnings/route.ts
 // Consolidated: Uses new affiliate-engine, fallback to legacy referral-engine
 import { createSupabaseServer } from "@/lib/supabase/server";

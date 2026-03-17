@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // src/app/api/cron/outreach/route.ts
 import { runDailyOutreach, generateDailyComparisonPage } from "@/lib/growth/outreach-agent";
 import { NextResponse } from "next/server";

@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // src/app/api/cron/sales-director/route.ts
 import { runSalesDirectorPipeline } from "@/lib/sales/sales-director";
 import { NextResponse } from "next/server";

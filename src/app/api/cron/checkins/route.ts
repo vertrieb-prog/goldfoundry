@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // src/app/api/cron/checkins/route.ts
 import { generateProactiveCheckIns } from "@/lib/forge-ai-mentor";
 import { NextResponse } from "next/server";

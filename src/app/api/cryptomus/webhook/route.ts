@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // src/app/api/cryptomus/webhook/route.ts
 import { handleCryptomusWebhook } from "@/lib/payments/cryptomus-client";
 import { NextResponse } from "next/server";

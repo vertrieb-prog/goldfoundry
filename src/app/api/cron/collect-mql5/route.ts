@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { MQL5Collector } from "@/lib/data/collector";
 

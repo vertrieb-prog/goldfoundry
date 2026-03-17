@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // src/app/api/crm/campaigns/route.ts
 import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server";
 import { searchContacts, logCommunication } from "@/lib/crm/crm-engine";

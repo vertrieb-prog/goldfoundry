@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // src/app/api/strategy/propose/route.ts
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { generateStrategyProposal, scheduleAutoDemo } from "@/lib/strategy/auto-advisor";

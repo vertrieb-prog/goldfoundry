@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // src/app/api/content/generate/route.ts
 import { generateMorningBriefing, generateTradeResults, generateEducationalContent } from "@/lib/content/content-engine";
 import { NextResponse } from "next/server";

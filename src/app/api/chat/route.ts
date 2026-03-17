@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // src/app/api/chat/route.ts
 import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server";
 import { buildMentorPrompt, extractMemoryUpdates, cleanResponseForUser, saveMemoryUpdate } from "@/lib/forge-ai-mentor";

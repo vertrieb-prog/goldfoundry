@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // src/app/api/profit-sharing/follower-view/route.ts
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { getFollowerProfitView } from "@/lib/profit/profit-engine";

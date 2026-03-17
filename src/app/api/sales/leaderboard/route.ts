@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // src/app/api/sales/leaderboard/route.ts
 import { getAffiliateLeaderboard } from "@/lib/sales/sales-director";
 import { NextResponse } from "next/server";

@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // src/app/api/affiliate/payouts/route.ts
 import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server";
 import { requestPayout, processPayout } from "@/lib/mlm/affiliate-engine";

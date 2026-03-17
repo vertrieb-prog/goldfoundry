@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // src/app/api/profit-sharing/trader-dashboard/route.ts
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { getTraderDashboard } from "@/lib/profit/profit-engine";

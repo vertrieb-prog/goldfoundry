@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { MyFxBookScraper } from "@/lib/data/collector";
 

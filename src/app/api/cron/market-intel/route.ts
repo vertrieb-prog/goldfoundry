@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // src/app/api/cron/market-intel/route.ts
 import { runIntelUpdate } from "@/lib/intel/market-intel";
 import { NextResponse } from "next/server";

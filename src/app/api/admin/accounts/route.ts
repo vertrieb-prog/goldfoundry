@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // src/app/api/admin/accounts/route.ts — Admin: All accounts with signal mappings
 import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";

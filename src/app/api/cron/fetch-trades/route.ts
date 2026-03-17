@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // src/app/api/cron/fetch-trades/route.ts
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { MetaApiClient } from "@/lib/metaapi-client";

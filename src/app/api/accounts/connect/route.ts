@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // src/app/api/accounts/connect/route.ts — Add MT4/MT5 Tracking Account
 // Uses MetaApi REST API directly (SDK crashes in Next.js server: "window is not defined")
 import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server";

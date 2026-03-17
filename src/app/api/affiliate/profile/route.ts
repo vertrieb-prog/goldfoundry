@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // src/app/api/affiliate/profile/route.ts
 // Apply as affiliate + Get dashboard
 import { createSupabaseServer } from "@/lib/supabase/server";

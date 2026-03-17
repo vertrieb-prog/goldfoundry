@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // src/app/api/greeting/route.ts
 import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server";
 import Anthropic from "@anthropic-ai/sdk";

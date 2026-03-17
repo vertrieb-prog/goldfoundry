@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // src/app/api/stripe/checkout/route.ts
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { stripe, PLANS, type PlanKey } from "@/lib/stripe/stripe-client";

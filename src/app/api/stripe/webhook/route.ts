@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // src/app/api/stripe/webhook/route.ts
 import { stripe } from "@/lib/stripe/stripe-client";
 import { createSupabaseAdmin } from "@/lib/supabase/server";

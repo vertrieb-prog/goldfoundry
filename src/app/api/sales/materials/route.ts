@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // src/app/api/sales/materials/route.ts
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { generateSalesMaterials } from "@/lib/sales/sales-director";
