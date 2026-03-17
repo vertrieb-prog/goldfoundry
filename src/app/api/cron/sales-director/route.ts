@@ -1,0 +1,17 @@
+// src/app/api/cron/sales-director/route.ts
+import { runSalesDirectorPipeline } from "@/lib/sales/sales-director";
+import { NextResponse } from "next/server";
+
+export async function GET(request: Request) {
+  const auth = request.headers.get("authorization");
+  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const results = await runSalesDirectorPipeline();
+    return NextResponse.json({ success: true, ...results });
+  } catch (err) {
+    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+  }
+}
