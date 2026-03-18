@@ -15,6 +15,7 @@ const log = (msg: string, data?: any) =>
 
 const PLATFORM_CUT = 40; // Prozent
 const TRADER_CUT = 60;
+const VERTRIEB_SHARE = 50; // 50% der Platform Fee geht an Vertrieb
 
 // ══════════════════════════════════════════════════════════════
 // AGREEMENT ERSTELLEN (wenn Follower sich an Trader anbindet)
@@ -129,6 +130,10 @@ export async function runMonthlySettlement(): Promise<{
     const followerNet = Math.round((grossProfit - platformFee - traderPayout) * 100) / 100;
     // followerNet sollte ~0 sein (40+60=100%), aber für Rundungsdifferenzen
 
+    // VERTRIEB: 50% der Platform Fee wird an Partner-Netzwerk ausgeschüttet
+    const vertriebPool = Math.round(platformFee * (VERTRIEB_SHARE / 100) * 100) / 100;
+    const platformNet = Math.round((platformFee - vertriebPool) * 100) / 100;
+
     // Neuer HWM = aktuelle Equity (Trader verdient erst wieder wenn es darüber geht)
     const newHWM = currentEquity;
 
@@ -200,10 +205,21 @@ export async function runMonthlySettlement(): Promise<{
       follower: (agreement.slave_accounts as any)?.mt_login,
       grossProfit,
       platformFee,
+      platformNet,
+      vertriebPool,
       traderPayout,
     });
 
-    log(`Settlement: Follower ${(agreement.slave_accounts as any)?.mt_login} | Profit: €${grossProfit} | Platform: €${platformFee} | Trader: €${traderPayout}`);
+    // Vertrieb-Provision für den Referrer des Followers verbuchen
+    if (vertriebPool > 0) {
+      await distributeVertriebCommission(
+        db, agreement.follower_user_id, vertriebPool,
+        periodStart.toISOString().split("T")[0],
+        periodEnd.toISOString().split("T")[0]
+      );
+    }
+
+    log(`Settlement: Follower ${(agreement.slave_accounts as any)?.mt_login} | Profit: €${grossProfit} | Platform: €${platformFee} (netto: €${platformNet}, Vertrieb: €${vertriebPool}) | Trader: €${traderPayout}`);
   }
 
   // AUM Update für alle Trader
@@ -226,7 +242,8 @@ export async function runMonthlySettlement(): Promise<{
     }).eq("trader_user_id", traderId);
   }
 
-  log(`Settlement fertig: ${settlements.length} Abrechnungen, Platform: €${totalPlatformFee}, Trader: €${totalTraderPayout}`);
+  const totalVertrieb = settlements.reduce((s, x) => s + (x.vertriebPool ?? 0), 0);
+  log(`Settlement fertig: ${settlements.length} Abrechnungen, Platform: €${totalPlatformFee} (netto: €${Math.round((totalPlatformFee - totalVertrieb) * 100) / 100}, Vertrieb: €${totalVertrieb}), Trader: €${totalTraderPayout}`);
 
   return { processed: settlements.length, totalPlatformFee, totalTraderPayout, settlements };
 }
@@ -372,4 +389,103 @@ export async function getFollowerProfitView(followerUserId: string) {
   }
 
   return { subscriptions, totalEstimatedFees: Math.round(totalFees * 100) / 100 };
+}
+
+// ══════════════════════════════════════════════════════════════
+// VERTRIEB COMMISSION — 50% der Platform Fee an Partner-Netzwerk
+// Verteilt auf bis zu 3 MLM-Ebenen (gleiche Raten wie Abo-Provision)
+// ══════════════════════════════════════════════════════════════
+
+async function distributeVertriebCommission(
+  db: ReturnType<typeof createSupabaseAdmin>,
+  followerUserId: string,
+  vertriebPool: number,
+  periodStart: string,
+  periodEnd: string
+) {
+  // Upline des Followers finden (wer hat ihn geworben?)
+  const { data: profile } = await db.from("profiles")
+    .select("referred_by").eq("id", followerUserId).single();
+
+  if (!profile?.referred_by) return; // Kein Referrer → kein Vertrieb
+
+  // Bis zu 3 Ebenen nach oben
+  let currentReferrerId: string | null = profile.referred_by;
+  const levels = [
+    { level: 1, rate: 0.30 }, // L1 bekommt 30% des Vertriebspools (Standard)
+    { level: 2, rate: 0.10 }, // L2 bekommt 10%
+    { level: 3, rate: 0.05 }, // L3 bekommt 5%
+  ];
+
+  for (const { level, rate } of levels) {
+    if (!currentReferrerId) break;
+
+    const { data: referrer } = await db.from("profiles")
+      .select("id, referred_by, subscription_active")
+      .eq("id", currentReferrerId)
+      .single();
+
+    if (!referrer) break;
+
+    // Nur Partner mit Builder Pack bekommen Provision
+    const { count: packCount } = await db.from("builder_packs")
+      .select("*", { count: "exact", head: true })
+      .eq("buyer_id", referrer.id);
+
+    if (!packCount || packCount === 0) {
+      log(`Vertrieb L${level}: Partner ${referrer.id} hat kein Builder Pack — übersprungen`);
+      currentReferrerId = referrer.referred_by;
+      continue;
+    }
+
+    if (!referrer.subscription_active) {
+      currentReferrerId = referrer.referred_by;
+      continue;
+    }
+
+    const commission = Math.round(vertriebPool * rate * 100) / 100;
+    if (commission <= 0) break;
+
+    // In commission_log verbuchen
+    await db.from("commission_log").insert({
+      partner_id: referrer.id,
+      from_user_id: followerUserId,
+      level,
+      amount: commission,
+      percentage: rate * 100,
+      type: "profit_share",
+      month: periodStart.substring(0, 7),
+    });
+
+    // FORGE Points gutschreiben (1 FP = €0.10 → commission / 0.10 = FP)
+    const fpAmount = Math.round(commission / 0.10);
+    if (fpAmount > 0) {
+      await db.from("fp_transactions").insert({
+        user_id: referrer.id,
+        amount: fpAmount,
+        type: "profit_share",
+        description: `Profit Share L${level}: €${commission} von Follower-Gewinnen`,
+      });
+
+      // Balance updaten
+      await db.rpc("increment_fp_balance", {
+        p_user_id: referrer.id,
+        p_amount: fpAmount,
+      }).catch(async () => {
+        const { data: fp } = await db.from("forge_points")
+          .select("balance, total_earned").eq("user_id", referrer.id).single();
+        if (fp) {
+          await db.from("forge_points").update({
+            balance: Number(fp.balance) + fpAmount,
+            total_earned: Number(fp.total_earned) + fpAmount,
+            updated_at: new Date().toISOString(),
+          }).eq("user_id", referrer.id);
+        }
+      });
+    }
+
+    log(`Vertrieb L${level}: Partner ${referrer.id} bekommt €${commission} (${fpAmount} FP) aus Profit Share`);
+
+    currentReferrerId = referrer.referred_by;
+  }
 }

@@ -1,6 +1,7 @@
 // src/app/dashboard/chat/page.tsx
 "use client";
 import { useState, useRef, useEffect } from "react";
+import FeatureGate from "@/components/FeatureGate";
 
 interface Message { role: "user" | "assistant"; content: string; }
 
@@ -85,6 +86,7 @@ export default function ChatPage() {
   }
 
   return (
+    <FeatureGate minTier="analyzer" featureName="FORGE Mentor" landingPage="/forge-mentor">
     <div className="flex flex-col" style={{ height: "calc(100vh - 4rem)" }}>
       <div className="mb-4">
         <h1 className="text-2xl font-bold" style={{ color: "var(--gf-text-bright)" }}>FORGE Mentor</h1>
@@ -143,5 +145,6 @@ export default function ChatPage() {
         <button type="submit" className="gf-btn !px-6" disabled={streaming}>{streaming ? "..." : "→"}</button>
       </form>
     </div>
+    </FeatureGate>
   );
 }

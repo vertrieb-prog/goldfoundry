@@ -10,3 +10,5 @@ gf-pack/
 *.zip
 reference-designs/
 MEGA-AUTONOMOUS-PROMPT.md
+
+.vercel

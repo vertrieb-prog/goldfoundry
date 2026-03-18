@@ -8,30 +8,89 @@ const PLANS = [
     key: "analyzer",
     name: "Analyzer",
     price: 9,
-    desc: "Perfekt für den Einstieg",
+    desc: "Perfekt fuer den Einstieg",
     features: ["Trade-History Analyse", "1 MT-Account", "FORGE Mentor (5/Tag)", "Community Zugang", "Leaderboard"],
+    link: "/leaderboard",
   },
   {
     key: "copier",
-    name: "Copier",
+    name: "Smart Copier",
     price: 29,
     popular: true,
     desc: "Der beliebteste Plan",
-    features: ["Alles aus Analyzer", "Smart Copier (1 Account)", "7-Faktor Risk Engine", "Market Intel + News Pause", "FORGE Mentor unbegrenzt", "Affiliate Link"],
+    features: ["Alles aus Analyzer", "Smart Copier (1 Account)", "Telegram Copier + AI Management", "7-Faktor Risk Engine", "Market Intel + News Pause", "FORGE Mentor unbegrenzt", "Affiliate Link"],
+    link: "/smart-copier",
   },
   {
     key: "pro",
     name: "Pro Trader",
     price: 79,
-    desc: "Für ernsthafte Trader",
-    features: ["Alles aus Copier", "Smart Copier (5 Accounts)", "MQL4/MQL5 Code-Optimierung", "Backtest mit Monte Carlo", "Strategy Marketplace", "MLM Trader Partner"],
+    desc: "Fuer ernsthafte Trader",
+    features: ["Alles aus Smart Copier", "Smart Copier (5 Accounts)", "Telegram Copier (3 Channels)", "MQL4/MQL5 Code-Optimierung", "Backtest mit Monte Carlo", "Strategy Marketplace", "MLM Trader Partner"],
+    link: "/strategy-lab",
   },
   {
     key: "provider",
     name: "Signal Provider",
     price: 149,
     desc: "Monetarisiere deine Trades",
-    features: ["Alles aus Pro", "Unbegrenzte Follower", "Profit-Abrechnung 60/40", "Branded Landing Page", "API Zugang", "Dedicated Manager"],
+    features: ["Alles aus Pro Trader", "Unbegrenzte Follower", "Telegram Copier (unbegrenzt)", "Profit-Abrechnung 60/40", "Branded Landing Page", "API Zugang", "Dedicated Manager"],
+    link: "/partner",
+  },
+];
+
+/* ── Feature-Matrix: welches Produkt ist in welchem Paket enthalten ── */
+const FEATURE_MATRIX: { category: string; features: { name: string; analyzer: string | boolean; copier: string | boolean; pro: string | boolean; provider: string | boolean }[] }[] = [
+  {
+    category: "Trading Tools",
+    features: [
+      { name: "Command Center",       analyzer: true,          copier: true,          pro: true,          provider: true },
+      { name: "Accounts (MT4/MT5)",    analyzer: "1 Account",   copier: "1 Account",   pro: "5 Accounts",  provider: "Unbegrenzt" },
+      { name: "Trade Ledger",          analyzer: true,          copier: true,          pro: true,          provider: true },
+      { name: "Leaderboard",           analyzer: true,          copier: true,          pro: true,          provider: true },
+    ],
+  },
+  {
+    category: "Copy Trading",
+    features: [
+      { name: "Smart Copier",          analyzer: false,         copier: "1 Account",   pro: "5 Accounts",  provider: "Unbegrenzt" },
+      { name: "Telegram Copier",       analyzer: false,         copier: "1 Channel",   pro: "3 Channels",  provider: "Unbegrenzt" },
+      { name: "7-Faktor Risk Engine",  analyzer: false,         copier: true,          pro: true,          provider: true },
+      { name: "Market Intel + News Pause", analyzer: false,     copier: true,          pro: true,          provider: true },
+    ],
+  },
+  {
+    category: "KI & Analyse",
+    features: [
+      { name: "FORGE Mentor",          analyzer: "5/Tag",       copier: "Unbegrenzt",  pro: "Unbegrenzt",  provider: "Unbegrenzt" },
+      { name: "Trade-History Analyse",  analyzer: true,         copier: true,          pro: true,          provider: true },
+      { name: "MQL4/MQL5 Code-Optimierung", analyzer: false,   copier: false,         pro: true,          provider: true },
+    ],
+  },
+  {
+    category: "Strategy Lab",
+    features: [
+      { name: "Backtest mit Monte Carlo", analyzer: false,      copier: false,         pro: true,          provider: true },
+      { name: "Strategy Marketplace",   analyzer: false,         copier: false,         pro: true,          provider: true },
+    ],
+  },
+  {
+    category: "Partner & Monetarisierung",
+    features: [
+      { name: "Affiliate Link",        analyzer: false,         copier: true,          pro: true,          provider: true },
+      { name: "MLM Trader Partner",     analyzer: false,         copier: false,         pro: true,          provider: true },
+      { name: "Unbegrenzte Follower",   analyzer: false,         copier: false,         pro: false,         provider: true },
+      { name: "Profit-Abrechnung 60/40", analyzer: false,       copier: false,         pro: false,         provider: true },
+      { name: "Branded Landing Page",   analyzer: false,         copier: false,         pro: false,         provider: true },
+    ],
+  },
+  {
+    category: "Support & Extras",
+    features: [
+      { name: "Community Zugang",       analyzer: true,          copier: true,          pro: true,          provider: true },
+      { name: "API Zugang",             analyzer: false,         copier: false,         pro: false,         provider: true },
+      { name: "Dedicated Manager",      analyzer: false,         copier: false,         pro: false,         provider: true },
+    ],
   },
 ];
 
@@ -87,7 +146,7 @@ export default function PricingPage() {
           {PLANS.map(plan => (
             <div key={plan.key} className={`gf-panel p-6 flex flex-col relative ${plan.popular ? "ring-1 ring-[var(--gf-gold)]" : ""}`}>
               {plan.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 text-[10px] tracking-widest font-bold rounded-full font-mono" style={{ background: "var(--gf-gold)", color: "var(--gf-obsidian)" }}>
+                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-5 py-1.5 text-[10px] tracking-widest font-bold rounded-full font-mono shadow-lg shadow-[#d4a537]/30" style={{ background: "linear-gradient(135deg, #d4a537, #f0d070)", color: "#0a0a0a" }}>
                   BELIEBTESTER
                 </div>
               )}
@@ -114,6 +173,81 @@ export default function PricingPage() {
               </button>
             </div>
           ))}
+        </div>
+
+        {/* ── Feature-Vergleichstabelle ── */}
+        <div className="mt-20">
+          <div className="text-center mb-10">
+            <span className="gf-eyebrow mb-4 block">Feature-Vergleich</span>
+            <h2 className="gf-heading text-2xl md:text-4xl mb-3">
+              Alle Features im <span className="gf-gold-text">Überblick</span>
+            </h2>
+            <p className="text-sm text-zinc-500 max-w-lg mx-auto">
+              Sieh genau, welches Produkt in welchem Paket enthalten ist.
+            </p>
+          </div>
+
+          <div className="gf-panel overflow-x-auto">
+            <table className="w-full text-sm min-w-[640px]">
+              {/* Header */}
+              <thead>
+                <tr className="border-b" style={{ borderColor: "var(--gf-border)" }}>
+                  <th className="text-left py-4 px-4 text-zinc-500 font-normal w-[220px]">Feature</th>
+                  {PLANS.map(p => (
+                    <th key={p.key} className="py-4 px-3 text-center">
+                      <div className="text-white font-bold text-sm">{p.name}</div>
+                      <div className="gf-gold-text font-mono text-xs mt-0.5">€{p.price}/Mo</div>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {FEATURE_MATRIX.map((cat, ci) => (
+                  <>
+                    {/* Category header */}
+                    <tr key={`cat-${ci}`}>
+                      <td colSpan={5} className="pt-5 pb-2 px-4">
+                        <span className="text-xs font-bold tracking-widest text-zinc-400 uppercase font-mono">{cat.category}</span>
+                      </td>
+                    </tr>
+                    {cat.features.map((f, fi) => (
+                      <tr key={`${ci}-${fi}`} className="border-b last:border-0 hover:bg-white/[0.01] transition-colors" style={{ borderColor: "rgba(255,255,255,0.03)" }}>
+                        <td className="py-3 px-4 text-zinc-400">{f.name}</td>
+                        {(["analyzer", "copier", "pro", "provider"] as const).map(plan => {
+                          const val = f[plan];
+                          return (
+                            <td key={plan} className="py-3 px-3 text-center">
+                              {val === true ? (
+                                <span className="text-emerald-400 text-base">✓</span>
+                              ) : val === false ? (
+                                <span className="text-zinc-700 text-base">—</span>
+                              ) : (
+                                <span className="text-xs font-medium text-[var(--gf-gold)] font-mono">{val}</span>
+                              )}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* CTA under table */}
+          <div className="flex flex-wrap justify-center gap-3 mt-8">
+            {PLANS.map(p => (
+              <button
+                key={p.key}
+                onClick={() => checkout(p.key)}
+                className={p.popular ? "gf-btn gf-btn-shimmer text-sm" : "gf-btn-outline text-sm"}
+                disabled={loading === p.key}
+              >
+                {loading === p.key ? "Laden..." : `${p.name} — €${p.price}/Mo`}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Payment info */}

@@ -1,6 +1,7 @@
 // src/app/dashboard/strategy/page.tsx
 "use client";
 import { useState } from "react";
+import FeatureGate from "@/components/FeatureGate";
 
 const DEMO_ANALYSIS = {
   overallScore: 7.8,
@@ -50,6 +51,7 @@ export default function StrategyPage() {
   }
 
   return (
+    <FeatureGate minTier="pro" featureName="Strategy Lab" landingPage="/strategy-lab">
     <div>
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
@@ -160,5 +162,6 @@ export default function StrategyPage() {
         </div>
       </div>
     </div>
+    </FeatureGate>
   );
 }

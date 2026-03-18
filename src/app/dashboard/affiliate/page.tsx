@@ -1,6 +1,7 @@
 // src/app/dashboard/affiliate/page.tsx
 "use client";
 import { useEffect, useState } from "react";
+import FeatureGate from "@/components/FeatureGate";
 
 const DEMO_STATS = {
   totalEarned: 1247.80,
@@ -80,6 +81,7 @@ export default function AffiliatePage() {
   const s = data.stats;
 
   return (
+    <FeatureGate minTier="analyzer" featureName="Partner" landingPage="/partner">
     <div>
       {isDemo && (
         <div
@@ -242,5 +244,6 @@ export default function AffiliatePage() {
         </div>
       </div>
     </div>
+    </FeatureGate>
   );
 }

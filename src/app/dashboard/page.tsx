@@ -2,6 +2,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import FeatureGate from "@/components/FeatureGate";
 
 function KPI({ label, value, sub, color }: { label: string; value: string; sub?: string; color?: string }) {
   return (
@@ -95,6 +96,7 @@ export default function DashboardPage() {
     : Array.from({ length: 30 }, (_, i) => totalEquity * (0.95 + Math.random() * 0.1) + i * 50);
 
   return (
+    <FeatureGate minTier="analyzer" featureName="Dashboard" landingPage="/pricing">
     <div>
       {isDemo && <DemoBadge />}
 
@@ -270,5 +272,6 @@ export default function DashboardPage() {
         <p>Risikohinweis: Der Handel mit Finanzinstrumenten ist mit erheblichen Risiken verbunden und kann zum Verlust des eingesetzten Kapitals führen. Vergangene Ergebnisse sind keine Garantie für zukünftige Performance.</p>
       </div>
     </div>
+    </FeatureGate>
   );
 }

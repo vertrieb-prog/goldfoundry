@@ -1,6 +1,7 @@
 // src/app/dashboard/profit/page.tsx
 "use client";
 import { useEffect, useState } from "react";
+import FeatureGate from "@/components/FeatureGate";
 
 const DEMO_TRADER = {
   earnings: {
@@ -63,6 +64,7 @@ export default function ProfitPage() {
   const rt = trader?.realtime;
 
   return (
+    <FeatureGate minTier="copier" featureName="Profit Share" landingPage="/pricing">
     <div>
       {isDemo && (
         <div
@@ -173,5 +175,6 @@ export default function ProfitPage() {
         <p>Profit Sharing basiert auf dem High Water Mark Prinzip. Auszahlungen erfolgen nur bei neuem Gewinn über dem bisherigen Höchststand.</p>
       </div>
     </div>
+    </FeatureGate>
   );
 }

@@ -5,35 +5,60 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import RiskDisclaimer from "@/components/RiskDisclaimer";
 
+// Dashboard nav items. Items with `landingPage` redirect free users to the product page.
 const NAV = [
   { href: "/dashboard", label: "Command Center", icon: "◆" },
   { href: "/dashboard/accounts", label: "Accounts", icon: "📊" },
-  { href: "/dashboard/copier", label: "Smart Copier", icon: "⚡" },
-  { href: "/dashboard/chat", label: "FORGE Mentor", icon: "🧠" },
+  { href: "/dashboard/copier", label: "Smart Copier", icon: "⚡", landingPage: "/smart-copier", minTier: "copier" },
+  { href: "/dashboard/telegram", label: "Telegram Copier", icon: "📡", landingPage: "/telegram-copier", minTier: "copier" },
+  { href: "/dashboard/chat", label: "FORGE Mentor", icon: "🧠", landingPage: "/forge-mentor", minTier: "analyzer" },
   { href: "/dashboard/trades", label: "Trade Ledger", icon: "📋" },
-  { href: "/dashboard/strategy", label: "Strategy Lab", icon: "🔬" },
-  { href: "/dashboard/affiliate", label: "Partner", icon: "💰" },
+  { href: "/dashboard/strategy", label: "Strategy Lab", icon: "🔬", landingPage: "/strategy-lab", minTier: "pro" },
+  { href: "/dashboard/partner", label: "Partner", icon: "💰" },
   { href: "/dashboard/profit", label: "Profit Share", icon: "📈" },
   { href: "/dashboard/settings", label: "Settings", icon: "⚙" },
 ];
+
+const TIER_LEVELS: Record<string, number> = {
+  free: 0, analyzer: 1, copier: 2, pro: 3, provider: 4,
+};
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const path = usePathname();
   const router = useRouter();
   const [isAdmin, setIsAdmin] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
+  const [userTier, setUserTier] = useState("free");
 
   useEffect(() => {
-    // Client-side auth guard (middleware handles redirect, this is a safety net)
     fetch("/api/auth/me")
       .then(r => {
         if (!r.ok) { router.push("/auth/login"); return; }
+        return r.json();
+      })
+      .then(d => {
+        if (d?.user) {
+          setUserTier(d.user.subscription_tier || "free");
+        }
         setAuthChecked(true);
       })
       .catch(() => router.push("/auth/login"));
 
     fetch("/api/admin/overview").then(r => { if (r.ok) setIsAdmin(true); }).catch(() => {});
   }, [router]);
+
+  // Check if user has access to a feature
+  function hasAccess(n: typeof NAV[0]): boolean {
+    if (!n.minTier) return true;
+    const userLevel = TIER_LEVELS[userTier] ?? 0;
+    const requiredLevel = TIER_LEVELS[n.minTier] ?? 0;
+    return userLevel >= requiredLevel;
+  }
+
+  // Always link to the dashboard page — content handled inside
+  function resolveHref(n: typeof NAV[0]): string {
+    return n.href;
+  }
 
   if (!authChecked) {
     return (
@@ -61,11 +86,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Nav */}
         <nav className="flex flex-col gap-0.5 flex-1 p-3 overflow-y-auto">
           {NAV.map(n => {
+            const href = resolveHref(n);
+            const isLocked = href !== n.href;
             const active = path === n.href || (n.href !== "/dashboard" && path.startsWith(n.href + "/"));
             return (
               <Link
                 key={n.href}
-                href={n.href}
+                href={href}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${
                   active
                     ? "font-semibold bg-[rgba(250,239,112,0.06)] text-[var(--gf-gold)]"
@@ -74,7 +101,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               >
                 <span className="text-base w-5 text-center">{n.icon}</span>
                 <span>{n.label}</span>
-                {active && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-[var(--gf-gold)]" />}
+                {isLocked && <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded bg-[rgba(212,165,55,0.15)] text-[var(--gf-gold)]">PRO</span>}
+                {!isLocked && active && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-[var(--gf-gold)]" />}
               </Link>
             );
           })}
@@ -100,11 +128,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t overflow-x-auto" style={{ background: "rgba(9,9,11,0.95)", backdropFilter: "blur(12px)", borderColor: "var(--gf-border)" }}>
         <div className="flex min-w-max">
           {NAV.map(n => {
+            const href = resolveHref(n);
             const active = path === n.href || (n.href !== "/dashboard" && path.startsWith(n.href + "/"));
             return (
               <Link
                 key={n.href}
-                href={n.href}
+                href={href}
                 className="flex-shrink-0 flex flex-col items-center py-2.5 px-3 text-xs gap-1 transition-colors"
                 style={{
                   color: active ? "var(--gf-gold)" : "var(--gf-text-dim)",

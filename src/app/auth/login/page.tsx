@@ -12,9 +12,11 @@ export default function LoginPage() {
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault(); setLoading(true); setErr("");
-    const res = await fetch("/api/auth/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password: pw }) });
-    const data = await res.json();
-    if (data.error) { setErr(data.error); setLoading(false); } else router.push("/dashboard");
+    try {
+      const res = await fetch("/api/auth/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password: pw }) });
+      const data = await res.json();
+      if (data.error) { setErr(data.error); setLoading(false); } else router.push("/dashboard");
+    } catch (e) { setErr("Verbindungsfehler — bitte versuche es erneut"); setLoading(false); }
   }
 
   return (

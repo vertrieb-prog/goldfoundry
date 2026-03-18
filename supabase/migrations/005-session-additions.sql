@@ -132,35 +132,24 @@ CREATE TABLE IF NOT EXISTS crm_leads (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE TABLE IF NOT EXISTS crm_activities (
-  id BIGSERIAL PRIMARY KEY,
-  user_id UUID,
-  lead_id UUID REFERENCES crm_leads(id) ON DELETE CASCADE,
-  type TEXT NOT NULL,                  -- page_view, login, trade, email_open, email_click, signup, payment, copier_start, copier_stop, mentor_chat, support_ticket
-  detail JSONB,                        -- { page: "/kurs/bitcoin", duration: 45, revenue: 29 }
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-
-CREATE TABLE IF NOT EXISTS crm_campaigns (
-  id BIGSERIAL PRIMARY KEY,
-  name TEXT NOT NULL,
-  type TEXT NOT NULL,                  -- welcome, winback, upgrade, retention, seasonal, performance_report
-  segment JSONB,                       -- { status: "registered", days_inactive: 7 }
-  subject_template TEXT,
-  body_template TEXT,
-  active BOOLEAN DEFAULT true,
-  sent_count INTEGER DEFAULT 0,
-  open_count INTEGER DEFAULT 0,
-  click_count INTEGER DEFAULT 0,
-  conversion_count INTEGER DEFAULT 0,
-  created_at TIMESTAMPTZ DEFAULT now()
-);
+-- crm_activities already created in 002_crm_schema.sql (UUID PK)
+-- crm_campaigns already created in 002_crm_schema.sql (UUID PK)
+-- Adding lead-specific columns if not present
+ALTER TABLE crm_campaigns ADD COLUMN IF NOT EXISTS type TEXT;
+ALTER TABLE crm_campaigns ADD COLUMN IF NOT EXISTS segment JSONB;
+ALTER TABLE crm_campaigns ADD COLUMN IF NOT EXISTS subject_template TEXT;
+ALTER TABLE crm_campaigns ADD COLUMN IF NOT EXISTS body_template TEXT;
+ALTER TABLE crm_campaigns ADD COLUMN IF NOT EXISTS active BOOLEAN DEFAULT true;
+ALTER TABLE crm_campaigns ADD COLUMN IF NOT EXISTS sent_count INTEGER DEFAULT 0;
+ALTER TABLE crm_campaigns ADD COLUMN IF NOT EXISTS open_count INTEGER DEFAULT 0;
+ALTER TABLE crm_campaigns ADD COLUMN IF NOT EXISTS click_count INTEGER DEFAULT 0;
+ALTER TABLE crm_campaigns ADD COLUMN IF NOT EXISTS conversion_count INTEGER DEFAULT 0;
 
 CREATE TABLE IF NOT EXISTS crm_email_queue (
-  id BIGSERIAL PRIMARY KEY,
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID,
   lead_id UUID REFERENCES crm_leads(id) ON DELETE CASCADE,
-  campaign_id BIGINT REFERENCES crm_campaigns(id),
+  campaign_id UUID REFERENCES crm_campaigns(id),
   email TEXT NOT NULL,
   subject TEXT NOT NULL,
   body TEXT NOT NULL,
@@ -177,9 +166,7 @@ CREATE INDEX IF NOT EXISTS idx_leads_plan ON crm_leads(plan);
 CREATE INDEX IF NOT EXISTS idx_leads_score ON crm_leads(score DESC);
 CREATE INDEX IF NOT EXISTS idx_leads_source ON crm_leads(source);
 CREATE INDEX IF NOT EXISTS idx_leads_churn ON crm_leads(churn_risk DESC);
-CREATE INDEX IF NOT EXISTS idx_activities_user ON crm_activities(user_id);
-CREATE INDEX IF NOT EXISTS idx_activities_type ON crm_activities(type);
-CREATE INDEX IF NOT EXISTS idx_activities_created ON crm_activities(created_at DESC);
+-- crm_activities indexes already created in 002_crm_schema.sql
 CREATE INDEX IF NOT EXISTS idx_email_status ON crm_email_queue(status);
 CREATE INDEX IF NOT EXISTS idx_email_scheduled ON crm_email_queue(scheduled_at);
 
@@ -242,9 +229,7 @@ CREATE TABLE IF NOT EXISTS affiliate_payouts (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE INDEX IF NOT EXISTS idx_payouts_partner ON affiliate_payouts(partner_id);
-CREATE INDEX IF NOT EXISTS idx_payouts_status ON affiliate_payouts(status);
-CREATE INDEX IF NOT EXISTS idx_payouts_period ON affiliate_payouts(period_end DESC);
+-- affiliate_payouts indexes already created in 003_affiliate_schema.sql
 
 
 -- ─────────────────────────────────────────────────────────────

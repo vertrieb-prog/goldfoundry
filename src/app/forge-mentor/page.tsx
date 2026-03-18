@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import Footer from "@/components/Footer";
 
 export const metadata: Metadata = {
   title: "FORGE Mentor | Gold Foundry",
@@ -176,31 +177,7 @@ export default function ForgeMentorPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="relative z-10 border-t px-6 py-12" style={{ borderColor: "var(--gf-border)" }}>
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between gap-8">
-          <div>
-            <div className="text-lg font-bold gf-gold-text mb-2">GOLD FOUNDRY</div>
-            <p className="text-xs text-[#555]">Das All-in-One Trading Terminal.</p>
-          </div>
-          <div className="flex gap-12 text-sm text-[#555]">
-            <div className="flex flex-col gap-2">
-              <Link href="/pricing" className="hover:text-[#d4a537] transition-colors">Pricing</Link>
-              <Link href="/leaderboard" className="hover:text-[#d4a537] transition-colors">Leaderboard</Link>
-            </div>
-            <div className="flex flex-col gap-2">
-              <Link href="/impressum" className="hover:text-[#d4a537] transition-colors">Impressum</Link>
-              <Link href="/datenschutz" className="hover:text-[#d4a537] transition-colors">Datenschutz</Link>
-              <Link href="/agb" className="hover:text-[#d4a537] transition-colors">AGB</Link>
-              <Link href="/risk-disclaimer" className="hover:text-[#d4a537] transition-colors">Risikohinweis</Link>
-            </div>
-          </div>
-        </div>
-        <div className="max-w-6xl mx-auto mt-8 pt-6 text-xs" style={{ borderTop: "1px solid var(--gf-border)", color: "#555" }}>
-          <p className="mb-4">Risikohinweis: Der Handel mit Finanzinstrumenten ist mit erheblichen Risiken verbunden und kann zum Verlust des eingesetzten Kapitals führen. Vergangene Ergebnisse sind keine Garantie für zukünftige Performance.</p>
-          <p className="text-center">&copy; 2026 Gold Foundry. Trading birgt Risiken.</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

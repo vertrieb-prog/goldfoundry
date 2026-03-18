@@ -1,6 +1,7 @@
 // src/app/dashboard/trades/page.tsx
 "use client";
 import { useEffect, useState } from "react";
+import FeatureGate from "@/components/FeatureGate";
 
 const DEMO_STATS = {
   totalTrades: 847,
@@ -58,6 +59,7 @@ export default function TradesPage() {
   ];
 
   return (
+    <FeatureGate minTier="analyzer" featureName="Trade Ledger" landingPage="/pricing">
     <div>
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
@@ -142,5 +144,6 @@ export default function TradesPage() {
         </table>
       </div>
     </div>
+    </FeatureGate>
   );
 }

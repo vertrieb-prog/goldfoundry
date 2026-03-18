@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import ChatWidget from "@/components/ChatWidget";
+import EmbedWrapper from "@/components/EmbedWrapper";
 
 export const metadata: Metadata = {
   title: "Gold Foundry — Trading Terminal",
@@ -19,6 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="apple-touch-icon" href="/icon-192.png" />
       </head>
       <body>
+        <EmbedWrapper />
         {children}
         <ChatWidget />
       </body>

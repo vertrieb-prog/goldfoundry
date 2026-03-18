@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import FeatureGate from "@/components/FeatureGate";
 
 interface BrokerServer {
   name: string;
@@ -131,6 +132,7 @@ export default function AddAccountPage() {
   const canProceedStep2 = mtLogin && mtPassword;
 
   return (
+    <FeatureGate minTier="copier" featureName="Konto verbinden" landingPage="/smart-copier">
     <div className="max-w-2xl mx-auto">
       {/* Header */}
       <div className="mb-8">
@@ -760,5 +762,6 @@ export default function AddAccountPage() {
         </p>
       </div>
     </div>
+    </FeatureGate>
   );
 }

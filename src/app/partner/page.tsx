@@ -1,9 +1,10 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import Footer from "@/components/Footer";
 
 export const metadata: Metadata = {
   title: "Partner Programm | Gold Foundry",
-  description: "Verdiene bis zu 50% Provision. 3-Ebenen MLM mit FORGE Points. Werde Gold Foundry Partner.",
+  description: "Verdiene bis zu 50% Provision + Profit Share. 3-Ebenen MLM mit FORGE Points. Werde Gold Foundry Partner.",
 };
 
 const RANKS = [
@@ -67,7 +68,7 @@ export default function PartnerPage() {
             <span className="italic font-bold text-white">Passiv.</span>
           </h1>
           <p className="text-lg max-w-2xl mx-auto mb-10 leading-relaxed text-[#888]">
-            Empfiehl Gold Foundry und verdiene bis zu 50% Provision auf 3 Ebenen. Passives Einkommen durch dein Netzwerk.
+            Empfiehl Gold Foundry und verdiene bis zu 50% Provision auf 3 Ebenen — plus Profit Share an den Trading-Gewinnen deiner Referrals.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/auth/register" className="gf-btn text-base !px-10 !py-4">Partner werden &nbsp;&rarr;</Link>
@@ -178,23 +179,106 @@ export default function PartnerPage() {
         </div>
       </section>
 
-      {/* Builder Packs */}
+      {/* Profit Share */}
       <section className="relative z-10 max-w-5xl mx-auto px-6 py-20">
         <div className="text-center mb-12 animate-in">
-          <span className="gf-badge mb-6 inline-flex">Builder Packs</span>
+          <span className="gf-badge mb-6 inline-flex">Profit Share</span>
           <h2 className="font-serif text-3xl md:text-5xl leading-[1.1]">
-            <span className="italic text-white/40">Beschleunige</span>{" "}
-            <span className="italic font-bold text-white">deinen Aufstieg.</span>
+            <span className="italic text-white/40">Verdiene an den</span>{" "}
+            <span className="italic font-bold text-white">Trading-Gewinnen.</span>
           </h2>
+          <p className="text-sm text-[#666] mt-4 max-w-2xl mx-auto leading-relaxed">
+            Gold Foundry erhebt 40% Performance Fee auf Copier-Gewinne. 50% davon — also 20% des Gesamtprofits — werden an den Vertrieb ausgeschüttet.
+          </p>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-in delay-1">
+
+        <div className="grid md:grid-cols-3 gap-5 mb-8 animate-in delay-1">
+          <div className="gf-panel p-6 text-center relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#d4a537]/30 to-transparent" />
+            <div className="text-3xl font-bold text-white mb-2 font-mono">40%</div>
+            <h3 className="text-sm font-semibold text-[#d4a537] mb-1">Platform Fee</h3>
+            <p className="text-xs text-[#555]">auf Copier-Gewinne (oberhalb HWM)</p>
+          </div>
+          <div className="gf-panel p-6 text-center relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#28c840]/30 to-transparent" />
+            <div className="text-3xl font-bold text-[#28c840] mb-2 font-mono">50%</div>
+            <h3 className="text-sm font-semibold text-[#28c840] mb-1">Vertriebsanteil</h3>
+            <p className="text-xs text-[#555]">der Platform Fee an Partner</p>
+          </div>
+          <div className="gf-panel p-6 text-center relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#d4a537]/30 to-transparent" />
+            <div className="text-3xl font-bold gf-gold-text mb-2 font-mono">= 20%</div>
+            <h3 className="text-sm font-semibold text-white mb-1">Dein Anteil</h3>
+            <p className="text-xs text-[#555]">am Gesamtprofit deiner Referrals</p>
+          </div>
+        </div>
+
+        <div className="gf-panel p-6 animate-in delay-2">
+          <div className="text-[10px] tracking-[2px] text-[#d4a537] uppercase mb-4 font-medium">So funktioniert es</div>
+          <div className="gf-terminal">
+            <div className="gf-terminal-bar">
+              <div className="gf-terminal-dot bg-[#ff5f57]" /><div className="gf-terminal-dot bg-[#febc2e]" /><div className="gf-terminal-dot bg-[#28c840]" />
+              <span className="ml-3 text-[10px] tracking-[2px] text-[#555] uppercase font-mono">Profit Share Beispiel</span>
+            </div>
+            <div className="p-4 space-y-2 text-[13px] font-mono">
+              <div className="flex justify-between text-[#888]"><span>Dein Referral kopiert FORGE COPY</span><span className="text-white">Copier aktiv</span></div>
+              <div className="flex justify-between text-[#888]"><span>Copier-Gewinn im Monat</span><span className="text-white">€5.000</span></div>
+              <div className="flex justify-between text-[#888]"><span>40% Platform Fee</span><span className="text-[#d4a537]">€2.000</span></div>
+              <div className="flex justify-between text-[#888]"><span>50% davon an Vertrieb</span><span className="text-[#28c840]">€1.000</span></div>
+              <div className="border-t border-white/5 pt-2 flex justify-between text-[#888]"><span>Dein L1-Anteil (z.B. 30% Silver)</span><span className="text-[#28c840] font-bold">€300/Mo</span></div>
+              <div className="flex justify-between text-[#555] text-[11px]"><span>+ L2 + L3 Ebenen</span><span className="text-[#28c840]">zusätzlich</span></div>
+            </div>
+          </div>
+          <p className="text-[11px] text-[#555] mt-4 leading-relaxed">
+            Die Profit-Share-Provision wird monatlich abgerechnet, basierend auf dem High Water Mark (HWM) Prinzip — du verdienst nur an neuem Gewinn.
+            Die Vertriebsprovision wird auf die gleichen 3 Ebenen verteilt wie die Abo-Provision.
+          </p>
+        </div>
+      </section>
+
+      {/* Builder Packs — Einstieg in den Vertrieb */}
+      <section className="relative z-10 max-w-5xl mx-auto px-6 py-20">
+        <div className="text-center mb-12 animate-in">
+          <span className="gf-badge mb-6 inline-flex">Dein Einstieg</span>
+          <h2 className="font-serif text-3xl md:text-5xl leading-[1.1]">
+            <span className="italic text-white/40">Starte mit einem</span>{" "}
+            <span className="italic font-bold text-white">Builder Pack.</span>
+          </h2>
+          <p className="text-sm text-[#666] mt-4 max-w-2xl mx-auto leading-relaxed">
+            Um Provisionen zu verdienen, brauchst du ein Builder Pack. Du bekommst dafür Invite-Codes, die du an dein Netzwerk verteilst — jeder eingelöste Code wird zu deinem zahlenden Referral.
+          </p>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 animate-in delay-1">
           {PACKS.map((p, i) => (
-            <div key={i} className="gf-panel p-6 text-center group hover:border-[#d4a537]/30 transition-colors">
-              <h3 className="text-lg font-semibold text-white mb-2">{p.size}</h3>
+            <div key={i} className={`gf-panel p-6 text-center group hover:border-[#d4a537]/30 transition-colors relative overflow-hidden ${i === 0 ? 'ring-1 ring-[#d4a537]/30' : ''}`}>
+              {i === 0 && <div className="absolute top-0 left-0 right-0 text-center text-[9px] tracking-[2px] uppercase text-[#0b0b0b] font-bold bg-[#d4a537] py-0.5">Beliebt</div>}
+              <h3 className="text-lg font-semibold text-white mb-2 mt-2">{p.size}</h3>
               <div className="text-2xl font-bold gf-gold-text mb-1 font-mono">{p.price}</div>
-              <p className="text-[11px] text-[#555]">{p.perUnit}</p>
+              <p className="text-[11px] text-[#555] mb-3">{p.perUnit}</p>
+              <div className="text-[10px] text-[#888] space-y-1">
+                <div>{p.size.replace(' Pack', '')} Invite-Codes</div>
+                <div>Provisionen freigeschaltet</div>
+                <div>Abo-Provision + Profit Share</div>
+              </div>
             </div>
           ))}
+        </div>
+        <div className="gf-panel p-5 animate-in delay-2">
+          <div className="text-[10px] tracking-[2px] text-[#d4a537] uppercase mb-3 font-medium">Was du bekommst</div>
+          <div className="grid md:grid-cols-3 gap-4 text-sm">
+            <div className="flex items-start gap-3">
+              <span className="text-[#d4a537] mt-0.5">&#10022;</span>
+              <div><span className="text-white font-medium">Invite-Codes</span><br /><span className="text-[#555] text-xs">Verteile sie an dein Netzwerk — jeder Code = ein potenzieller Referral</span></div>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="text-[#d4a537] mt-0.5">&#10022;</span>
+              <div><span className="text-white font-medium">Provision freigeschaltet</span><br /><span className="text-[#555] text-xs">Abo-Provision + Profit Share auf 3 Ebenen sofort aktiv</span></div>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="text-[#d4a537] mt-0.5">&#10022;</span>
+              <div><span className="text-white font-medium">Fast Start Bonus</span><br /><span className="text-[#555] text-xs">500 FP Bonus wenn 60%+ deiner Codes eingelöst werden</span></div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -206,19 +290,48 @@ export default function PartnerPage() {
             <span className="gf-badge mb-4 inline-flex">Rechenbeispiel</span>
             <h3 className="font-serif text-2xl md:text-3xl italic text-white">Was du verdienen kannst.</h3>
           </div>
-          <div className="gf-terminal">
+
+          {/* Stream 1: Abo-Provision */}
+          <div className="gf-terminal mb-4">
             <div className="gf-terminal-bar">
               <div className="gf-terminal-dot bg-[#ff5f57]" /><div className="gf-terminal-dot bg-[#febc2e]" /><div className="gf-terminal-dot bg-[#28c840]" />
-              <span className="ml-3 text-[10px] tracking-[2px] text-[#555] uppercase font-mono">Provision Calculator</span>
+              <span className="ml-3 text-[10px] tracking-[2px] text-[#555] uppercase font-mono">1. Abo-Provision</span>
             </div>
             <div className="p-4 space-y-2 text-[13px] font-mono">
               <div className="flex justify-between text-[#888]"><span>10 Referrals x Copier-Plan (€29/Mo)</span><span className="text-white">€290/Mo</span></div>
-              <div className="flex justify-between text-[#888]"><span>Level 1 Provision (30% Silver)</span><span className="text-[#28c840]">€87/Mo</span></div>
+              <div className="flex justify-between text-[#888]"><span>Level 1 Provision (30% Silver)</span><span className="text-[#28c840]">€87,00/Mo</span></div>
               <div className="flex justify-between text-[#888]"><span>Level 2 (5 indirekte, 10%)</span><span className="text-[#28c840]">€14,50/Mo</span></div>
-              <div className="border-t border-white/5 pt-2 flex justify-between font-bold"><span className="text-[#d4a537]">Gesamt passiv</span><span className="text-[#28c840]">€101,50/Mo</span></div>
-              <div className="flex justify-between text-[#555] text-[11px]"><span>Jährlich</span><span className="text-[#28c840]">€1.218,00/Jahr</span></div>
+              <div className="border-t border-white/5 pt-2 flex justify-between"><span className="text-[#d4a537]">Subtotal Abo</span><span className="text-[#28c840] font-bold">€101,50/Mo</span></div>
             </div>
           </div>
+
+          {/* Stream 2: Profit Share */}
+          <div className="gf-terminal mb-4">
+            <div className="gf-terminal-bar">
+              <div className="gf-terminal-dot bg-[#ff5f57]" /><div className="gf-terminal-dot bg-[#febc2e]" /><div className="gf-terminal-dot bg-[#28c840]" />
+              <span className="ml-3 text-[10px] tracking-[2px] text-[#555] uppercase font-mono">2. Profit Share</span>
+            </div>
+            <div className="p-4 space-y-2 text-[13px] font-mono">
+              <div className="flex justify-between text-[#888]"><span>10 Referrals mit avg. €2.000 Copier-Gewinn</span><span className="text-white">€20.000/Mo</span></div>
+              <div className="flex justify-between text-[#888]"><span>40% Platform Fee</span><span className="text-[#888]">€8.000</span></div>
+              <div className="flex justify-between text-[#888]"><span>50% davon = Vertriebspool</span><span className="text-white">€4.000</span></div>
+              <div className="flex justify-between text-[#888]"><span>Dein L1-Anteil (30% Silver)</span><span className="text-[#28c840]">€1.200,00/Mo</span></div>
+              <div className="flex justify-between text-[#888]"><span>L2 (5 indirekte, 10%)</span><span className="text-[#28c840]">€200,00/Mo</span></div>
+              <div className="border-t border-white/5 pt-2 flex justify-between"><span className="text-[#d4a537]">Subtotal Profit Share</span><span className="text-[#28c840] font-bold">€1.400,00/Mo</span></div>
+            </div>
+          </div>
+
+          {/* Gesamt */}
+          <div className="gf-panel p-4 border-[#d4a537]/20">
+            <div className="space-y-2 text-[13px] font-mono">
+              <div className="flex justify-between"><span className="text-[#888]">Abo-Provision</span><span className="text-[#28c840]">€101,50/Mo</span></div>
+              <div className="flex justify-between"><span className="text-[#888]">Profit Share</span><span className="text-[#28c840]">€1.400,00/Mo</span></div>
+              <div className="border-t border-white/5 pt-2 flex justify-between font-bold text-base"><span className="gf-gold-text">Gesamt passiv</span><span className="text-[#28c840]">€1.501,50/Mo</span></div>
+              <div className="flex justify-between text-[#555] text-[11px]"><span>Jährlich</span><span className="text-[#28c840]">€18.018,00/Jahr</span></div>
+            </div>
+          </div>
+
+          <p className="text-[10px] text-[#555] mt-4 text-center">Rechenbeispiel. Tatsächliche Einnahmen hängen von Trading-Performance und Netzwerkgröße ab.</p>
         </div>
       </section>
 
@@ -236,31 +349,7 @@ export default function PartnerPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="relative z-10 border-t px-6 py-12" style={{ borderColor: "var(--gf-border)" }}>
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between gap-8">
-          <div>
-            <div className="text-lg font-bold gf-gold-text mb-2">GOLD FOUNDRY</div>
-            <p className="text-xs text-[#555]">Das All-in-One Trading Terminal.</p>
-          </div>
-          <div className="flex gap-12 text-sm text-[#555]">
-            <div className="flex flex-col gap-2">
-              <Link href="/pricing" className="hover:text-[#d4a537] transition-colors">Pricing</Link>
-              <Link href="/leaderboard" className="hover:text-[#d4a537] transition-colors">Leaderboard</Link>
-            </div>
-            <div className="flex flex-col gap-2">
-              <Link href="/impressum" className="hover:text-[#d4a537] transition-colors">Impressum</Link>
-              <Link href="/datenschutz" className="hover:text-[#d4a537] transition-colors">Datenschutz</Link>
-              <Link href="/agb" className="hover:text-[#d4a537] transition-colors">AGB</Link>
-              <Link href="/risk-disclaimer" className="hover:text-[#d4a537] transition-colors">Risikohinweis</Link>
-            </div>
-          </div>
-        </div>
-        <div className="max-w-6xl mx-auto mt-8 pt-6 text-xs" style={{ borderTop: "1px solid var(--gf-border)", color: "#555" }}>
-          <p className="mb-4">Risikohinweis: Der Handel mit Finanzinstrumenten ist mit erheblichen Risiken verbunden und kann zum Verlust des eingesetzten Kapitals führen. Vergangene Ergebnisse sind keine Garantie für zukünftige Performance.</p>
-          <p className="text-center">&copy; 2026 Gold Foundry. Trading birgt Risiken.</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

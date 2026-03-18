@@ -1,6 +1,7 @@
 // src/app/dashboard/copier/page.tsx
 "use client";
 import { useEffect, useState } from "react";
+import FeatureGate from "@/components/FeatureGate";
 
 const DEMO_INTEL = {
   risk_level: "GREEN",
@@ -94,6 +95,7 @@ export default function CopierPage() {
   }
 
   return (
+    <FeatureGate minTier="copier" featureName="Smart Copier" landingPage="/smart-copier">
     <div>
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
@@ -230,51 +232,17 @@ export default function CopierPage() {
         ))}
       </div>
 
-      {/* Telegram Copier Section */}
-      <div className="gf-panel p-6">
-        <div className="flex items-center justify-between mb-5">
-          <div className="flex items-center gap-3">
-            <h2 className="text-lg font-bold" style={{ color: "var(--gf-text-bright)" }}>Telegram Copier</h2>
-            <span className="px-2 py-0.5 rounded text-[10px] font-bold tracking-wider" style={{ background: "rgba(39,174,96,0.12)", color: "var(--gf-green)" }}>
-              AKTIV
-            </span>
+      {/* Telegram Copier Teaser */}
+      <div className="gf-panel p-5">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-sm font-semibold" style={{ color: "var(--gf-text-bright)" }}>Telegram Copier</div>
+            <div className="text-xs mt-1" style={{ color: "var(--gf-text-dim)" }}>Signale aus Telegram-Gruppen automatisch kopieren</div>
           </div>
-          <span className="text-xs" style={{ color: "var(--gf-text-dim)" }}>
-            Connected to <span style={{ color: "var(--gf-text-bright)" }}>{DEMO_TELEGRAM.groups.length} Signal Groups</span>
-          </span>
-        </div>
-
-        {/* Signal Groups */}
-        <div className="grid md:grid-cols-3 gap-3 mb-5">
-          {DEMO_TELEGRAM.groups.map((g, i) => (
-            <div key={i} className="p-3 rounded" style={{ background: "var(--gf-obsidian)" }}>
-              <div className="text-sm font-semibold" style={{ color: "var(--gf-text-bright)" }}>{g.name}</div>
-              <div className="text-xs mono mt-1" style={{ color: "var(--gf-text-dim)" }}>{g.count} Signale</div>
-            </div>
-          ))}
-        </div>
-
-        {/* Last Signal */}
-        <div className="p-3 rounded mb-4" style={{ background: "var(--gf-obsidian)" }}>
-          <div className="text-[10px] tracking-widest mb-1" style={{ color: "var(--gf-text-dim)" }}>LETZTES SIGNAL</div>
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <span className="mono text-sm" style={{ color: "var(--gf-text-bright)" }}>{DEMO_TELEGRAM.lastSignal.text}</span>
-            <span className="px-2 py-0.5 rounded text-[10px] font-bold" style={{ background: "rgba(39,174,96,0.12)", color: "var(--gf-green)" }}>
-              {DEMO_TELEGRAM.lastSignal.status}
-            </span>
-          </div>
-        </div>
-
-        {/* Smart Orders */}
-        <div>
-          <div className="text-[10px] tracking-widest mb-2" style={{ color: "var(--gf-text-dim)" }}>SMART ORDERS</div>
-          <div className="flex flex-wrap gap-2">
-            {DEMO_TELEGRAM.smartOrders.map((s, i) => (
-              <span key={i} className="px-3 py-1.5 rounded text-xs" style={{ background: "rgba(212,165,55,0.08)", color: "var(--gf-gold)" }}>{s}</span>
-            ))}
-          </div>
+          <a href="/dashboard/telegram" className="gf-btn text-xs px-4 py-2">Öffnen →</a>
         </div>
       </div>
     </div>
+    </FeatureGate>
   );
 }
