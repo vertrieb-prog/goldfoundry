@@ -68,8 +68,8 @@ const FAQ = [
 function SectionCTA({ text, secondary }: { text?: string; secondary?: boolean }) {
   return (
     <div className={`flex flex-col sm:flex-row gap-3 ${secondary ? "" : "justify-center"} mt-12`}>
-      <Link href="/auth/register" className="gf-btn gf-btn-shimmer">
-        {text || "Jetzt kostenlos starten →"}
+      <Link href="/pricing" className="gf-btn gf-btn-shimmer">
+        {text || "Jetzt Plan wählen →"}
       </Link>
       <Link href="/pricing" className="gf-btn-outline">
         Alle Pläne ansehen
@@ -101,7 +101,7 @@ export default function Home() {
           <Link href="#terminal" className="px-3 py-1.5 rounded-full text-zinc-400 hover:text-white transition-colors">Terminal</Link>
           <Link href="/pricing" className="px-3 py-1.5 rounded-full text-zinc-400 hover:text-white transition-colors">Pricing</Link>
         </div>
-        <Link href="/auth/register" className="gf-btn gf-btn-sm !rounded-full">
+        <Link href="/pricing" className="gf-btn gf-btn-sm !rounded-full">
           Jetzt starten →
         </Link>
       </nav>
@@ -127,7 +127,7 @@ export default function Home() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
-            <Link href="/auth/register" className="gf-btn gf-btn-shimmer gf-btn-breathe text-base !px-10 !py-4">
+            <Link href="/pricing" className="gf-btn gf-btn-shimmer gf-btn-breathe text-base !px-10 !py-4">
               Jetzt starten — ab €9/Mo
             </Link>
             <Link href="/pricing" className="gf-btn-outline text-base !px-10 !py-4">
@@ -221,7 +221,7 @@ export default function Home() {
             automatisch, intelligent und in Echtzeit. <strong className="text-zinc-900">Das ist Gold Foundry.</strong>
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link href="/auth/register" className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-zinc-900 text-white font-bold text-sm rounded-xl hover:bg-zinc-800 transition-colors font-mono">
+            <Link href="/pricing" className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-zinc-900 text-white font-bold text-sm rounded-xl hover:bg-zinc-800 transition-colors font-mono">
               Jetzt System starten →
             </Link>
             <Link href="/pricing" className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-transparent text-zinc-600 font-semibold text-sm rounded-xl border border-zinc-300 hover:border-zinc-400 transition-colors">
@@ -369,7 +369,7 @@ export default function Home() {
             </div>
             {/* CTA in terminal section */}
             <div className="flex flex-col sm:flex-row gap-3">
-              <Link href="/auth/register" className="gf-btn">
+              <Link href="/pricing" className="gf-btn">
                 Terminal freischalten →
               </Link>
               <Link href="/leaderboard" className="gf-btn-outline">
@@ -395,7 +395,7 @@ export default function Home() {
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           {TARGETS.map((t, i) => (
-            <Link key={i} href="/auth/register" className="gf-panel p-6 group block animate-in" style={{ animationDelay: `${i * 0.08}s`, opacity: 0 }}>
+            <Link key={i} href="/pricing" className="gf-panel p-6 group block animate-in" style={{ animationDelay: `${i * 0.08}s`, opacity: 0 }}>
               <div className="flex items-center justify-between mb-4">
                 <div className="gf-icon-ring">{t.icon}</div>
                 <span className="text-[9px] tracking-widest font-mono text-zinc-500 px-2 py-1 rounded-full bg-white/[0.03] border border-white/[0.06]">
@@ -504,7 +504,7 @@ export default function Home() {
             {" "}
             <span className="gf-gold-text">Ein System. Null Kompromisse.</span>
           </h2>
-          <Link href="/auth/register" className="gf-btn gf-btn-shimmer gf-btn-breathe text-base !px-10 !py-4">
+          <Link href="/pricing" className="gf-btn gf-btn-shimmer gf-btn-breathe text-base !px-10 !py-4">
             Jetzt loslegen →
           </Link>
         </div>
@@ -565,7 +565,7 @@ export default function Home() {
               <span className="flex items-center gap-1.5"><span className="text-emerald-500">✓</span> In 2 Min. startklar</span>
             </div>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/auth/register" className="gf-btn gf-btn-shimmer gf-btn-breathe text-base !px-10 !py-4">
+              <Link href="/pricing" className="gf-btn gf-btn-shimmer gf-btn-breathe text-base !px-10 !py-4">
                 Jetzt starten — ab €9/Mo →
               </Link>
               <Link href="/pricing" className="gf-btn-outline text-base !px-10 !py-4">

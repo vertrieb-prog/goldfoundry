@@ -42,14 +42,29 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Auth pages — redirect to dashboard if already logged in
-  if (request.nextUrl.pathname.startsWith("/auth/") && user) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+  // Dashboard access — only for paying users (check subscription tier)
+  if (request.nextUrl.pathname.startsWith("/dashboard") && user) {
+    // Allow upgrade page for everyone (that's where they pay)
+    if (request.nextUrl.pathname === "/dashboard/upgrade") {
+      return supabaseResponse;
+    }
+
+    // Check subscription tier from user metadata or profiles
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("subscription_tier")
+      .eq("id", user.id)
+      .single();
+
+    const tier = profile?.subscription_tier || "free";
+    if (tier === "free") {
+      return NextResponse.redirect(new URL("/pricing", request.url));
+    }
   }
 
-  // Pricing page — redirect logged-in users to dashboard upgrade page
-  if (request.nextUrl.pathname === "/pricing" && user) {
-    return NextResponse.redirect(new URL("/dashboard/upgrade", request.url));
+  // Auth pages — redirect to pricing if already logged in (they pick a plan first)
+  if (request.nextUrl.pathname.startsWith("/auth/") && user) {
+    return NextResponse.redirect(new URL("/pricing", request.url));
   }
 
   return supabaseResponse;
