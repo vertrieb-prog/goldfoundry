@@ -267,6 +267,150 @@ export default function DashboardPage() {
 
       {loading && <div className="text-center py-12" style={{ color: "var(--gf-text-dim)" }}>Lade Daten...</div>}
 
+      {/* ── Paket-Vergleich: Was brauchst du zum Starten? ── */}
+      <div className="mb-6">
+        <div className="mb-4">
+          <h2 className="text-lg font-bold" style={{ color: "var(--gf-text-bright)" }}>Was brauchst du zum Starten?</h2>
+          <p className="text-xs mt-0.5" style={{ color: "var(--gf-text-dim)" }}>Dein Plan ist aktiv — so legst du mit dem Trading los.</p>
+        </div>
+
+        {/* Vergleichstabelle */}
+        <div className="gf-panel overflow-x-auto">
+          <table className="w-full text-sm min-w-[600px]">
+            <thead>
+              <tr className="border-b" style={{ borderColor: "var(--gf-border)" }}>
+                <th className="text-left py-3 px-4 text-xs font-normal" style={{ color: "var(--gf-text-dim)" }}>Voraussetzung</th>
+                <th className="py-3 px-3 text-center">
+                  <div className="text-white font-bold text-xs">Analyzer</div>
+                  <div className="gf-gold-text font-mono text-[10px]">€9/Mo</div>
+                </th>
+                <th className="py-3 px-3 text-center" style={{ background: "rgba(212,165,55,0.04)" }}>
+                  <div className="text-white font-bold text-xs">Smart Copier</div>
+                  <div className="gf-gold-text font-mono text-[10px]">€29/Mo</div>
+                </th>
+                <th className="py-3 px-3 text-center">
+                  <div className="text-white font-bold text-xs">Pro Trader</div>
+                  <div className="gf-gold-text font-mono text-[10px]">€79/Mo</div>
+                </th>
+                <th className="py-3 px-3 text-center">
+                  <div className="text-white font-bold text-xs">Signal Provider</div>
+                  <div className="gf-gold-text font-mono text-[10px]">€149/Mo</div>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {/* MT Accounts */}
+              <tr className="border-b" style={{ borderColor: "rgba(255,255,255,0.03)" }}>
+                <td className="py-3 px-4 text-xs" style={{ color: "var(--gf-text-dim)" }}>MetaTrader Konto</td>
+                <td className="py-3 px-3 text-center text-xs font-mono" style={{ color: "var(--gf-gold)" }}>1 Account</td>
+                <td className="py-3 px-3 text-center text-xs font-mono" style={{ color: "var(--gf-gold)", background: "rgba(212,165,55,0.04)" }}>1 Account</td>
+                <td className="py-3 px-3 text-center text-xs font-mono" style={{ color: "var(--gf-gold)" }}>bis 5 Accounts</td>
+                <td className="py-3 px-3 text-center text-xs font-mono" style={{ color: "var(--gf-gold)" }}>Unbegrenzt</td>
+              </tr>
+              {/* Min. Einzahlung */}
+              <tr className="border-b" style={{ borderColor: "rgba(255,255,255,0.03)" }}>
+                <td className="py-3 px-4 text-xs" style={{ color: "var(--gf-text-dim)" }}>Empf. Mindesteinzahlung</td>
+                <td className="py-3 px-3 text-center text-xs font-mono" style={{ color: "var(--gf-text-dim)" }}>beliebig</td>
+                <td className="py-3 px-3 text-center text-xs font-mono" style={{ color: "var(--gf-gold)", background: "rgba(212,165,55,0.04)" }}>ab €500</td>
+                <td className="py-3 px-3 text-center text-xs font-mono" style={{ color: "var(--gf-gold)" }}>ab €1.000</td>
+                <td className="py-3 px-3 text-center text-xs font-mono" style={{ color: "var(--gf-gold)" }}>ab €2.000</td>
+              </tr>
+              {/* Smart Copier */}
+              <tr className="border-b" style={{ borderColor: "rgba(255,255,255,0.03)" }}>
+                <td className="py-3 px-4 text-xs" style={{ color: "var(--gf-text-dim)" }}>Smart Copier</td>
+                <td className="py-3 px-3 text-center"><span className="text-zinc-700">—</span></td>
+                <td className="py-3 px-3 text-center" style={{ background: "rgba(212,165,55,0.04)" }}><span className="text-emerald-400">✓</span></td>
+                <td className="py-3 px-3 text-center"><span className="text-emerald-400">✓</span></td>
+                <td className="py-3 px-3 text-center"><span className="text-emerald-400">✓</span></td>
+              </tr>
+              {/* Telegram Copier */}
+              <tr className="border-b" style={{ borderColor: "rgba(255,255,255,0.03)" }}>
+                <td className="py-3 px-4 text-xs" style={{ color: "var(--gf-text-dim)" }}>Telegram Copier</td>
+                <td className="py-3 px-3 text-center"><span className="text-zinc-700">—</span></td>
+                <td className="py-3 px-3 text-center text-xs font-mono" style={{ color: "var(--gf-gold)", background: "rgba(212,165,55,0.04)" }}>1 Channel</td>
+                <td className="py-3 px-3 text-center text-xs font-mono" style={{ color: "var(--gf-gold)" }}>3 Channels</td>
+                <td className="py-3 px-3 text-center text-xs font-mono" style={{ color: "var(--gf-gold)" }}>Unbegrenzt</td>
+              </tr>
+              {/* 7-Faktor Risk Engine */}
+              <tr className="border-b" style={{ borderColor: "rgba(255,255,255,0.03)" }}>
+                <td className="py-3 px-4 text-xs" style={{ color: "var(--gf-text-dim)" }}>7-Faktor Risk Engine</td>
+                <td className="py-3 px-3 text-center"><span className="text-zinc-700">—</span></td>
+                <td className="py-3 px-3 text-center" style={{ background: "rgba(212,165,55,0.04)" }}><span className="text-emerald-400">✓</span></td>
+                <td className="py-3 px-3 text-center"><span className="text-emerald-400">✓</span></td>
+                <td className="py-3 px-3 text-center"><span className="text-emerald-400">✓</span></td>
+              </tr>
+              {/* FORGE Mentor */}
+              <tr className="border-b" style={{ borderColor: "rgba(255,255,255,0.03)" }}>
+                <td className="py-3 px-4 text-xs" style={{ color: "var(--gf-text-dim)" }}>FORGE Mentor</td>
+                <td className="py-3 px-3 text-center text-xs font-mono" style={{ color: "var(--gf-gold)" }}>5/Tag</td>
+                <td className="py-3 px-3 text-center text-xs font-mono" style={{ color: "var(--gf-gold)", background: "rgba(212,165,55,0.04)" }}>Unbegrenzt</td>
+                <td className="py-3 px-3 text-center text-xs font-mono" style={{ color: "var(--gf-gold)" }}>Unbegrenzt</td>
+                <td className="py-3 px-3 text-center text-xs font-mono" style={{ color: "var(--gf-gold)" }}>Unbegrenzt</td>
+              </tr>
+              {/* Backtest / Strategy */}
+              <tr className="border-b" style={{ borderColor: "rgba(255,255,255,0.03)" }}>
+                <td className="py-3 px-4 text-xs" style={{ color: "var(--gf-text-dim)" }}>Strategy Lab + Backtest</td>
+                <td className="py-3 px-3 text-center"><span className="text-zinc-700">—</span></td>
+                <td className="py-3 px-3 text-center" style={{ background: "rgba(212,165,55,0.04)" }}><span className="text-zinc-700">—</span></td>
+                <td className="py-3 px-3 text-center"><span className="text-emerald-400">✓</span></td>
+                <td className="py-3 px-3 text-center"><span className="text-emerald-400">✓</span></td>
+              </tr>
+              {/* Partner */}
+              <tr>
+                <td className="py-3 px-4 text-xs" style={{ color: "var(--gf-text-dim)" }}>Partner / MLM</td>
+                <td className="py-3 px-3 text-center"><span className="text-zinc-700">—</span></td>
+                <td className="py-3 px-3 text-center text-xs font-mono" style={{ color: "var(--gf-gold)", background: "rgba(212,165,55,0.04)" }}>Affiliate</td>
+                <td className="py-3 px-3 text-center text-xs font-mono" style={{ color: "var(--gf-gold)" }}>MLM Partner</td>
+                <td className="py-3 px-3 text-center text-xs font-mono" style={{ color: "var(--gf-gold)" }}>+ Follower + 60/40</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        {/* Smart Copier Bonus + Quick-Start */}
+        <div className="grid md:grid-cols-2 gap-3 mt-3">
+          {/* Bonus-Box */}
+          <div className="gf-panel p-5" style={{
+            background: "linear-gradient(135deg, rgba(212,165,55,0.06), rgba(212,165,55,0.02))",
+            border: "1px solid rgba(212,165,55,0.18)",
+          }}>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-base">★</span>
+              <span className="text-xs font-bold tracking-wide" style={{ color: "var(--gf-gold)" }}>SMART COPIER BONUS</span>
+            </div>
+            <p className="text-sm leading-relaxed" style={{ color: "var(--gf-text-bright)" }}>
+              Ab <span className="font-bold gf-gold-text">€1.000 Einzahlung</span> bei deinem Broker entfällt die <span className="font-bold">1. Monatsgebühr</span> für den Smart Copier komplett.
+            </p>
+            <p className="text-[11px] mt-2" style={{ color: "var(--gf-text-dim)" }}>
+              Du sparst €29 — starte direkt ohne Gebühr in den ersten Monat.
+            </p>
+          </div>
+
+          {/* Quick-Start Schritte */}
+          <div className="gf-panel p-5">
+            <span className="text-xs tracking-widest uppercase font-mono block mb-3" style={{ color: "var(--gf-text-dim)" }}>So startest du</span>
+            <div className="space-y-2.5 text-xs" style={{ color: "var(--gf-text-dim)" }}>
+              <div className="flex items-center gap-2.5">
+                <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0" style={{ background: "rgba(39,174,96,0.1)", color: "#27ae60" }}>✓</span>
+                <span>Gold Foundry Account + Plan aktiv</span>
+              </div>
+              <div className="flex items-center gap-2.5">
+                <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0" style={{ background: "rgba(212,165,55,0.1)", color: "var(--gf-gold)" }}>2</span>
+                <span>MT4/MT5 Konto verbinden</span>
+              </div>
+              <div className="flex items-center gap-2.5">
+                <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0" style={{ background: "rgba(212,165,55,0.1)", color: "var(--gf-gold)" }}>3</span>
+                <span>Einzahlung beim Broker tätigen</span>
+              </div>
+              <div className="flex items-center gap-2.5">
+                <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0" style={{ background: "rgba(212,165,55,0.1)", color: "var(--gf-gold)" }}>4</span>
+                <span>Copier aktivieren — fertig</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Risikohinweis */}
       <div className="mt-8 pt-6 text-xs" style={{ borderTop: "1px solid var(--gf-border)", color: "var(--gf-text-dim)" }}>
         <p>Risikohinweis: Der Handel mit Finanzinstrumenten ist mit erheblichen Risiken verbunden und kann zum Verlust des eingesetzten Kapitals führen. Vergangene Ergebnisse sind keine Garantie für zukünftige Performance.</p>

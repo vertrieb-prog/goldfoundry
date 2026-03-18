@@ -47,9 +47,14 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
+  // Pricing page — redirect logged-in users to dashboard upgrade page
+  if (request.nextUrl.pathname === "/pricing" && user) {
+    return NextResponse.redirect(new URL("/dashboard/upgrade", request.url));
+  }
+
   return supabaseResponse;
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/chat/:path*", "/copier/:path*", "/leaderboard/:path*", "/admin/:path*", "/auth/:path*"],
+  matcher: ["/dashboard/:path*", "/chat/:path*", "/copier/:path*", "/leaderboard/:path*", "/admin/:path*", "/auth/:path*", "/pricing"],
 };
