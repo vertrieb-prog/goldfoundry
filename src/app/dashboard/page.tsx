@@ -22,7 +22,7 @@ function MiniChart({ data }: { data: number[] }) {
   if (!data.length) return null;
   const min = Math.min(...data); const max = Math.max(...data); const range = max - min || 1;
   const w = 200; const h = 60;
-  const points = data.map((v, i) => `${(i / (data.length - 1)) * w},${h - ((v - min) / range) * h}`).join(" ");
+  const points = data.map((v, i) => `${(i / Math.max(data.length - 1, 1)) * w},${h - ((v - min) / range) * h}`).join(" ");
   return (
     <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-16" preserveAspectRatio="none">
       <defs><linearGradient id="gc" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#d4a537" stopOpacity="0.3" /><stop offset="100%" stopColor="#d4a537" stopOpacity="0" /></linearGradient></defs>
@@ -108,7 +108,7 @@ export default function DashboardPage() {
           <div className="gf-panel px-4 py-2 flex items-center gap-3">
             <span className="text-xs" style={{ color: "var(--gf-text-dim)" }}>FORGE INTEL</span>
             <StatusBadge status={isDemo ? "GREEN" : (intel?.risk_level ?? "GREEN")} />
-            <span className="text-xs mono" style={{ color: "var(--gf-text-dim)" }}>{isDemo ? "TRENDING" : (intel?.regime ?? "\u2014")}</span>
+            <span className="text-xs mono" style={{ color: "var(--gf-text-dim)" }}>{isDemo ? "TRENDING" : (intel?.regime ?? "—")}</span>
           </div>
         )}
       </div>
@@ -117,45 +117,45 @@ export default function DashboardPage() {
       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 mb-6">
         <KPI
           label="Balance"
-          value={isDemo ? "\u20ac25.847,32" : `\u20ac${totalEquity.toLocaleString("de-DE", { minimumFractionDigits: 2 })}`}
-          sub={isDemo ? "+\u20ac1.247,32 gesamt" : undefined}
+          value={isDemo ? "€25.847,32" : `€${totalEquity.toLocaleString("de-DE", { minimumFractionDigits: 2 })}`}
+          sub={isDemo ? "+€1.247,32 gesamt" : undefined}
         />
         <KPI
           label="Equity"
-          value={isDemo ? "\u20ac26.102,55" : `\u20ac${totalEquity.toLocaleString("de-DE", { minimumFractionDigits: 2 })}`}
-          sub={isDemo ? "+\u20ac255,23 offen" : undefined}
+          value={isDemo ? "€26.102,55" : `€${totalEquity.toLocaleString("de-DE", { minimumFractionDigits: 2 })}`}
+          sub={isDemo ? "+€255,23 offen" : undefined}
         />
         <KPI
           label="Heute P&L"
-          value={isDemo ? "+\u20ac312,40" : `${todayPnl >= 0 ? "+" : ""}\u20ac${todayPnl.toFixed(2)}`}
+          value={isDemo ? "+€312,40" : `${todayPnl >= 0 ? "+" : "-"}€${Math.abs(todayPnl).toFixed(2)}`}
           sub={isDemo ? "+1.2% heute" : undefined}
           color={isDemo ? "var(--gf-green)" : (todayPnl >= 0 ? "var(--gf-green)" : "var(--gf-red)")}
         />
         <KPI
           label="Drawdown"
-          value={isDemo ? "2,8%" : "\u2014"}
+          value={isDemo ? "2,8%" : "—"}
           sub={isDemo ? "von max. 5%" : undefined}
           color={isDemo ? "var(--gf-green)" : undefined}
         />
         <KPI
           label="Win Rate"
-          value={isDemo ? "71,4%" : "\u2014"}
+          value={isDemo ? "71,4%" : "—"}
           sub={isDemo ? "letzte 30 Tage" : undefined}
           color={isDemo ? "var(--gf-gold)" : undefined}
         />
         <KPI
           label="Total Trades"
           value={isDemo ? "847" : `${totalCopied}`}
-          sub={isDemo ? "seit Kontoer\u00f6ffnung" : `${totalSkipped} \u00fcbersprungen`}
+          sub={isDemo ? "seit Kontoeröffnung" : `${totalSkipped} übersprungen`}
         />
       </div>
 
       {/* EQUITY CURVE */}
       <div className="gf-panel p-5 mb-6">
         <div className="flex items-center justify-between mb-3">
-          <span className="text-xs tracking-widest uppercase" style={{ color: "var(--gf-text-dim)" }}>Equity Curve \u00b7 30 Tage</span>
+          <span className="text-xs tracking-widest uppercase" style={{ color: "var(--gf-text-dim)" }}>Equity Curve · 30 Tage</span>
           <span className="text-lg font-bold gf-gold-text">
-            {isDemo ? "\u20ac25.847,32" : `\u20ac${totalEquity.toLocaleString("de-DE", { minimumFractionDigits: 0 })}`}
+            {isDemo ? "€25.847,32" : `€${totalEquity.toLocaleString("de-DE", { minimumFractionDigits: 0 })}`}
           </span>
         </div>
         <MiniChart data={equityCurve} />
@@ -190,7 +190,7 @@ export default function DashboardPage() {
                         <span className="text-sm font-semibold mono" style={{ color: "var(--gf-text-bright)" }}>{t.symbol}</span>
                       </div>
                       <span className="text-sm font-bold mono" style={{ color: isPos ? "var(--gf-green)" : "var(--gf-red)" }}>
-                        {isPos ? "+" : ""}\u20ac{Math.abs(t.pnl).toFixed(2)}
+                        {isPos ? "+" : ""}€{Math.abs(t.pnl).toFixed(2)}
                       </span>
                     </div>
                   );
@@ -218,7 +218,7 @@ export default function DashboardPage() {
                 Echte Daten statt Demo. Verbinde jetzt dein MetaTrader-Konto und tracke deine Performance live.
               </p>
               <Link href="/dashboard/accounts/add" className="gf-btn text-sm !py-3 !px-8">
-                Konto verbinden \u2192
+                Konto verbinden →
               </Link>
             </div>
           </>
@@ -235,7 +235,7 @@ export default function DashboardPage() {
                 </div>
                 <div className="grid grid-cols-3 gap-3 text-center">
                   <div>
-                    <div className="text-lg font-bold" style={{ color: "var(--gf-text-bright)" }}>\u20ac{acc.equity?.toLocaleString("de-DE", { minimumFractionDigits: 0 })}</div>
+                    <div className="text-lg font-bold" style={{ color: "var(--gf-text-bright)" }}>€{acc.equity?.toLocaleString("de-DE", { minimumFractionDigits: 0 })}</div>
                     <div className="text-[10px]" style={{ color: "var(--gf-text-dim)" }}>Equity</div>
                   </div>
                   <div>
@@ -243,7 +243,7 @@ export default function DashboardPage() {
                     <div className="text-[10px]" style={{ color: "var(--gf-text-dim)" }}>DD Buffer</div>
                   </div>
                   <div>
-                    <div className="text-lg font-bold" style={{ color: acc.lastMultiplier > 0.8 ? "var(--gf-green)" : acc.lastMultiplier > 0.3 ? "var(--gf-gold)" : "var(--gf-red)" }}>{acc.lastMultiplier ?? "\u2014"}x</div>
+                    <div className="text-lg font-bold" style={{ color: acc.lastMultiplier > 0.8 ? "var(--gf-green)" : acc.lastMultiplier > 0.3 ? "var(--gf-gold)" : "var(--gf-red)" }}>{acc.lastMultiplier ?? "—"}x</div>
                     <div className="text-[10px]" style={{ color: "var(--gf-text-dim)" }}>Multiplier</div>
                   </div>
                 </div>
@@ -255,7 +255,7 @@ export default function DashboardPage() {
                 )}
                 <div className="mt-3 flex justify-between text-xs" style={{ color: "var(--gf-text-dim)" }}>
                   <span>Heute: {acc.todayCopied} kopiert / {acc.todaySkipped} geskippt</span>
-                  <span style={{ color: acc.todayPnl >= 0 ? "var(--gf-green)" : "var(--gf-red)" }}>{acc.todayPnl >= 0 ? "+" : ""}\u20ac{acc.todayPnl?.toFixed(2)}</span>
+                  <span style={{ color: acc.todayPnl >= 0 ? "var(--gf-green)" : "var(--gf-red)" }}>{acc.todayPnl >= 0 ? "+" : "-"}€{Math.abs(acc.todayPnl ?? 0).toFixed(2)}</span>
                 </div>
               </div>
             ))}
@@ -267,7 +267,7 @@ export default function DashboardPage() {
 
       {/* Risikohinweis */}
       <div className="mt-8 pt-6 text-xs" style={{ borderTop: "1px solid var(--gf-border)", color: "var(--gf-text-dim)" }}>
-        <p>Risikohinweis: Der Handel mit Finanzinstrumenten ist mit erheblichen Risiken verbunden und kann zum Verlust des eingesetzten Kapitals fuehren. Vergangene Ergebnisse sind keine Garantie fuer zukuenftige Performance.</p>
+        <p>Risikohinweis: Der Handel mit Finanzinstrumenten ist mit erheblichen Risiken verbunden und kann zum Verlust des eingesetzten Kapitals führen. Vergangene Ergebnisse sind keine Garantie für zukünftige Performance.</p>
       </div>
     </div>
   );

@@ -6,3 +6,7 @@ node_modules/
 next-env.d.ts
 
 .vercel
+gf-pack/
+*.zip
+reference-designs/
+MEGA-AUTONOMOUS-PROMPT.md

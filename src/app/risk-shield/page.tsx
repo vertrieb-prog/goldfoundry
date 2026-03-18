@@ -1,12 +1,18 @@
 import Link from "next/link";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Risk Shield | Gold Foundry",
+  description: "Automatischer Schutz vor Stop Hunts, Flash Crashes und Spread-Spikes. Dein Kapital, geschützt.",
+};
 
 const LAYERS = [
-  { num: "01", title: "Stop Hunt Detection", desc: "Erkennt kuenstliche Spikes an runden Zahlen ($2,100, $2,000). Schliesst Positionen bevor der Spike dein SL triggert.", icon: "🎯", color: "#d4a537" },
-  { num: "02", title: "Flash Crash Guard", desc: "Sofortiger Close bei abnormaler Volatilitaet. Reagiert in <100ms auf ploetzliche Marktbewegungen.", icon: "⚡", color: "#ff6b6b" },
+  { num: "01", title: "Stop Hunt Detection", desc: "Erkennt künstliche Spikes an runden Zahlen ($2,100, $2,000). Schließt Positionen bevor der Spike dein SL triggert.", icon: "🎯", color: "#d4a537" },
+  { num: "02", title: "Flash Crash Guard", desc: "Sofortiger Close bei abnormaler Volatilitaet. Reagiert in <100ms auf plötzliche Marktbewegungen.", icon: "⚡", color: "#ff6b6b" },
   { num: "03", title: "Spread Anomaly Filter", desc: "Blockiert Trades bei >3x normalem Spread. Kein Entry mehr zu Wucher-Spreads bei News oder Low-Liquidity.", icon: "📊", color: "#3b82f6" },
   { num: "04", title: "Slippage Protection", desc: "Maximale Slippage-Toleranz von 2 Pips. Trade wird abgelehnt wenn der Broker schlechter filled.", icon: "🛡️", color: "#27ae60" },
   { num: "05", title: "Gap Protection", desc: "Weekend Gap + News Gap Schutz. Positionen werden vor Marktschluss automatisch abgesichert.", icon: "🔒", color: "#a855f7" },
-  { num: "06", title: "Correlation Shield", desc: "Verhindert Ueberexposure in korrelierenden Paaren. XAUUSD + XAGUSD + EURUSD = max. X% Risiko.", icon: "🔗", color: "#d4a537" },
+  { num: "06", title: "Correlation Shield", desc: "Verhindert Überexposure in korrelierenden Paaren. XAUUSD + XAGUSD + EURUSD = max. X% Risiko.", icon: "🔗", color: "#d4a537" },
 ];
 
 const STATS = [
@@ -61,7 +67,7 @@ export default function RiskShieldPage() {
           <span className="gf-badge mb-6 inline-flex">Defense System</span>
           <h2 className="font-serif text-4xl md:text-5xl leading-[1.1]">
             <span className="italic text-white/40">6 Ebenen.</span>{" "}
-            <span className="italic font-bold text-white">Null Luecken.</span>
+            <span className="italic font-bold text-white">Null Lücken.</span>
           </h2>
         </div>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -101,11 +107,11 @@ export default function RiskShieldPage() {
                   <div className="text-[#555]">09:29:58 | XAUUSD @ $2,100.00</div>
                   <div className="text-[#888]">09:29:59 | Spike detected: -$14.20 in 800ms</div>
                   <div className="text-[#ff6b6b]">09:30:00 | SL HIT @ $2,086.80</div>
-                  <div className="text-[#ff6b6b] font-bold">09:30:01 | Verlust: -\u20ac2.400,00</div>
-                  <div className="text-[#555]">09:30:15 | Preis zurueck bei $2,099.40</div>
+                  <div className="text-[#ff6b6b] font-bold">09:30:01 | Verlust: -€2.400,00</div>
+                  <div className="text-[#555]">09:30:15 | Preis zurück bei $2,099.40</div>
                 </div>
               </div>
-              <p className="text-sm text-[#888]">Trader verliert <span className="text-[#ff6b6b] font-semibold">\u20ac2.400</span> durch Stop Hunt bei XAUUSD $2,100 — ein klassisches Pattern.</p>
+              <p className="text-sm text-[#888]">Trader verliert <span className="text-[#ff6b6b] font-semibold">€2.400</span> durch Stop Hunt bei XAUUSD $2,100 — ein klassisches Pattern.</p>
             </div>
           </div>
           {/* After */}
@@ -117,9 +123,9 @@ export default function RiskShieldPage() {
                 <div className="text-[11px] font-mono space-y-1">
                   <div className="text-[#555]">09:29:55 | Stop Hunt Pattern erkannt @ $2,100</div>
                   <div className="text-[#d4a537]">09:29:56 | Risk Shield: Position geschuetzt</div>
-                  <div className="text-[#28c840]">09:29:57 | SL temporaer erweitert auf $2,082.00</div>
-                  <div className="text-[#28c840] font-bold">09:30:15 | Position sicher. Verlust: \u20ac0,00</div>
-                  <div className="text-[#28c840]">09:31:00 | TP HIT @ $2,108.50 | +\u20ac850,00</div>
+                  <div className="text-[#28c840]">09:29:57 | SL temporär erweitert auf $2,082.00</div>
+                  <div className="text-[#28c840] font-bold">09:30:15 | Position sicher. Verlust: €0,00</div>
+                  <div className="text-[#28c840]">09:31:00 | TP HIT @ $2,108.50 | +€850,00</div>
                 </div>
               </div>
               <p className="text-sm text-[#888]">Risk Shield erkennt das Pattern und schuetzt <span className="text-[#28c840] font-semibold">15 Sekunden VOR</span> dem Spike. Trade wird zum Gewinner.</p>
@@ -175,8 +181,8 @@ export default function RiskShieldPage() {
           </div>
         </div>
         <div className="max-w-6xl mx-auto mt-8 pt-6 text-xs" style={{ borderTop: "1px solid var(--gf-border)", color: "#555" }}>
-          <p className="mb-4">Risikohinweis: Der Handel mit Finanzinstrumenten ist mit erheblichen Risiken verbunden und kann zum Verlust des eingesetzten Kapitals fuehren. Vergangene Ergebnisse sind keine Garantie fuer zukuenftige Performance.</p>
-          <p className="text-center">&copy; 2025 Gold Foundry. Trading birgt Risiken.</p>
+          <p className="mb-4">Risikohinweis: Der Handel mit Finanzinstrumenten ist mit erheblichen Risiken verbunden und kann zum Verlust des eingesetzten Kapitals führen. Vergangene Ergebnisse sind keine Garantie für zukünftige Performance.</p>
+          <p className="text-center">&copy; 2026 Gold Foundry. Trading birgt Risiken.</p>
         </div>
       </footer>
     </div>

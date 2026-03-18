@@ -221,10 +221,11 @@ export async function sendCRMEmail(
   // Send via email engine
   const { sendEmail } = await import("@/lib/email/email-engine");
 
-  // Replace variables in body
+  // Replace variables in body (HTML-escaped to prevent injection)
+  const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   const processedBody = htmlBody
-    .replace(/\{\{name\}\}/g, contact.full_name ?? "")
-    .replace(/\{\{email\}\}/g, contact.email);
+    .replace(/\{\{name\}\}/g, esc(contact.full_name ?? ""))
+    .replace(/\{\{email\}\}/g, esc(contact.email));
 
   // Note: sendEmail is not exported individually in the current email-engine
   // Using fetch to Resend directly here

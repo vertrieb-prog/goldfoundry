@@ -33,7 +33,7 @@ const PAGE_CONTEXT: Record<string, { greeting: string; actions: { label: string;
     ],
   },
   "/auth/register": {
-    greeting: "Gute Entscheidung! 🚀\n\nIn 60 Sekunden hast du deinen Account.\n\n📝 So geht's:\n1. E-Mail & Passwort eingeben\n2. Bestätigungsmail klicken\n3. Dashboard öffnet sich\n4. MT-Konto verbinden → Copier läuft!\n\nDer Free-Plan gibt dir Zugang zum Dashboard und FORGE Mentor. Für den Copier brauchst du mindestens den Analyzer-Plan ($9/mo).",
+    greeting: "Gute Entscheidung! 🚀\n\nIn 60 Sekunden hast du deinen Account.\n\n📝 So geht's:\n1. E-Mail & Passwort eingeben\n2. Bestätigungsmail klicken\n3. Dashboard öffnet sich\n4. MT-Konto verbinden → Copier läuft!\n\nDer Free-Plan gibt dir Zugang zum Dashboard und FORGE Mentor. Für den Copier brauchst du mindestens den Analyzer-Plan (€9/mo).",
     actions: [
       { label: "Welcher Plan für mich?", q: "Ich bin Anfänger. Welchen Plan empfiehlst du mir?" },
       { label: "Was kostet es?", q: "Was bekomme ich im Basis-Plan und was kostet ein Upgrade?" },
@@ -41,7 +41,7 @@ const PAGE_CONTEXT: Record<string, { greeting: string; actions: { label: string;
     ],
   },
   "/pricing": {
-    greeting: "Du schaust dir die Pläne an — gute Idee.\n\nKurz-Überblick:\n\n💡 Analyzer ($9/mo) — Dashboard + FORGE Mentor\n⚡ Copier ($29/mo) — Alles + Smart Copier\n🔥 Pro ($59/mo) — Alles + Strategy Lab + Priority\n👑 Provider ($99/mo) — Signale anbieten + Revenue Share\n\nAlle Pläne haben die 7-Faktor Risk Engine. Frag mich wenn du unsicher bist!",
+    greeting: "Du schaust dir die Pläne an — gute Idee.\n\nKurz-Überblick:\n\n💡 Analyzer (€9/mo) — Dashboard + FORGE Mentor\n⚡ Copier (€29/mo) — Alles + Smart Copier\n🔥 Pro (€59/mo) — Alles + Strategy Lab + Priority\n👑 Provider (€99/mo) — Signale anbieten + Revenue Share\n\nAlle Pläne haben die 7-Faktor Risk Engine. Frag mich wenn du unsicher bist!",
     actions: [
       { label: "Was ist der Unterschied?", q: "Erkläre mir den Unterschied zwischen Copier und Pro Plan genau." },
       { label: "Lohnt sich Pro?", q: "Lohnt sich der Pro Plan? Was bekomme ich extra?" },
@@ -82,7 +82,7 @@ const PAGE_CONTEXT: Record<string, { greeting: string; actions: { label: string;
     ],
   },
   "/dashboard/affiliate": {
-    greeting: "Partner Program! 💰\n\nVerdiene passiv mit deinem Netzwerk:\n\n📊 30% auf Ebene 1\n📊 10% auf Ebene 2\n📊 5% auf Ebene 3\n\nDein Affiliate-Link ist oben. Teile ihn auf Social Media, in Trading-Gruppen oder mit Freunden.\n\nAuszahlung ab $50 — automatisch zum Monatsende.",
+    greeting: "Partner Program! 💰\n\nVerdiene passiv mit deinem Netzwerk:\n\n📊 30% auf Ebene 1\n📊 10% auf Ebene 2\n📊 5% auf Ebene 3\n\nDein Affiliate-Link ist oben. Teile ihn auf Social Media, in Trading-Gruppen oder mit Freunden.\n\nAuszahlung ab €50 — automatisch zum Monatsende.",
     actions: [
       { label: "Meinen Link teilen", q: "Wie kann ich meinen Affiliate-Link am besten verbreiten?" },
       { label: "Auszahlung?", q: "Wann und wie bekomme ich meine Affiliate-Einnahmen ausgezahlt?" },
@@ -198,14 +198,14 @@ export default function ChatWidget() {
       greetText += "\n";
       for (const a of data.stats.accounts) {
         const icon = a.on ? "🟢" : "🔴";
-        greetText += `\n${icon} ${a.firm}: $${a.eq?.toLocaleString() ?? 0} · Buffer ${a.buf}%`;
+        greetText += `\n${icon} ${a.firm}: €${a.eq?.toLocaleString() ?? 0} · Buffer ${a.buf}%`;
       }
     }
     if (data.stats?.todayPnl !== undefined && data.stats.todayPnl !== 0) {
-      greetText += `\n\n📊 Heute: ${data.stats.todayPnl >= 0 ? "+" : ""}$${data.stats.todayPnl} · Woche: ${data.stats.weekPnl >= 0 ? "+" : ""}$${data.stats.weekPnl} · WR: ${data.stats.wr}%`;
+      greetText += `\n\n📊 Heute: ${data.stats.todayPnl >= 0 ? "+" : ""}€${data.stats.todayPnl} · Woche: ${data.stats.weekPnl >= 0 ? "+" : ""}€${data.stats.weekPnl} · WR: ${data.stats.wr}%`;
     }
     if (data.stats?.affBalance > 0) {
-      greetText += `\n💰 $${data.stats.affBalance} Affiliate-Guthaben`;
+      greetText += `\n💰 €${data.stats.affBalance} Affiliate-Guthaben`;
     }
     if (data.copierAuto?.length) {
       for (const c of data.copierAuto) {

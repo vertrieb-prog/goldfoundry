@@ -18,22 +18,43 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4" style={{ background: "var(--gf-obsidian)" }}>
-      <div className="w-full max-w-sm">
-        <div className="text-center mb-8">
-          <Link href="/"><span className="text-2xl font-bold gf-gold-text">GOLD FOUNDRY</span></Link>
-          <div className="text-[9px] tracking-[3px] mt-1" style={{ color: "var(--gf-text-dim)" }}>FORGE TERMINAL</div>
+    <div className="min-h-screen flex items-center justify-center px-4 relative" style={{ background: "var(--gf-obsidian)" }}>
+      {/* Background */}
+      <div className="gf-grid-bg fixed inset-0 z-0" />
+      <div className="gf-orb gf-orb-gold fixed z-0" style={{ width: 500, height: 500, top: "20%", left: "30%" }} />
+
+      <div className="w-full max-w-sm relative z-10">
+        {/* Brand */}
+        <div className="text-center mb-10">
+          <Link href="/" className="inline-block">
+            <span className="text-2xl font-extrabold gf-gold-text tracking-wide">GOLD FOUNDRY</span>
+          </Link>
+          <div className="text-[9px] tracking-[3px] mt-1.5 text-zinc-600 font-mono">FORGE TERMINAL</div>
         </div>
+
+        {/* Card */}
         <div className="gf-panel p-8">
-          <h2 className="text-lg font-semibold mb-6" style={{ color: "var(--gf-text-bright)" }}>Login</h2>
+          <h2 className="text-xl font-bold text-white mb-2">Willkommen zurück</h2>
+          <p className="text-sm text-zinc-500 mb-6">Melde dich in deinem Account an.</p>
+
           <form onSubmit={handleLogin} className="flex flex-col gap-4">
-            <input type="email" placeholder="E-Mail" className="gf-input" value={email} onChange={e => setEmail(e.target.value)} required />
-            <input type="password" placeholder="Passwort" className="gf-input" value={pw} onChange={e => setPw(e.target.value)} required />
-            {err && <div className="text-sm" style={{ color: "var(--gf-red)" }}>{err}</div>}
-            <button type="submit" className="gf-btn w-full" disabled={loading}>{loading ? "Laden..." : "Einloggen →"}</button>
+            <div>
+              <label className="text-xs font-medium text-zinc-400 mb-1.5 block">E-Mail</label>
+              <input type="email" placeholder="name@email.com" className="gf-input" value={email} onChange={e => setEmail(e.target.value)} required />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-zinc-400 mb-1.5 block">Passwort</label>
+              <input type="password" placeholder="••••••••" className="gf-input" value={pw} onChange={e => setPw(e.target.value)} required />
+            </div>
+            {err && <div className="text-sm text-red-400 bg-red-500/5 border border-red-500/10 rounded-lg px-3 py-2">{err}</div>}
+            <button type="submit" className="gf-btn w-full mt-2" disabled={loading}>
+              {loading ? "Laden..." : "Einloggen →"}
+            </button>
           </form>
-          <div className="mt-6 text-center text-sm" style={{ color: "var(--gf-text-dim)" }}>
-            Kein Account? <Link href="/auth/register" style={{ color: "var(--gf-gold)" }}>Registrieren</Link>
+
+          <div className="mt-6 text-center text-sm text-zinc-500">
+            Kein Account?{" "}
+            <Link href="/auth/register" className="text-[var(--gf-gold)] hover:underline font-medium">Registrieren</Link>
           </div>
         </div>
       </div>

@@ -10,10 +10,9 @@
 // Generiert automatisch Vergleichsdaten für SEO + Sales.
 // ============================================================
 
-import Anthropic from "@anthropic-ai/sdk";
+import { cachedCall } from "@/lib/ai/cached-client";
+import { MODELS } from "@/lib/config";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
-
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 
 const log = (msg: string) =>
   console.log(`[${new Date().toISOString()}] [FORGE-RECON] ${msg}`);
@@ -57,7 +56,7 @@ export const COMPETITORS = {
     name: "ZuluTrade",
     url: "https://www.zulutrade.com",
     type: "copy_trading",
-    pricing: "$10/Strategie/Monat oder Profit-Sharing",
+    pricing: "€10/Strategie/Monat oder Profit-Sharing",
     users: "2.4M+",
     strengths: [
       "10,000+ Signal Provider weltweit",
@@ -114,7 +113,7 @@ export const COMPETITORS = {
     name: "4X Solutions",
     url: "https://4xsolutions.com",
     type: "copier",
-    pricing: "$5/Account/Monat",
+    pricing: "€5/Account/Monat",
     users: "10k+",
     strengths: [
       "Enterprise-Grade Trade Copier",
@@ -209,10 +208,8 @@ export async function runCompetitiveScan(): Promise<CompetitiveReport> {
   const competitorNames = Object.values(COMPETITORS).map(c => c.name);
 
   // AI analyzes the competitive landscape
-  const response = await anthropic.messages.create({
-    model: "claude-sonnet-4-20250514",
-    max_tokens: 1500,
-    system: `Du bist der Competitive Intelligence Agent von Gold Foundry (goldfoundry.de), einem AI-Trading-Portal. 
+  const text = await cachedCall({
+    prompt: `Du bist der Competitive Intelligence Agent von Gold Foundry (goldfoundry.de), einem AI-Trading-Portal.
 
 Deine Aufgabe: Analysiere die Wettbewerbslandschaft und identifiziere Threats + Opportunities.
 
@@ -227,11 +224,9 @@ Antworte als JSON:
   "recommendations": ["Empfehlung 1", ...],
   "seoActions": ["SEO Aktion 1", ...]
 }`,
-    messages: [{
-      role: "user",
-      content: `Analysiere diese Konkurrenten und ihre aktuellen Schwächen die wir ausnutzen können:
+    message: `Analysiere diese Konkurrenten und ihre aktuellen Schwächen die wir ausnutzen können:
 
-${Object.entries(COMPETITORS).map(([key, c]) => 
+${Object.entries(COMPETITORS).map(([key, c]) =>
   `${c.name} (${c.type}): ${c.users} User, ${c.pricing}. Schwächen: ${c.weaknesses.slice(0, 5).join(", ")}`
 ).join("\n\n")}
 
@@ -240,10 +235,9 @@ Basierend darauf:
 2. Wo sind sie am verwundbarsten?
 3. Was sollte Gold Foundry als nächstes bauen um den Vorsprung zu halten?
 4. Welche SEO-Vergleichsseiten sollten wir erstellen?`,
-    }],
+    model: MODELS.fast,
+    maxTokens: 1500,
   });
-
-  const text = response.content[0].type === "text" ? response.content[0].text : "{}";
 
   try {
     const parsed = JSON.parse(text.replace(/```json|```/g, "").trim());
@@ -340,13 +334,9 @@ export async function generateComparisonContent(competitorKey: string): Promise<
 
   const comparison = getFeatureComparison();
 
-  const response = await anthropic.messages.create({
-    model: "claude-sonnet-4-20250514",
-    max_tokens: 1500,
-    system: `Du schreibst SEO-optimierte Vergleichsseiten für Gold Foundry. Ehrlich aber klar Gold Foundry im Vorteil. 800+ Wörter, H2/H3, natürliche Keywords.`,
-    messages: [{
-      role: "user",
-      content: `Gold Foundry vs ${competitor.name}. 
+  const text = await cachedCall({
+    prompt: `Du schreibst SEO-optimierte Vergleichsseiten für Gold Foundry. Ehrlich aber klar Gold Foundry im Vorteil. 800+ Wörter, H2/H3, natürliche Keywords.`,
+    message: `Gold Foundry vs ${competitor.name}.
 
 Gold Foundry hat ${comparison.scores["Gold Foundry"]}/${comparison.maxScore} Features.
 ${competitor.name} hat ${comparison.scores[competitor.name as keyof typeof comparison.scores] ?? 0}/${comparison.maxScore} Features.
@@ -358,10 +348,9 @@ ${competitor.name} Schwächen:
 ${competitor.weaknesses.join("\n")}
 
 Schreibe die Vergleichsseite. Title max 60 Zeichen, Meta max 155.`,
-    }],
+    model: MODELS.fast,
+    maxTokens: 1500,
   });
-
-  const text = response.content[0].type === "text" ? response.content[0].text : "";
 
   return {
     title: `Gold Foundry vs ${competitor.name} — Der komplette Vergleich`,

@@ -1,10 +1,11 @@
 // ═══════════════════════════════════════════════════════════════
-// src/lib/trade-manager/manager.ts — Trade Manager
-// Receives signals, checks risk, calculates lots, executes
+// src/lib/trade-manager/manager.ts — Trade Signal Processing
+// Nutzt die zentrale Risk Engine für Lot-Berechnung
 // ═══════════════════════════════════════════════════════════════
 
-import { supabaseAdmin } from "@/lib/supabase-admin";
+import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { RISK_THRESHOLDS, MOMENTUM_SCALING } from "@/lib/config";
+import { calculateCopyLots } from "@/lib/copier/risk-engine";
 
 export interface TradeSignal {
     symbol: string;
@@ -24,22 +25,12 @@ export interface RiskCheckResult {
     ddRemaining: number;
 }
 
-// ── Lot Size Calculator ─────────────────────────────────────
-export function calculateLotSize(opts: {
-    balance: number;
-    riskPercent: number;
-    entryPrice: number;
-    stopLoss: number;
-    symbol: string;
-    leverage: number;
-}): number {
-    const pipValue = opts.symbol.includes("JPY") ? 0.01 : 0.0001;
-    const slPips = Math.abs(opts.entryPrice - opts.stopLoss) / pipValue;
-    if (slPips <= 0) return 0.01;
-
-    const riskAmount = opts.balance * (opts.riskPercent / 100);
-    const lotSize = riskAmount / (slPips * 10); // standard lot = 10 per pip
-    return Math.max(0.01, Math.round(lotSize * 100) / 100);
+// ── Pip-Size (konsistent mit risk-engine.ts) ─────────────────
+function getPipSize(symbol: string): number {
+    if (symbol.includes("JPY")) return 0.01;
+    if (symbol === "XAUUSD") return 0.01;
+    if (symbol === "XAGUSD") return 0.001;
+    return 0.0001;
 }
 
 // ── Risk Check ──────────────────────────────────────────────
@@ -55,23 +46,19 @@ export function checkRisk(opts: {
     const thresholds = RISK_THRESHOLDS[opts.brokerType] || RISK_THRESHOLDS.standard;
     const currentDD = ((opts.balance - opts.equity) / opts.balance) * 100;
 
-    // Kill switch
     if (currentDD >= (thresholds.ddKillSwitch || 10)) {
         return { approved: false, lotSize: 0, reason: "Kill Switch: DD zu hoch", riskPercent: 0, ddRemaining: 0 };
     }
 
-    // Max daily loss
     if (opts.dailyLoss >= (thresholds.maxDailyLoss || 5)) {
         return { approved: false, lotSize: 0, reason: "Tägliches Verlustlimit erreicht", riskPercent: 0, ddRemaining: thresholds.ddPause - currentDD };
     }
 
-    // Max open trades
     if (opts.openTrades >= (thresholds.maxOpenTrades || 10)) {
         return { approved: false, lotSize: 0, reason: "Max offene Trades erreicht", riskPercent: 0, ddRemaining: thresholds.ddPause - currentDD };
     }
 
-    // Momentum scaling
-    let riskPercent = MOMENTUM_SCALING.baseRisk;
+    let riskPercent: number = MOMENTUM_SCALING.baseRisk;
     if (opts.consecutiveWins > 0) {
         riskPercent = Math.min(
             MOMENTUM_SCALING.baseRisk * MOMENTUM_SCALING.maxMultiplier,
@@ -79,20 +66,20 @@ export function checkRisk(opts: {
         );
     }
 
-    // Reduce risk if near DD limit
     if (currentDD >= thresholds.ddReduceLots) {
         riskPercent *= 0.5;
     }
 
+    // Lot-Berechnung über zentrale Risk Engine
     const entryPrice = opts.signal.entryPrice || 0;
-    const lotSize = entryPrice > 0 ? calculateLotSize({
-        balance: opts.balance,
-        riskPercent,
-        entryPrice,
-        stopLoss: opts.signal.stopLoss,
-        symbol: opts.signal.symbol,
-        leverage: 1,
-    }) : 0.01;
+    const firmProfile = opts.brokerType === "tegas" ? "tegas_24x" : "tag_12x";
+    const stopPips = entryPrice > 0
+        ? Math.abs(entryPrice - opts.signal.stopLoss) / getPipSize(opts.signal.symbol)
+        : 0;
+
+    const lotSize = entryPrice > 0
+        ? calculateCopyLots(0.01, stopPips, opts.equity, firmProfile, riskPercent, opts.signal.symbol)
+        : 0.01;
 
     return {
         approved: true,
@@ -111,8 +98,9 @@ export async function executeTrade(opts: {
     userId: string;
 }): Promise<{ success: boolean; orderId?: string; error?: string }> {
     try {
-        // Log trade to DB
-        const { data, error } = await supabaseAdmin.from("trade_log").insert({
+        const db = createSupabaseAdmin();
+
+        const { data, error } = await db.from("trade_log").insert({
             user_id: opts.userId,
             account_id: opts.accountId,
             symbol: opts.signal.symbol,
@@ -128,9 +116,30 @@ export async function executeTrade(opts: {
 
         if (error) throw error;
 
-        // TODO: Execute via MetaAPI
-        // const metaApi = await getMetaApiConnection(opts.accountId);
-        // const result = await metaApi.createMarketOrder(...)
+        const token = process.env.METAAPI_TOKEN;
+        if (token) {
+            const { default: MetaApi } = await import("metaapi.cloud-sdk");
+            const api = new MetaApi(token);
+            const account = await api.metatraderAccountApi.getAccount(opts.accountId);
+            const conn = account.getRPCConnection();
+            await conn.connect();
+            await conn.waitSynchronized();
+
+            const method = opts.signal.action === "BUY" ? "createMarketBuyOrder" : "createMarketSellOrder";
+            const result = await conn[method](
+                opts.signal.symbol,
+                opts.lotSize,
+                opts.signal.stopLoss,
+                opts.signal.takeProfits[0] || undefined,
+                { comment: `GF-${opts.signal.source}` }
+            );
+
+            await db.from("trade_log")
+                .update({ status: "executed", order_id: result.orderId })
+                .eq("id", data?.id);
+
+            return { success: true, orderId: result.orderId };
+        }
 
         return { success: true, orderId: data?.id };
     } catch (err: any) {

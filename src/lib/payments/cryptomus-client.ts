@@ -15,7 +15,7 @@ const MERCHANT_ID = process.env.CRYPTOMUS_MERCHANT_ID ?? "";
 const PAYMENT_KEY = process.env.CRYPTOMUS_PAYMENT_KEY ?? "";
 
 export const PLAN_PRICES: Record<string, number> = {
-  analyzer: 9, copier: 29, pro: 79, provider: 149,
+  analyzer: 9, copier: 29, pro: 59, provider: 99,
 };
 
 // ── Cryptomus Signature ───────────────────────────────────────
@@ -44,7 +44,7 @@ export async function createCryptomusInvoice(data: {
 
   const body: Record<string, any> = {
     amount: price.toString(),
-    currency: "USD",
+    currency: "EUR",
     order_id: orderId,
     url_return: `${process.env.NEXT_PUBLIC_APP_URL ?? "https://goldfoundry.de"}/dashboard?payment=success`,
     url_callback: `${process.env.NEXT_PUBLIC_APP_URL ?? "https://goldfoundry.de"}/api/cryptomus/webhook`,
@@ -145,6 +145,12 @@ export async function handleCryptomusWebhook(body: any, signHeader: string): Pro
 
   // If PAID → activate subscription + track affiliate
   if ((status === "paid" || status === "paid_over") && isFinal) {
+    // Idempotency: Skip if already completed (webhook retry)
+    if (payment.status === "completed") {
+      console.log(`[CRYPTOMUS] Webhook duplicate ignored: ${orderId} already completed`);
+      return { success: true };
+    }
+
     // Parse additional_data to get userId and plan
     let userId = payment.user_id;
     let plan = payment.plan;
@@ -155,31 +161,40 @@ export async function handleCryptomusWebhook(body: any, signHeader: string): Pro
       plan = additional.plan ?? plan;
     } catch {}
 
+    // Check if subscription already active for this user (prevents double activation)
+    const { data: profile } = await db.from("profiles")
+      .select("subscription_active, subscription_tier")
+      .eq("id", userId).single();
+
+    const alreadyActive = profile?.subscription_active && profile?.subscription_tier === plan;
+
     // Activate subscription
     await db.from("profiles").update({
       subscription_tier: plan,
       subscription_active: true,
     }).eq("id", userId);
 
-    // Track affiliate conversion → COMMISSIONS FLIESSEN!
-    const price = PLAN_PRICES[plan] ?? 0;
-    try {
-      await trackConversion({
-        referredUserId: userId,
-        eventType: "first_payment",
-        subscriptionTier: plan,
-        paymentAmount: price,
-      });
-    } catch (err) {
-      console.error("[CRYPTOMUS] Affiliate tracking failed:", err);
+    // Track affiliate conversion ONLY if not already active (prevents double commission)
+    if (!alreadyActive) {
+      const price = PLAN_PRICES[plan] ?? 0;
+      try {
+        await trackConversion({
+          referredUserId: userId,
+          eventType: "first_payment",
+          subscriptionTier: plan,
+          paymentAmount: price,
+        });
+      } catch (err) {
+        console.error("[CRYPTOMUS] Affiliate tracking failed:", err);
+      }
+
+      // CRM event
+      try {
+        await trackUserEvent(userId, "subscription_start", `${plan} Abo via Crypto (${body.currency})`);
+      } catch {}
     }
 
-    // CRM event
-    try {
-      await trackUserEvent(userId, "subscription_start", `${plan} Abo via Crypto (${body.currency})`);
-    } catch {}
-
-    console.log(`[CRYPTOMUS] Payment completed: ${orderId} → ${plan} for ${userId}`);
+    console.log(`[CRYPTOMUS] Payment completed: ${orderId} → ${plan} for ${userId}${alreadyActive ? " (already active, skipped commission)" : ""}`);
   }
 
   return { success: true };

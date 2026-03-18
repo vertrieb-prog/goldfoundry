@@ -22,6 +22,11 @@ export async function POST(request: Request) {
       copier_active: false,
       copier_paused_reason: reason ?? "Manuell pausiert",
     }).eq("id", accountId);
+
+    // Deactivate profit-sharing agreement for this account
+    await db.from("profit_sharing").update({ active: false })
+      .eq("follower_account_id", accountId);
+
     return NextResponse.json({ success: true, status: "paused" });
   }
 
@@ -39,6 +44,11 @@ export async function POST(request: Request) {
       copier_active: true,
       copier_paused_reason: null,
     }).eq("id", accountId);
+
+    // Reactivate profit-sharing agreement for this account
+    await db.from("profit_sharing").update({ active: true })
+      .eq("follower_account_id", accountId);
+
     return NextResponse.json({ success: true, status: "resumed" });
   }
 

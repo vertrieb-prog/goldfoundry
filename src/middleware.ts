@@ -3,9 +3,8 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
-  // DEV MODE: Skip auth when using placeholder Supabase keys
-  const isDevMode = !process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder');
-  if (isDevMode) {
+  // DEV MODE: Skip auth only in development when Supabase is not configured
+  if (process.env.NODE_ENV === "development" && !process.env.NEXT_PUBLIC_SUPABASE_URL) {
     return NextResponse.next({ request });
   }
 

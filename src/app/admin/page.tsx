@@ -37,9 +37,9 @@ export default function AdminOverview() {
     { label: "Accounts", value: stats.accounts.total, sub: `${stats.accounts.copier} Copier · ${stats.accounts.tracking} Tracking`, icon: "📊" },
     { label: "Signal-Konten", value: stats.masters.total, sub: `${stats.masters.active} aktiv`, icon: "📡" },
     { label: "Copier aktiv", value: stats.accounts.copierActive, sub: `von ${stats.accounts.copier}`, icon: "⚡" },
-    { label: "Total Equity", value: `$${stats.financials.totalEquity.toLocaleString()}`, sub: "Verwaltetes Kapital", icon: "💎" },
-    { label: "Total Profit", value: `$${stats.financials.totalProfit.toLocaleString()}`, sub: "Alle Konten", icon: "💰" },
-    { label: "Platform Fees", value: `$${stats.financials.platformFees.toLocaleString()}`, sub: "Earned", icon: "🏦" },
+    { label: "Total Equity", value: `€${stats.financials.totalEquity.toLocaleString()}`, sub: "Verwaltetes Kapital", icon: "💎" },
+    { label: "Total Profit", value: `€${stats.financials.totalProfit.toLocaleString()}`, sub: "Alle Konten", icon: "💰" },
+    { label: "Platform Fees", value: `€${stats.financials.platformFees.toLocaleString()}`, sub: "Earned", icon: "🏦" },
     { label: "Trades", value: stats.financials.totalTrades.toLocaleString(), sub: "Insgesamt", icon: "📋" },
   ];
 

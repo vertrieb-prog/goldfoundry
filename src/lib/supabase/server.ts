@@ -22,12 +22,16 @@ export function createSupabaseServer() {
   );
 }
 
-// Service role client for cron jobs and admin operations
+// Service role client for cron jobs and admin operations (singleton)
+let _adminClient: any = null;
 export function createSupabaseAdmin() {
-  const { createClient } = require("@supabase/supabase-js");
-  return createClient(
-    (process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL)!,
-    (process.env.SUPABASE_SERVICE_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  );
+  if (!_adminClient) {
+    const { createClient } = require("@supabase/supabase-js");
+    _adminClient = createClient(
+      (process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL)!,
+      (process.env.SUPABASE_SERVICE_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!,
+      { auth: { autoRefreshToken: false, persistSession: false } }
+    );
+  }
+  return _adminClient;
 }

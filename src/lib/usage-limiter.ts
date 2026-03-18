@@ -12,7 +12,7 @@
 //   pro:      300 Nachrichten
 //   provider: unlimited (Soft-Limit 1000)
 //
-// Kostendeckel: Max $5 API-Kosten pro User pro Monat
+// Kostendeckel: Max €5 API-Kosten pro User pro Monat
 // Danach → Redirect zu Upline + "Limit erreicht" Message
 // ============================================================
 

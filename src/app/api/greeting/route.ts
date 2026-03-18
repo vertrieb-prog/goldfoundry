@@ -1,10 +1,9 @@
 export const dynamic = "force-dynamic";
 // src/app/api/greeting/route.ts
 import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server";
-import Anthropic from "@anthropic-ai/sdk";
+import { cachedCall } from "@/lib/ai/cached-client";
+import { MODELS } from "@/lib/config";
 import { NextResponse } from "next/server";
-
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 
 export async function GET(request: Request) {
   const supabase = createSupabaseServer();
@@ -56,10 +55,8 @@ Memory: Exp:${memory.tradingExperience ?? "?"} Goal:${memory.propFirmGoal ?? "?"
   let greeting: string;
 
   try {
-    const res = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 400,
-      system: `Du bist FORGE Mentor. Begrüße ${name} beim Login. Max 120 Wörter. Struktur:
+    greeting = await cachedCall({
+      prompt: `Du bist FORGE Mentor. Begrüße ${name} beim Login. Max 120 Wörter. Struktur:
 1. Persönliche Begrüßung + wichtigste Zahl
 2. Was seit letztem Mal passiert ist (2 Sätze)
 3. 1 konkreter CTA der ihn zum HANDELN bringt
@@ -71,9 +68,10 @@ Wenn VERLUST: "Der Shield hat X Threats geblockt. Ohne ihn wäre es schlimmer."
 Wenn KEIN ACCOUNT: "In 3 Minuten ist dein Copier live. Ich führe dich durch."
 
 Ton: Direkt, warm, kompetent. Wie ein Mentor der sich kümmert. Deutsch.`,
-      messages: [{ role: "user", content: data }],
+      message: data,
+      model: MODELS.smart,
+      maxTokens: 400,
     });
-    greeting = res.content[0].type === "text" ? res.content[0].text : `Hey ${name}!`;
   } catch {
     greeting = isPaying
       ? `Hey ${name}! ${todayPnl >= 0 ? `Heute: +$${todayPnl.toFixed(0)}` : "Dein Copier arbeitet."} Buffer: ${accs[0]?.buf ?? 0}%.`

@@ -22,33 +22,63 @@ function RegisterForm() {
 
   return (
     <form onSubmit={handleRegister} className="flex flex-col gap-4">
-      <input type="text" placeholder="Vollständiger Name" className="gf-input" value={name} onChange={e => setName(e.target.value)} required />
-      <input type="email" placeholder="E-Mail" className="gf-input" value={email} onChange={e => setEmail(e.target.value)} required />
-      <input type="password" placeholder="Passwort (min. 8 Zeichen)" className="gf-input" value={pw} onChange={e => setPw(e.target.value)} minLength={8} required />
-      {ref && <div className="text-xs px-3 py-2 rounded" style={{ background: "rgba(212,165,55,0.05)", color: "var(--gf-gold)" }}>Eingeladen von: {ref}</div>}
-      {err && <div className="text-sm" style={{ color: "var(--gf-red)" }}>{err}</div>}
-      <button type="submit" className="gf-btn w-full" disabled={loading}>{loading ? "Laden..." : "Account erstellen →"}</button>
+      <div>
+        <label className="text-xs font-medium text-zinc-400 mb-1.5 block">Name</label>
+        <input type="text" placeholder="Vollständiger Name" className="gf-input" value={name} onChange={e => setName(e.target.value)} required />
+      </div>
+      <div>
+        <label className="text-xs font-medium text-zinc-400 mb-1.5 block">E-Mail</label>
+        <input type="email" placeholder="name@email.com" className="gf-input" value={email} onChange={e => setEmail(e.target.value)} required />
+      </div>
+      <div>
+        <label className="text-xs font-medium text-zinc-400 mb-1.5 block">Passwort</label>
+        <input type="password" placeholder="Min. 8 Zeichen" className="gf-input" value={pw} onChange={e => setPw(e.target.value)} minLength={8} required />
+      </div>
+      {ref && (
+        <div className="text-xs px-3 py-2 rounded-lg bg-[rgba(250,239,112,0.04)] border border-[rgba(250,239,112,0.1)] text-[var(--gf-gold)] font-mono">
+          Eingeladen von: {ref}
+        </div>
+      )}
+      {err && <div className="text-sm text-red-400 bg-red-500/5 border border-red-500/10 rounded-lg px-3 py-2">{err}</div>}
+      <button type="submit" className="gf-btn w-full mt-2" disabled={loading}>
+        {loading ? "Laden..." : "Account erstellen →"}
+      </button>
     </form>
   );
 }
 
 export default function RegisterPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center px-4" style={{ background: "var(--gf-obsidian)" }}>
-      <div className="w-full max-w-sm">
-        <div className="text-center mb-8">
-          <Link href="/"><span className="text-2xl font-bold gf-gold-text">GOLD FOUNDRY</span></Link>
-          <div className="text-[9px] tracking-[3px] mt-1" style={{ color: "var(--gf-text-dim)" }}>FORGE TERMINAL</div>
+    <div className="min-h-screen flex items-center justify-center px-4 relative" style={{ background: "var(--gf-obsidian)" }}>
+      {/* Background */}
+      <div className="gf-grid-bg fixed inset-0 z-0" />
+      <div className="gf-orb gf-orb-gold fixed z-0" style={{ width: 500, height: 500, top: "20%", right: "20%" }} />
+
+      <div className="w-full max-w-sm relative z-10">
+        {/* Brand */}
+        <div className="text-center mb-10">
+          <Link href="/" className="inline-block">
+            <span className="text-2xl font-extrabold gf-gold-text tracking-wide">GOLD FOUNDRY</span>
+          </Link>
+          <div className="text-[9px] tracking-[3px] mt-1.5 text-zinc-600 font-mono">FORGE TERMINAL</div>
         </div>
+
+        {/* Card */}
         <div className="gf-panel p-8">
-          <h2 className="text-lg font-semibold mb-6" style={{ color: "var(--gf-text-bright)" }}>Account erstellen</h2>
+          <h2 className="text-xl font-bold text-white mb-2">Account erstellen</h2>
+          <p className="text-sm text-zinc-500 mb-6">Starte in unter 2 Minuten.</p>
           <Suspense><RegisterForm /></Suspense>
-          <div className="mt-6 text-center text-sm" style={{ color: "var(--gf-text-dim)" }}>
-            Bereits registriert? <Link href="/auth/login" style={{ color: "var(--gf-gold)" }}>Login</Link>
+
+          <div className="mt-6 text-center text-sm text-zinc-500">
+            Bereits registriert?{" "}
+            <Link href="/auth/login" className="text-[var(--gf-gold)] hover:underline font-medium">Login</Link>
           </div>
         </div>
-        <p className="text-center text-xs mt-4" style={{ color: "var(--gf-text-dim)" }}>
-          Mit der Registrierung akzeptierst du unsere <Link href="/agb" className="underline">AGB</Link> und <Link href="/datenschutz" className="underline">Datenschutzrichtlinie</Link>.
+
+        <p className="text-center text-xs mt-4 text-zinc-600">
+          Mit der Registrierung akzeptierst du unsere{" "}
+          <Link href="/agb" className="underline hover:text-zinc-400">AGB</Link> und{" "}
+          <Link href="/datenschutz" className="underline hover:text-zinc-400">Datenschutzrichtlinie</Link>.
         </p>
       </div>
     </div>

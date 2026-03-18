@@ -6,6 +6,10 @@
 
 const RESEND_KEY = process.env.RESEND_API_KEY ?? "";
 
+function escapeHtml(str: string): string {
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
 async function sendMail(to: string, subject: string, html: string) {
   if (!RESEND_KEY) {
     console.log(`[AFFILIATE-NOTIFY] SIMULATED → ${to}: ${subject}`);
@@ -43,22 +47,25 @@ export async function notifyNewReferralSignup(
   newUserEmail: string,
   totalReferrals: number
 ) {
+  const safeName = escapeHtml(newUserName);
+  const safeEmail = escapeHtml(newUserEmail);
+  const safeAffName = escapeHtml(affiliateName);
   await sendMail(
     affiliateEmail,
-    `🔔 Neuer Signup: ${newUserName} hat sich über deinen Link registriert!`,
+    `Neuer Signup: ${safeName} hat sich über deinen Link registriert!`,
     wrap(`
-      <h2 style="color:#d4a537;font-size:20px;margin:0 0 16px;">Hey ${affiliateName}! 🎉</h2>
+      <h2 style="color:#d4a537;font-size:20px;margin:0 0 16px;">Hey ${safeAffName}!</h2>
       <p style="color:#a09070;line-height:1.7;font-size:14px;">
-        Gerade eben hat sich <strong style="color:#e8dcc0;">${newUserName}</strong> über deinen Referral-Link registriert.
+        Gerade eben hat sich <strong style="color:#e8dcc0;">${safeName}</strong> über deinen Referral-Link registriert.
       </p>
       <div style="background:#110f0a;border:1px solid rgba(212,165,55,0.15);border-radius:4px;padding:16px;margin:20px 0;">
-        <p style="margin:4px 0;color:#a09070;">→ Name: <strong style="color:#e8dcc0;">${newUserName}</strong></p>
-        <p style="margin:4px 0;color:#a09070;">→ E-Mail: <strong style="color:#e8dcc0;">${newUserEmail}</strong></p>
+        <p style="margin:4px 0;color:#a09070;">→ Name: <strong style="color:#e8dcc0;">${safeName}</strong></p>
+        <p style="margin:4px 0;color:#a09070;">→ E-Mail: <strong style="color:#e8dcc0;">${safeEmail}</strong></p>
         <p style="margin:4px 0;color:#a09070;">→ Deine Referrals gesamt: <strong style="color:#d4a537;">${totalReferrals}</strong></p>
       </div>
       <p style="color:#a09070;font-size:14px;">
-        Sobald ${newUserName.split(" ")[0]} ein Abo abschließt, verdienst du automatisch deine Provision. 
-        Bleib dran — jeder Signup bringt dich näher ans nächste Tier! 💪
+        Sobald ${escapeHtml(newUserName.split(" ")[0])} ein Abo abschließt, verdienst du automatisch deine Provision.
+        Bleib dran — jeder Signup bringt dich näher ans nächste Tier!
       </p>
     `)
   );
@@ -75,25 +82,28 @@ export async function notifyReferralConverted(
   level: number
 ) {
   const levelLabel = level === 1 ? "Direkt" : level === 2 ? "Level 2" : "Level 3";
+  const safeName = escapeHtml(newUserName);
+  const safeAffName = escapeHtml(affiliateName);
+  const safeTier = escapeHtml(tier);
   await sendMail(
     affiliateEmail,
-    `💰 +$${commissionAmount.toFixed(2)} Provision! ${newUserName} hat ein ${tier}-Abo abgeschlossen`,
+    `+${commissionAmount.toFixed(2)} EUR Provision! ${newUserName} hat ein ${tier}-Abo abgeschlossen`,
     wrap(`
-      <h2 style="color:#d4a537;font-size:20px;margin:0 0 16px;">${affiliateName}, du hast gerade Geld verdient! 💰</h2>
+      <h2 style="color:#d4a537;font-size:20px;margin:0 0 16px;">${safeAffName}, du hast gerade Geld verdient!</h2>
       <div style="background:#110f0a;border:1px solid rgba(212,165,55,0.15);border-radius:4px;padding:20px;margin:20px 0;text-align:center;">
-        <div style="font-size:36px;font-weight:700;color:#d4a537;">+$${commissionAmount.toFixed(2)}</div>
+        <div style="font-size:36px;font-weight:700;color:#d4a537;">+${commissionAmount.toFixed(2)} EUR</div>
         <div style="font-size:12px;color:#5a4f3a;margin-top:4px;">${levelLabel}-Provision</div>
       </div>
       <p style="color:#a09070;line-height:1.7;font-size:14px;">
-        <strong style="color:#e8dcc0;">${newUserName}</strong> hat gerade das <strong style="color:#d4a537;">${tier.toUpperCase()}</strong>-Abo abgeschlossen.
-        Deine Provision von <strong style="color:#d4a537;">$${commissionAmount.toFixed(2)}</strong> wurde deinem Guthaben gutgeschrieben.
+        <strong style="color:#e8dcc0;">${safeName}</strong> hat gerade das <strong style="color:#d4a537;">${safeTier.toUpperCase()}</strong>-Abo abgeschlossen.
+        Deine Provision von <strong style="color:#d4a537;">${commissionAmount.toFixed(2)} EUR</strong> wurde deinem Guthaben gutgeschrieben.
       </p>
       <div style="background:#110f0a;border:1px solid rgba(212,165,55,0.1);border-radius:4px;padding:12px 16px;margin:16px 0;">
-        <p style="margin:0;color:#a09070;">Dein aktuelles Guthaben: <strong style="color:#d4a537;font-size:18px;">$${newBalance.toFixed(2)}</strong></p>
+        <p style="margin:0;color:#a09070;">Dein aktuelles Guthaben: <strong style="color:#d4a537;font-size:18px;">${newBalance.toFixed(2)} EUR</strong></p>
       </div>
       <p style="color:#a09070;font-size:14px;">
-        Das ist passives Einkommen — jeden Monat, solange ${newUserName.split(" ")[0]} dabei bleibt.
-        Und: wenn ${newUserName.split(" ")[0]} selbst Leute bringt, verdienst du auf Level 2 mit! 🔥
+        Das ist passives Einkommen — jeden Monat, solange ${escapeHtml(newUserName.split(" ")[0])} dabei bleibt.
+        Und: wenn ${escapeHtml(newUserName.split(" ")[0])} selbst Leute bringt, verdienst du auf Level 2 mit!
       </p>
     `)
   );
@@ -110,16 +120,16 @@ export async function notifyTierUpgrade(
 ) {
   await sendMail(
     affiliateEmail,
-    `🏆 Tier-Upgrade! Du bist jetzt ${newTier.toUpperCase()}-Partner!`,
+    `Tier-Upgrade! Du bist jetzt ${escapeHtml(newTier).toUpperCase()}-Partner!`,
     wrap(`
-      <h2 style="color:#d4a537;font-size:22px;margin:0 0 16px;">Glückwunsch, ${affiliateName}! 🏆</h2>
+      <h2 style="color:#d4a537;font-size:22px;margin:0 0 16px;">Glückwunsch, ${escapeHtml(affiliateName)}!</h2>
       <p style="color:#a09070;line-height:1.7;font-size:14px;">
         Du hast es geschafft! Mit <strong style="color:#d4a537;">${activeReferrals} aktiven Referrals</strong> 
-        steigst du auf von <span style="color:#5a4f3a;">${oldTier.toUpperCase()}</span> auf:
+        steigst du auf von <span style="color:#5a4f3a;">${escapeHtml(oldTier).toUpperCase()}</span> auf:
       </p>
       <div style="text-align:center;margin:24px 0;">
         <div style="display:inline-block;padding:16px 40px;background:linear-gradient(135deg,rgba(212,165,55,0.15),rgba(212,165,55,0.05));border:2px solid #d4a537;border-radius:4px;">
-          <div style="font-size:28px;font-weight:700;color:#d4a537;letter-spacing:3px;">${newTier.toUpperCase()}</div>
+          <div style="font-size:28px;font-weight:700;color:#d4a537;letter-spacing:3px;">${escapeHtml(newTier).toUpperCase()}</div>
           <div style="font-size:11px;color:#8a7a5a;margin-top:4px;">PARTNER TIER</div>
         </div>
       </div>
@@ -150,7 +160,7 @@ export async function notifyPayoutProcessed(
       ? `✅ $${amount.toFixed(2)} ausgezahlt! Dein Geld ist unterwegs.`
       : `❌ Auszahlung abgelehnt — bitte prüfe deine Daten`,
     wrap(isApproved ? `
-      <h2 style="color:#d4a537;font-size:20px;margin:0 0 16px;">${affiliateName}, dein Geld ist raus! ✅</h2>
+      <h2 style="color:#d4a537;font-size:20px;margin:0 0 16px;">${escapeHtml(affiliateName)}, dein Geld ist raus!</h2>
       <div style="background:#110f0a;border:1px solid rgba(212,165,55,0.15);border-radius:4px;padding:20px;margin:20px 0;text-align:center;">
         <div style="font-size:32px;font-weight:700;color:#d4a537;">$${amount.toFixed(2)}</div>
         <div style="font-size:11px;color:#5a4f3a;margin-top:4px;">via ${method.toUpperCase()}</div>
@@ -165,7 +175,7 @@ export async function notifyPayoutProcessed(
         Deine Auszahlung über <strong>$${amount.toFixed(2)}</strong> konnte nicht verarbeitet werden.
       </p>
       <div style="background:rgba(192,57,43,0.08);border:1px solid rgba(192,57,43,0.2);border-radius:4px;padding:12px 16px;margin:16px 0;">
-        <p style="margin:0;color:#c0392b;">Grund: ${rejectionReason ?? "Bitte kontaktiere den Support."}</p>
+        <p style="margin:0;color:#c0392b;">Grund: ${escapeHtml(rejectionReason ?? "Bitte kontaktiere den Support.")}</p>
       </div>
       <p style="color:#a09070;font-size:14px;">Der Betrag wurde deinem Guthaben wieder gutgeschrieben. Bitte prüfe deine Zahlungsdaten.</p>
     `)
@@ -189,7 +199,7 @@ export async function notifyWeeklyEarnings(
       ? `📊 Dein Wochen-Report: +$${weekEarnings.toFixed(2)} verdient!`
       : `📊 Dein Wochen-Report — lass uns nächste Woche durchstarten!`,
     wrap(`
-      <h2 style="color:#d4a537;font-size:20px;margin:0 0 16px;">Hey ${affiliateName}, hier ist dein Wochen-Report:</h2>
+      <h2 style="color:#d4a537;font-size:20px;margin:0 0 16px;">Hey ${escapeHtml(affiliateName)}, hier ist dein Wochen-Report:</h2>
       <div style="background:#110f0a;border:1px solid rgba(212,165,55,0.1);border-radius:4px;padding:20px;margin:20px 0;">
         <div style="display:flex;justify-content:space-around;text-align:center;">
           <div>

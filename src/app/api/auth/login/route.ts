@@ -7,9 +7,8 @@ export async function POST(request: Request) {
   try {
     const { email, password } = await request.json();
 
-    // DEV MODE: Skip Supabase when using placeholder keys
-    const isDevMode = !process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder');
-    if (isDevMode) {
+    // DEV MODE: Skip Supabase only in development when not configured
+    if (process.env.NODE_ENV === "development" && !process.env.NEXT_PUBLIC_SUPABASE_URL) {
       return NextResponse.json({ success: true, user: { id: 'dev-user', email }, devMode: true });
     }
 

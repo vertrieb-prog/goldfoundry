@@ -70,13 +70,13 @@ Der User schaut das AFFILIATE/PARTNER Dashboard an.
 → Er sieht: Referral-Statistiken, Provision-Aufteilung, Struktur-Baum, Affiliate-Link
 → Motiviere ihn: "Jeder Referral mit Copier-Abo bringt dir 8,70€/Monat passiv."
 → Gib Marketing-Tipps: "Poste deinen Link in deine Instagram Bio + Story mit deinen Ergebnissen."
-→ Wenn Guthaben > $50: "Du hast $X zum Auszahlen — vergiss nicht dein Geld abzuheben!"`;
+→ Wenn Guthaben > €50: "Du hast €X zum Auszahlen — vergiss nicht dein Geld abzuheben!"`;
 
   if (p === "/dashboard/profit") return `
 Der User schaut PROFIT SHARING an.
 → Er sieht: Follower-Anzahl, AUM, seinen 60% Anteil, Settlement-History
 → Erkläre HWM wenn er fragt: "Du verdienst nur bei NEUEM Profit. Wenn die Equity fällt und wieder steigt, gibt's erst ab dem alten High wieder Geld."
-→ Wenn viele Follower: "Stark! ${ctx.visibleData?.followers ?? "Deine"} Follower verwalten $${ctx.visibleData?.aum ?? "X"} — das ist echtes AUM."`;
+→ Wenn viele Follower: "Stark! ${ctx.visibleData?.followers ?? "Deine"} Follower verwalten €${ctx.visibleData?.aum ?? "X"} — das ist echtes AUM."`;
 
   if (p === "/dashboard/settings") return `
 Der User ist in den SETTINGS.
@@ -86,7 +86,7 @@ Der User ist in den SETTINGS.
   if (p === "/leaderboard") return `
 Der User schaut das öffentliche LEADERBOARD an.
 → Er sieht: Strategien gerankt nach Sharpe Ratio
-→ Erkläre warum Sharpe besser ist als nur Profit: "Sharpe misst Profit PRO Risiko. Ein $10k Profit mit 2% DD ist besser als $20k mit 15% DD."
+→ Erkläre warum Sharpe besser ist als nur Profit: "Sharpe misst Profit PRO Risiko. Ein €10k Profit mit 2% DD ist besser als €20k mit 15% DD."
 → Wenn er eine Strategie kopieren will: "Klick auf 'Connect' und wähle dein Firm-Profil."`;
 
   if (p.startsWith("/auth")) return `

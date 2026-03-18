@@ -6,7 +6,7 @@ export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "Wissen | Gold Foundry",
-  description: "Trading-Wissen, Strategien und Marktanalysen von Gold Foundry. Lerne alles ueber professionelles Trading.",
+  description: "Trading-Wissen, Strategien und Marktanalysen von Gold Foundry. Lerne alles über professionelles Trading.",
 };
 
 export default async function WissenIndex() {
@@ -76,7 +76,7 @@ export default async function WissenIndex() {
       )}
 
       <footer className="mt-16 pt-8 border-t border-gray-800 text-xs text-gray-500">
-        <p>Risikohinweis: Der Handel mit Finanzinstrumenten ist mit erheblichen Risiken verbunden und kann zum Verlust des eingesetzten Kapitals fuehren. Vergangene Ergebnisse sind keine Garantie fuer zukuenftige Performance.</p>
+        <p>Risikohinweis: Der Handel mit Finanzinstrumenten ist mit erheblichen Risiken verbunden und kann zum Verlust des eingesetzten Kapitals führen. Vergangene Ergebnisse sind keine Garantie für zukünftige Performance.</p>
       </footer>
     </main>
   );

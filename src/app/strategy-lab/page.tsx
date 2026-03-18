@@ -1,7 +1,13 @@
 import Link from "next/link";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Strategy Lab | Gold Foundry",
+  description: "Strategien entwickeln, testen und optimieren. KI-gestützte Analyse für bessere Trading-Ergebnisse.",
+};
 
 const FEATURES = [
-  { icon: "📤", title: "MQL4/MQL5 Upload", desc: "Lade deinen EA hoch und erhalte in 30 Sekunden eine vollstaendige AI-Analyse. Code-Qualitaet, Risiko-Score, Optimierungspotenzial.", tag: "UPLOAD", color: "#3b82f6" },
+  { icon: "📤", title: "MQL4/MQL5 Upload", desc: "Lade deinen EA hoch und erhalte in 30 Sekunden eine vollständige KI-Analyse. Code-Qualitaet, Risiko-Score, Optimierungspotenzial.", tag: "UPLOAD", color: "#3b82f6" },
   { icon: "🎲", title: "Monte Carlo Backtest", desc: "10.000 Simulationen mit randomisierten Parametern. Finde heraus ob dein EA robust ist — oder nur curve-fitted.", tag: "SIMULATION", color: "#a855f7" },
   { icon: "📈", title: "Walk-Forward Optimierung", desc: "Automatische Out-of-Sample Tests. Dein EA wird auf ungesehenen Daten validiert — nicht nur auf der Vergangenheit.", tag: "OPTIMIZE", color: "#27ae60" },
   { icon: "🏆", title: "Prop-Firm Challenge Simulation", desc: "Teste deinen EA gegen echte FTMO/MFF Regeln. Drawdown-Limits, Profit-Targets, Zeitlimits — alles simuliert.", tag: "CHALLENGE", color: "#d4a537" },
@@ -15,15 +21,15 @@ const ANALYSIS_RESULTS = [
 ];
 
 const SUGGESTIONS = [
-  "SL/TP Ratio von 1:1.2 auf 1:2.0 erhoehen \u2192 +23% Profit Factor",
-  "Trailing Stop nach 50% TP-Distanz aktivieren \u2192 +18% Avg. Win",
-  "Freitag 14:00 UTC Close-All hinzufuegen \u2192 Weekend Gap Schutz",
-  "Lot-Berechnung von Fixed auf ATR-basiert umstellen \u2192 -31% Drawdown",
+  "SL/TP Ratio von 1:1.2 auf 1:2.0 erhöhen → +23% Profit Factor",
+  "Trailing Stop nach 50% TP-Distanz aktivieren → +18% Avg. Win",
+  "Freitag 14:00 UTC Close-All hinzufügen → Weekend Gap Schutz",
+  "Lot-Berechnung von Fixed auf ATR-basiert umstellen → -31% Drawdown",
 ];
 
 const STATS = [
   { value: "500+", label: "EAs analysiert" },
-  { value: "\u00d8 23%", label: "Performance-Steigerung" },
+  { value: "Ø 23%", label: "Performance-Steigerung" },
   { value: "10.000", label: "Monte Carlo Runs" },
 ];
 
@@ -54,12 +60,12 @@ export default function StrategyLabPage() {
         <div className="text-center animate-in">
           <span className="gf-badge mb-6 inline-flex">RESEARCH</span>
           <h1 className="font-serif text-5xl md:text-6xl lg:text-7xl leading-[1.05] mb-6">
-            <span className="italic text-white/50">Dein EA. Unsere AI.</span><br />
+            <span className="italic text-white/50">Dein EA. Unsere KI.</span><br />
             <span className="italic font-bold text-white">Maximale</span>{" "}
             <span className="italic font-bold gf-gold-text">Performance.</span>
           </h1>
           <p className="text-lg max-w-2xl mx-auto mb-10 leading-relaxed text-[#888]">
-            Lade deinen Expert Advisor hoch. Unsere AI analysiert, optimiert und simuliert — in Sekunden statt Wochen.
+            Lade deinen Expert Advisor hoch. Unsere KI analysiert, optimiert und simuliert — in Sekunden statt Wochen.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/auth/register" className="gf-btn text-base !px-10 !py-4">EA hochladen &nbsp;&rarr;</Link>
@@ -191,8 +197,8 @@ export default function StrategyLabPage() {
           </div>
         </div>
         <div className="max-w-6xl mx-auto mt-8 pt-6 text-xs" style={{ borderTop: "1px solid var(--gf-border)", color: "#555" }}>
-          <p className="mb-4">Risikohinweis: Der Handel mit Finanzinstrumenten ist mit erheblichen Risiken verbunden und kann zum Verlust des eingesetzten Kapitals fuehren. Vergangene Ergebnisse sind keine Garantie fuer zukuenftige Performance.</p>
-          <p className="text-center">&copy; 2025 Gold Foundry. Trading birgt Risiken.</p>
+          <p className="mb-4">Risikohinweis: Der Handel mit Finanzinstrumenten ist mit erheblichen Risiken verbunden und kann zum Verlust des eingesetzten Kapitals führen. Vergangene Ergebnisse sind keine Garantie für zukünftige Performance.</p>
+          <p className="text-center">&copy; 2026 Gold Foundry. Trading birgt Risiken.</p>
         </div>
       </footer>
     </div>

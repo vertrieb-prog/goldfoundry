@@ -31,8 +31,8 @@ export async function getFundingRates(): Promise<Array<{ symbol: string; rate: n
 export function defiCompare() {
     return {
         goldFoundry: { apy: "15-45%", risk: "Managed", minDeposit: "€500", features: ["Smart Copier", "Risk Shield", "FORGE Mentor"] },
-        aave: { apy: "2-5%", risk: "Smart Contract", minDeposit: "$1", features: ["Lending", "Flash Loans"] },
-        lido: { apy: "3-4%", risk: "Staking", minDeposit: "$1", features: ["ETH Staking", "stETH"] },
-        curve: { apy: "2-8%", risk: "IL + Smart Contract", minDeposit: "$1", features: ["Stablecoin Pools", "CRV Rewards"] },
+        aave: { apy: "2-5%", risk: "Smart Contract", minDeposit: "€1", features: ["Lending", "Flash Loans"] },
+        lido: { apy: "3-4%", risk: "Staking", minDeposit: "€1", features: ["ETH Staking", "stETH"] },
+        curve: { apy: "2-8%", risk: "IL + Smart Contract", minDeposit: "€1", features: ["Stablecoin Pools", "CRV Rewards"] },
     };
 }

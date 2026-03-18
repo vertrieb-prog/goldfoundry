@@ -54,15 +54,16 @@ export function splitTakeProfits(
 // ── Auto Breakeven Logic ────────────────────────────────────
 export function shouldMoveToBreakeven(
   entryPrice: number,
-  currentPrice: number,
+  direction: "BUY" | "SELL",
   tpHit: number,
   config: SmartOrderConfig = DEFAULT_SMART_CONFIG
 ): { moveBE: boolean; newSL: number } {
   if (!config.autoBreakeven) return { moveBE: false, newSL: 0 };
   if (tpHit >= config.beAfterTP) {
-    // Add small buffer (2 pips above entry) to cover spread
+    // Add small buffer (2 pips) to cover spread — direction-aware
     const buffer = entryPrice > 100 ? 0.2 : 0.0002;
-    return { moveBE: true, newSL: entryPrice + buffer };
+    const newSL = direction === "BUY" ? entryPrice + buffer : entryPrice - buffer;
+    return { moveBE: true, newSL };
   }
   return { moveBE: false, newSL: 0 };
 }
@@ -110,7 +111,7 @@ export function processSmartOrder(opts: {
 }) {
   const config = opts.config || DEFAULT_SMART_CONFIG;
   const splits = splitTakeProfits(opts.entryPrice, opts.takeProfits, opts.totalLots, config);
-  const be = shouldMoveToBreakeven(opts.entryPrice, opts.currentPrice, opts.tpHit, config);
+  const be = shouldMoveToBreakeven(opts.entryPrice, opts.direction, opts.tpHit, config);
   const trailing = calculateTrailingStop(
     opts.direction, opts.currentPrice, opts.stopLoss,
     opts.highestPrice, opts.lowestPrice, config

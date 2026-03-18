@@ -8,6 +8,9 @@ export async function POST(request: Request) {
     const body = await request.json();
     const sign = request.headers.get("sign") ?? "";
     const result = await handleCryptomusWebhook(body, sign);
+    if (!result.success) {
+      return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+    }
     return NextResponse.json(result);
   } catch (err) {
     return NextResponse.json({ error: (err as Error).message }, { status: 500 });

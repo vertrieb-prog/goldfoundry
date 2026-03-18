@@ -1,0 +1,46 @@
+{
+  "permissions": {
+    "allow": [
+      "Read", "Write", "Edit",
+      "Bash(npm:*)", "Bash(npx:*)", "Bash(node:*)",
+      "Bash(git:*)", "Bash(grep:*)", "Bash(find:*)",
+      "Bash(cat:*)", "Bash(ls:*)", "Bash(mkdir:*)",
+      "Bash(cp:*)", "Bash(mv:*)", "Bash(rm:*)",
+      "Bash(wc:*)", "Bash(sort:*)", "Bash(head:*)",
+      "Bash(tail:*)", "Bash(du:*)", "Bash(unzip:*)",
+      "Bash(sed:*)", "Bash(awk:*)", "Bash(echo:*)",
+      "Bash(tmux:*)",
+      "Agent"
+    ],
+    "deny": []
+  },
+  "env": {
+    "NODE_ENV": "development",
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
+    "CLAUDE_CODE_SUBAGENT_MODEL": "claude-sonnet-4-20250514"
+  },
+  "hooks": {
+    "PreCommit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "! grep -ri '\"AI Copier\\|\"FORGE AI\\|GRATIS\\|kostenlos\\|30% Provision\\|\\$29\\|\\$49\\|\\$79\\|\\$149' src/app/ src/components/ --include='*.tsx' --include='*.jsx' 2>/dev/null || (echo '❌ BLOCKED: Naming/Pricing violation. Run /fix first.' && exit 1)"
+          }
+        ]
+      }
+    ],
+    "PostWrite": [
+      {
+        "matcher": "src/app/**/*.tsx",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE=\"$CLAUDE_FILE_PATH\"; grep -q 'Risikohinweis\\|risk-disclaimer\\|Verlustrisiken' \"$FILE\" 2>/dev/null || echo '⚠️ WARNUNG: $FILE hat keinen Risikohinweis!'"
+          }
+        ]
+      }
+    ]
+  }
+}

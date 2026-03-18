@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 // src/app/api/stripe/webhook/route.ts
-import { stripe } from "@/lib/stripe/stripe-client";
+import { stripe, PLANS, type PlanKey } from "@/lib/stripe/stripe-client";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { trackConversion } from "@/lib/mlm/affiliate-engine";
 import { trackUserEvent } from "@/lib/crm/crm-engine";
@@ -26,18 +26,26 @@ export async function POST(request: Request) {
       const userId = session.metadata?.userId;
       const plan = session.metadata?.plan;
       if (userId && plan) {
+        // Idempotency: Check if already active with same plan (prevents double commission on webhook retry)
+        const { data: existingProfile } = await db.from("profiles")
+          .select("subscription_active, subscription_tier")
+          .eq("id", userId).single();
+        const alreadyActive = existingProfile?.subscription_active && existingProfile?.subscription_tier === plan;
+
         await db.from("profiles").update({
           subscription_tier: plan,
           subscription_active: true,
           stripe_customer_id: session.customer,
         }).eq("id", userId);
 
-        // AFFILIATE: Track first payment → commissions fließen!
-        try {
-          const price = { analyzer: 9, copier: 29, pro: 79, provider: 149 }[plan] ?? 0;
-          await trackConversion({ referredUserId: userId, eventType: "first_payment", subscriptionTier: plan, paymentAmount: price });
-        } catch {}
-        try { await trackUserEvent(userId, "subscription_start", `${plan} Abo gestartet`); } catch {}
+        // AFFILIATE: Track first payment → commissions fließen! (only if not already active)
+        if (!alreadyActive) {
+          try {
+            const price = (plan in PLANS) ? PLANS[plan as PlanKey].price : 0;
+            await trackConversion({ referredUserId: userId, eventType: "first_payment", subscriptionTier: plan, paymentAmount: price });
+          } catch {}
+          try { await trackUserEvent(userId, "subscription_start", `${plan} Abo gestartet`); } catch {}
+        }
       }
       break;
     }
@@ -49,9 +57,9 @@ export async function POST(request: Request) {
       const plan = sub.metadata?.plan;
       if (userId && plan) {
         // Recurring payment → affiliate recurring commission
-        const price = { analyzer: 9, copier: 29, pro: 79, provider: 149 }[plan] ?? 0;
+        const price = (plan in PLANS) ? PLANS[plan as PlanKey].price : 0;
         try { await trackConversion({ referredUserId: userId, eventType: "recurring_payment", subscriptionTier: plan, paymentAmount: price }); } catch {}
-        try { await trackUserEvent(userId, "payment_success", `Monatliche Zahlung $${price}`); } catch {}
+        try { await trackUserEvent(userId, "payment_success", `Monatliche Zahlung €${price}`); } catch {}
       }
       break;
     }
@@ -75,6 +83,13 @@ export async function POST(request: Request) {
 
         // Copier auto-pause on churn
         await db.from("slave_accounts").update({ copier_active: false, copier_paused_reason: "Abo gekündigt" }).eq("user_id", userId);
+
+        // Deactivate all profit-sharing agreements for this user's accounts
+        const { data: userAccounts } = await db.from("slave_accounts").select("id").eq("user_id", userId);
+        if (userAccounts?.length) {
+          await db.from("profit_sharing").update({ active: false })
+            .in("follower_account_id", userAccounts.map(a => a.id));
+        }
 
         try { await trackConversion({ referredUserId: userId, eventType: "churn" }); } catch {}
         try { await trackUserEvent(userId, "subscription_cancel", "Abo gekündigt"); } catch {}

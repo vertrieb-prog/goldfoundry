@@ -55,7 +55,7 @@ export default function LeaderboardPage() {
                 <div className="text-[10px]" style={{ color: "var(--gf-text-dim)" }}>Win Rate</div>
               </div>
               <div className="text-right hidden md:block">
-                <div className="font-semibold" style={{ color: entry.totalPnl >= 0 ? "var(--gf-green)" : "var(--gf-red)" }}>${entry.totalPnl}</div>
+                <div className="font-semibold" style={{ color: entry.totalPnl >= 0 ? "var(--gf-green)" : "var(--gf-red)" }}>€{entry.totalPnl}</div>
                 <div className="text-[10px]" style={{ color: "var(--gf-text-dim)" }}>P&L</div>
               </div>
             </div>
@@ -67,6 +67,7 @@ export default function LeaderboardPage() {
           )}
         </div>
       </div>
+      <p style={{ color: "#666", fontSize: "0.75rem", textAlign: "center", padding: "2rem 1rem", maxWidth: 800, margin: "0 auto" }}>Risikohinweis: Vergangene Performance ist kein verlässlicher Indikator für zukünftige Ergebnisse. Trading birgt erhebliche Verlustrisiken. Gold Foundry ist kein Broker und bietet keine Anlageberatung.</p>
     </div>
   );
 }

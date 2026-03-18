@@ -97,6 +97,67 @@ function parseMyFxBookHtml(html: string, id: string): TraderStats | null {
   };
 }
 
+// ── MQL5Collector Class ─────────────────────────────────────
+export class MQL5Collector {
+  private maxSignals: number;
+  private symbolFilter: string;
+
+  constructor(opts: { maxSignals?: number; symbolFilter?: string } = {}) {
+    this.maxSignals = opts.maxSignals || 20;
+    this.symbolFilter = opts.symbolFilter || "";
+  }
+
+  async run() {
+    const { data: signals } = await supabaseAdmin
+      .from("mql5_signals")
+      .select("signal_id")
+      .limit(this.maxSignals);
+    const ids = signals?.map((s: { signal_id: string }) => s.signal_id) || [];
+    const stats = await collectMQL5(ids);
+    await saveTraderStats(stats);
+    return { collected: stats.length, source: "mql5", filter: this.symbolFilter };
+  }
+}
+
+// ── MyFxBookScraper Class ───────────────────────────────────
+export class MyFxBookScraper {
+  private dailyLimit: number;
+
+  constructor(opts: { dailyLimit?: number } = {}) {
+    this.dailyLimit = opts.dailyLimit || 100;
+  }
+
+  async run() {
+    const { data: accounts } = await supabaseAdmin
+      .from("myfxbook_accounts")
+      .select("account_id")
+      .limit(this.dailyLimit);
+    const ids = accounts?.map((a: { account_id: string }) => a.account_id) || [];
+    const stats = await collectMyFxBook(ids);
+    await saveTraderStats(stats);
+    return { collected: stats.length, source: "myfxbook" };
+  }
+
+  async getCommunityOutlook() {
+    try {
+      const resp = await fetch("https://www.myfxbook.com/community/outlook", {
+        headers: { "User-Agent": "Mozilla/5.0 (compatible; GoldFoundry/1.0)" },
+      });
+      if (!resp.ok) return { pairs: [], updated: new Date().toISOString() };
+      const html = await resp.text();
+      const pairs: Array<{ symbol: string; longPct: number; shortPct: number }> = [];
+      const regex = /class="symbol"[^>]*>(\w+)<.*?(\d+\.?\d*)%.*?(\d+\.?\d*)%/gs;
+      let match;
+      while ((match = regex.exec(html)) !== null) {
+        pairs.push({ symbol: match[1], longPct: parseFloat(match[2]), shortPct: parseFloat(match[3]) });
+      }
+      return { pairs, updated: new Date().toISOString() };
+    } catch {
+      return { pairs: [], updated: new Date().toISOString() };
+    }
+  }
+}
+
 // ── Save to DB ──────────────────────────────────────────────
 export async function saveTraderStats(stats: TraderStats[]) {
   if (!stats.length) return;

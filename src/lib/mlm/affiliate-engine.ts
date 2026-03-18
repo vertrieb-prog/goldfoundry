@@ -92,11 +92,8 @@ export async function trackClick(data: {
 
   // Update stats
   await db.rpc("increment_affiliate_stat", { aff_id: affProfile.id, stat: "total_clicks" })
-    .catch(() => {
-      // Fallback: manual increment
-      db.from("affiliate_profiles").update({
-        total_clicks: (affProfile as any).total_clicks + 1,
-      }).eq("id", affProfile.id);
+    .catch((err) => {
+      log("increment_affiliate_stat fehlgeschlagen", err);
     });
 
   return click;
@@ -113,6 +110,20 @@ export async function trackConversion(data: {
   paymentAmount?: number;
 }) {
   const db = createSupabaseAdmin();
+
+  // Idempotency: Check if this conversion was already tracked
+  const { data: existingConversion } = await db.from("affiliate_conversions")
+    .select("id")
+    .eq("referred_user_id", data.referredUserId)
+    .eq("event_type", data.eventType)
+    .eq("commission_level", 1) // Only check L1 as proxy for all levels
+    .limit(1)
+    .single();
+
+  if (existingConversion) {
+    log(`Duplikat-Conversion ignoriert: ${data.eventType} für User ${data.referredUserId}`);
+    return null;
+  }
 
   // Find who referred this user
   const { data: referredProfile } = await db.from("profiles")
@@ -259,7 +270,7 @@ async function checkTierUpgrade(affiliateId: string) {
 
   let newTier = "bronze";
   for (const tier of tiers ?? []) {
-    if ((activeRefs ?? 0) >= tier.min_active_referrals || monthlyRevenue >= Number(tier.min_monthly_revenue)) {
+    if ((activeRefs ?? 0) >= tier.min_active_referrals && monthlyRevenue >= Number(tier.min_monthly_revenue)) {
       newTier = tier.tier;
       break;
     }
@@ -374,12 +385,41 @@ export async function getFullStructure(userId: string): Promise<{
 export async function requestPayout(affiliateId: string, amount: number) {
   const db = createSupabaseAdmin();
 
+  if (!amount || amount <= 0) throw new Error("Ungültiger Betrag");
+
   const { data: aff } = await db.from("affiliate_profiles").select("*").eq("id", affiliateId).single();
   if (!aff) throw new Error("Affiliate nicht gefunden");
-  if (Number(aff.current_balance) < amount) throw new Error(`Balance nur $${aff.current_balance}. Angefragt: $${amount}`);
-  if (amount < Number(aff.minimum_payout)) throw new Error(`Minimum: $${aff.minimum_payout}`);
+  if (amount > Number(aff.current_balance)) throw new Error("Guthaben nicht ausreichend");
+  if (Number(aff.current_balance) < amount) throw new Error(`Balance nur €${aff.current_balance}. Angefragt: €${amount}`);
+  if (amount < Number(aff.minimum_payout)) throw new Error(`Minimum: €${aff.minimum_payout}`);
   if (!aff.payout_method) throw new Error("Keine Auszahlungsmethode hinterlegt");
 
+  // Check for duplicate payout requests (within 60 seconds)
+  const { data: recentPayout } = await db.from("affiliate_payouts")
+    .select("id")
+    .eq("affiliate_id", affiliateId)
+    .eq("amount", amount)
+    .in("status", ["pending", "processing"])
+    .gte("created_at", new Date(Date.now() - 60_000).toISOString())
+    .limit(1)
+    .single();
+
+  if (recentPayout) throw new Error("Auszahlung wird bereits verarbeitet. Bitte warte einen Moment.");
+
+  // Step 1: Reserve balance FIRST (atomic decrement via re-read)
+  const newBalance = Number(aff.current_balance) - amount;
+  if (newBalance < 0) throw new Error("Insufficient balance");
+
+  const { data: balanceUpdate, error: balanceError } = await db.from("affiliate_profiles").update({
+    current_balance: newBalance,
+    updated_at: new Date().toISOString(),
+  }).eq("id", affiliateId).gte("current_balance", amount).select("id").single(); // Conditional update prevents negative
+
+  if (balanceError || !balanceUpdate) {
+    throw new Error("Balance konnte nicht reserviert werden — möglicherweise wurde sie zwischenzeitlich reduziert.");
+  }
+
+  // Step 2: Create payout record AFTER balance is reserved
   const { data: payout, error } = await db.from("affiliate_payouts").insert({
     affiliate_id: affiliateId,
     amount,
@@ -388,15 +428,16 @@ export async function requestPayout(affiliateId: string, amount: number) {
     status: "pending",
   }).select().single();
 
-  if (error) throw error;
+  if (error) {
+    // Rollback: refund balance if payout insert fails
+    await db.from("affiliate_profiles").update({
+      current_balance: Number(aff.current_balance),
+      updated_at: new Date().toISOString(),
+    }).eq("id", affiliateId);
+    throw error;
+  }
 
-  // Reserve the amount (deduct from balance)
-  await db.from("affiliate_profiles").update({
-    current_balance: Number(aff.current_balance) - amount,
-    updated_at: new Date().toISOString(),
-  }).eq("id", affiliateId);
-
-  log(`Payout angefragt: $${amount} von ${aff.user_id}`);
+  log(`Payout angefragt: €${amount} von ${aff.user_id}`);
   return payout;
 }
 

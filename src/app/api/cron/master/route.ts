@@ -2,13 +2,26 @@ export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 
 const CRON_ROUTES = [
+  // Critical: Trading & Account Monitoring
+  "/api/cron/calendar-sync",
+  "/api/cron/fetch-trades",
+  "/api/cron/equity-snapshot",
+  "/api/cron/market-intel",
+  // Data Collection
   "/api/cron/collect-mql5",
   "/api/cron/collect-myfxbook",
   "/api/cron/intelligence",
   "/api/cron/sentiment",
+  "/api/cron/competitive-scan",
+  // CRM & Sales
   "/api/cron/lead-scoring",
-  "/api/cron/seo",
+  "/api/cron/checkins",
+  "/api/cron/outreach",
   "/api/cron/winback",
+  "/api/cron/sales-director",
+  "/api/cron/upline-push",
+  // Content
+  "/api/cron/seo",
 ];
 
 export async function GET(req: Request) {

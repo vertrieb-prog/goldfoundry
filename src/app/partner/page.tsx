@@ -1,4 +1,10 @@
 import Link from "next/link";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Partner Programm | Gold Foundry",
+  description: "Verdiene bis zu 50% Provision. 3-Ebenen MLM mit FORGE Points. Werde Gold Foundry Partner.",
+};
 
 const RANKS = [
   { name: "Starter", req: "0 Referrals", commission: "20%", color: "#888", bg: "#888" },
@@ -23,10 +29,10 @@ const MATCHING = [
 ];
 
 const PACKS = [
-  { size: "5er Pack", price: "\u20ac99", perUnit: "\u20ac19,80/Stueck" },
-  { size: "10er Pack", price: "\u20ac179", perUnit: "\u20ac17,90/Stueck" },
-  { size: "25er Pack", price: "\u20ac399", perUnit: "\u20ac15,96/Stueck" },
-  { size: "50er Pack", price: "\u20ac699", perUnit: "\u20ac13,98/Stueck" },
+  { size: "5er Pack", price: "€99", perUnit: "€19,80/Stueck" },
+  { size: "10er Pack", price: "€179", perUnit: "€17,90/Stueck" },
+  { size: "25er Pack", price: "€399", perUnit: "€15,96/Stueck" },
+  { size: "50er Pack", price: "€699", perUnit: "€13,98/Stueck" },
 ];
 
 export default function PartnerPage() {
@@ -70,12 +76,12 @@ export default function PartnerPage() {
         </div>
       </section>
 
-      {/* 7 Raenge */}
+      {/* 7 Ränge */}
       <section className="relative z-10 max-w-7xl mx-auto px-6 py-28">
         <div className="text-center mb-16 animate-in">
           <span className="gf-badge mb-6 inline-flex">Rank System</span>
           <h2 className="font-serif text-4xl md:text-5xl leading-[1.1]">
-            <span className="italic text-white/40">7 Raenge.</span>{" "}
+            <span className="italic text-white/40">7 Ränge.</span>{" "}
             <span className="italic font-bold text-white">Dein Aufstieg.</span>
           </h2>
         </div>
@@ -101,13 +107,13 @@ export default function PartnerPage() {
             <span className="gf-badge mb-6 inline-flex">FORGE Points</span>
             <h2 className="font-serif text-3xl md:text-4xl leading-[1.1] mb-4">
               <span className="italic text-white/40">1 FP =</span>{" "}
-              <span className="italic font-bold gf-gold-text">\u20ac0,10</span>
+              <span className="italic font-bold gf-gold-text">€0,10</span>
             </h2>
             <p className="text-sm text-[#666] leading-relaxed mb-6">
-              FORGE Points verdienst du durch Provisionen, abgeschlossene Tasks und Achievements. Einloesbar fuer Abos, Builder Packs oder Cash-Out.
+              FORGE Points verdienst du durch Provisionen, abgeschlossene Tasks und Achievements. Einlösbar für Abos, Builder Packs oder Cash-Out.
             </p>
             <div className="space-y-3">
-              {["Provisionen generieren automatisch FP", "Tasks & Achievements fuer Bonus-FP", "Einloesbar fuer Premium-Features oder Auszahlung"].map((item, i) => (
+              {["Provisionen generieren automatisch FP", "Tasks & Achievements für Bonus-FP", "Einlösbar für Premium-Features oder Auszahlung"].map((item, i) => (
                 <div key={i} className="flex items-center gap-3 text-sm">
                   <span className="text-[#d4a537]">&#10022;</span>
                   <span className="text-[#ccc]">{item}</span>
@@ -128,7 +134,7 @@ export default function PartnerPage() {
                 </div>
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-[#555]">Wert</span>
-                  <span className="text-[#28c840] font-mono">\u20ac1.245,00</span>
+                  <span className="text-[#28c840] font-mono">€1.245,00</span>
                 </div>
                 <div className="border-t border-white/5 pt-3 space-y-2 text-[12px] font-mono">
                   <div className="flex justify-between"><span className="text-[#555]">Heute</span><span className="text-[#28c840]">+85 FP</span></div>
@@ -206,11 +212,11 @@ export default function PartnerPage() {
               <span className="ml-3 text-[10px] tracking-[2px] text-[#555] uppercase font-mono">Provision Calculator</span>
             </div>
             <div className="p-4 space-y-2 text-[13px] font-mono">
-              <div className="flex justify-between text-[#888]"><span>10 Referrals x Copier-Plan (\u20ac29/Mo)</span><span className="text-white">\u20ac290/Mo</span></div>
-              <div className="flex justify-between text-[#888]"><span>Level 1 Provision (30% Silver)</span><span className="text-[#28c840]">\u20ac87/Mo</span></div>
-              <div className="flex justify-between text-[#888]"><span>Level 2 (5 indirekte, 10%)</span><span className="text-[#28c840]">\u20ac14,50/Mo</span></div>
-              <div className="border-t border-white/5 pt-2 flex justify-between font-bold"><span className="text-[#d4a537]">Gesamt passiv</span><span className="text-[#28c840]">\u20ac101,50/Mo</span></div>
-              <div className="flex justify-between text-[#555] text-[11px]"><span>Jaehrlich</span><span className="text-[#28c840]">\u20ac1.218,00/Jahr</span></div>
+              <div className="flex justify-between text-[#888]"><span>10 Referrals x Copier-Plan (€29/Mo)</span><span className="text-white">€290/Mo</span></div>
+              <div className="flex justify-between text-[#888]"><span>Level 1 Provision (30% Silver)</span><span className="text-[#28c840]">€87/Mo</span></div>
+              <div className="flex justify-between text-[#888]"><span>Level 2 (5 indirekte, 10%)</span><span className="text-[#28c840]">€14,50/Mo</span></div>
+              <div className="border-t border-white/5 pt-2 flex justify-between font-bold"><span className="text-[#d4a537]">Gesamt passiv</span><span className="text-[#28c840]">€101,50/Mo</span></div>
+              <div className="flex justify-between text-[#555] text-[11px]"><span>Jährlich</span><span className="text-[#28c840]">€1.218,00/Jahr</span></div>
             </div>
           </div>
         </div>
@@ -251,8 +257,8 @@ export default function PartnerPage() {
           </div>
         </div>
         <div className="max-w-6xl mx-auto mt-8 pt-6 text-xs" style={{ borderTop: "1px solid var(--gf-border)", color: "#555" }}>
-          <p className="mb-4">Risikohinweis: Der Handel mit Finanzinstrumenten ist mit erheblichen Risiken verbunden und kann zum Verlust des eingesetzten Kapitals fuehren. Vergangene Ergebnisse sind keine Garantie fuer zukuenftige Performance.</p>
-          <p className="text-center">&copy; 2025 Gold Foundry. Trading birgt Risiken.</p>
+          <p className="mb-4">Risikohinweis: Der Handel mit Finanzinstrumenten ist mit erheblichen Risiken verbunden und kann zum Verlust des eingesetzten Kapitals führen. Vergangene Ergebnisse sind keine Garantie für zukünftige Performance.</p>
+          <p className="text-center">&copy; 2026 Gold Foundry. Trading birgt Risiken.</p>
         </div>
       </footer>
     </div>

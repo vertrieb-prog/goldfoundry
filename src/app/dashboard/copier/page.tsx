@@ -7,7 +7,7 @@ const DEMO_INTEL = {
   risk_score: 18,
   regime: "TRENDING",
   geopolitical_risk: "LOW",
-  forecast_text: "Stabile Marktlage. Gold im Aufwaertstrend, moderate Volatilitaet. Keine relevanten News-Events in den naechsten 4h. Optimale Bedingungen fuer Trend-Following-Strategien.",
+  forecast_text: "Stabile Marktlage. Gold im Aufwärtstrend, moderate Volatilität. Keine relevanten News-Events in den nächsten 4h. Optimale Bedingungen für Trend-Following-Strategien.",
 };
 
 const DEMO_ACCOUNTS = [
@@ -98,7 +98,7 @@ export default function CopierPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold" style={{ color: "var(--gf-text-bright)" }}>FORGE COPY</h1>
+          <h1 className="text-2xl font-bold" style={{ color: "var(--gf-text-bright)" }}>Smart Copier</h1>
           <p className="text-sm mt-1" style={{ color: "var(--gf-text-dim)" }}>Smart Autopilot · 7-Faktor Risk Engine · Manipulation Shield</p>
         </div>
         <div className="flex items-center gap-3">
@@ -175,7 +175,7 @@ export default function CopierPage() {
             {/* Stats Row */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
               <div className="text-center">
-                <div className="text-xl font-bold" style={{ color: "var(--gf-text-bright)" }}>{"\u20AC"}{acc.equity?.toLocaleString()}</div>
+                <div className="text-xl font-bold" style={{ color: "var(--gf-text-bright)" }}>{"€"}{acc.equity?.toLocaleString()}</div>
                 <div className="text-[10px]" style={{ color: "var(--gf-text-dim)" }}>Equity</div>
               </div>
               <div className="text-center">
@@ -188,7 +188,7 @@ export default function CopierPage() {
               </div>
               <div className="text-center">
                 <div className="text-xl font-bold" style={{ color: acc.todayPnl >= 0 ? "var(--gf-green)" : "var(--gf-red)" }}>
-                  {acc.todayPnl >= 0 ? "+" : ""}{"\u20AC"}{acc.todayPnl?.toFixed(2)}
+                  {acc.todayPnl >= 0 ? "+" : "-"}{"€"}{Math.abs(acc.todayPnl ?? 0).toFixed(2)}
                 </div>
                 <div className="text-[10px]" style={{ color: "var(--gf-text-dim)" }}>Heute P&L</div>
               </div>

@@ -1,16 +1,22 @@
 import Link from "next/link";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "FORGE Mentor | Gold Foundry",
+  description: "Dein persönlicher KI-Trading-Mentor. Analyse, Coaching und Optimierung für jeden Trade.",
+};
 
 const FEATURES = [
-  { icon: "📊", title: "Trade-Analyse", desc: "Analysiert 847 Trades in 3 Sekunden. Erkennt Muster, Schwaechen und versteckte Edge in deiner Historie.", tag: "ANALYTICS", color: "#3b82f6" },
+  { icon: "📊", title: "Trade-Analyse", desc: "Analysiert 847 Trades in 3 Sekunden. Erkennt Muster, Schwächen und versteckte Edge in deiner Historie.", tag: "ANALYTICS", color: "#3b82f6" },
   { icon: "🛡️", title: "Risiko-Coaching", desc: "Warnt bevor du Fehler machst. Erkennt Overtrading, Revenge-Trading und emotionale Muster in Echtzeit.", tag: "PROTECTION", color: "#27ae60" },
   { icon: "🌍", title: "Markt-Intel", desc: "Regime Detection + Geopolitik Scanner. Weiss ob der Markt trending, ranging oder im Crash-Modus ist.", tag: "INTEL", color: "#a855f7" },
-  { icon: "⚙️", title: "Strategie-Optimierung", desc: "MQL4 Code-Analyse + Monte Carlo Simulation. Findet die optimalen Parameter fuer deinen EA.", tag: "OPTIMIZE", color: "#d4a537" },
+  { icon: "⚙️", title: "Strategie-Optimierung", desc: "MQL4 Code-Analyse + Monte Carlo Simulation. Findet die optimalen Parameter für deinen EA.", tag: "OPTIMIZE", color: "#d4a537" },
 ];
 
 const CHAT_MESSAGES = [
   { role: "user", text: "> Analyse meinen XAUUSD Trade von heute" },
-  { role: "mentor", text: "Entry war optimal (+0.8\u03c3 vom VWAP). SL zu eng \u2014 empfehle 1.5x ATR statt fixed 70 pips. TP bei 2.358 aligned mit Weekly R1." },
-  { role: "mentor", text: "Dein Risk/Reward lag bei 1:1.2. Fuer dein Profil empfehle ich min. 1:2. Die letzten 12 XAUUSD Trades hatten Ø 1:1.4 \u2014 hier liegt Optimierungspotenzial." },
+  { role: "mentor", text: "Entry war optimal (+0.8σ vom VWAP). SL zu eng — empfehle 1.5x ATR statt fixed 70 pips. TP bei 2.358 aligned mit Weekly R1." },
+  { role: "mentor", text: "Dein Risk/Reward lag bei 1:1.2. Für dein Profil empfehle ich min. 1:2. Die letzten 12 XAUUSD Trades hatten Ø 1:1.4 — hier liegt Optimierungspotenzial." },
 ];
 
 const STATS = [
@@ -44,14 +50,14 @@ export default function ForgeMentorPage() {
       {/* Hero */}
       <section className="relative z-10 max-w-7xl mx-auto px-6 pt-32 pb-16">
         <div className="text-center animate-in">
-          <span className="gf-badge mb-6 inline-flex">AI MENTOR</span>
+          <span className="gf-badge mb-6 inline-flex">FORGE MENTOR</span>
           <h1 className="font-serif text-5xl md:text-6xl lg:text-7xl leading-[1.05] mb-6">
-            <span className="italic text-white/50">Dein persoenlicher</span><br />
+            <span className="italic text-white/50">Dein persönlicher</span><br />
             <span className="italic font-bold text-white">Quant-Analyst.</span>{" "}
             <span className="italic font-bold gf-gold-text">24/7.</span>
           </h1>
           <p className="text-lg max-w-2xl mx-auto mb-10 leading-relaxed text-[#888]">
-            Analysiert jeden Trade. Optimiert deine Strategie. Kennt den Markt. Dein AI-Mentor der niemals schlaeft.
+            Analysiert jeden Trade. Optimiert deine Strategie. Kennt den Markt. Dein FORGE Mentor der niemals schläft.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/auth/register" className="gf-btn text-base !px-10 !py-4">FORGE Mentor testen &nbsp;&rarr;</Link>
@@ -103,7 +109,7 @@ export default function ForgeMentorPage() {
               <span className="ml-3 text-[10px] tracking-[2px] text-[#555] uppercase font-mono">FORGE Mentor v3.0</span>
               <div className="ml-auto flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-[#a855f7] animate-glow" />
-                <span className="text-[10px] text-[#a855f7] font-mono">AI ACTIVE</span>
+                <span className="text-[10px] text-[#a855f7] font-mono">AKTIV</span>
               </div>
             </div>
             <div className="p-4 space-y-3">
@@ -145,7 +151,7 @@ export default function ForgeMentorPage() {
         <div className="grid md:grid-cols-3 gap-5 animate-in delay-1">
           {[
             { q: "Warum verliere ich immer montags?", a: "Dein Win-Rate am Montag: 34%. Grund: Illiquide Opens + zu enge SLs. Empfehlung: Erste 2h nicht traden." },
-            { q: "Optimiere meinen XAUUSD EA", a: "Dein SL/TP Ratio ist suboptimal. Monte Carlo zeigt: 1.8x ATR SL + 2.4x ATR TP erhoehen den Profit Factor um 31%." },
+            { q: "Optimiere meinen XAUUSD EA", a: "Dein SL/TP Ratio ist suboptimal. Monte Carlo zeigt: 1.8x ATR SL + 2.4x ATR TP erhöhen den Profit Factor um 31%." },
             { q: "Wie ist das aktuelle Marktregime?", a: "XAUUSD: Bullish Trend (ADX 42). Risk-On Umfeld. US500 korreliert negativ. Empfehle Long-Bias mit reduziertem Size." },
           ].map((item, i) => (
             <div key={i} className="gf-panel p-6">
@@ -162,7 +168,7 @@ export default function ForgeMentorPage() {
           <div className="absolute inset-0 bg-gradient-to-b from-[#a855f7]/5 via-transparent to-transparent" />
           <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#d4a537]/30 to-transparent" />
           <div className="relative">
-            <div className="text-[10px] tracking-[4px] uppercase text-[#d4a537] mb-6 font-medium">AI-Powered</div>
+            <div className="text-[10px] tracking-[4px] uppercase text-[#d4a537] mb-6 font-medium">KI-gestuetzt</div>
             <h2 className="font-serif text-4xl md:text-5xl font-bold italic text-white mb-4">FORGE Mentor testen.</h2>
             <p className="text-base text-[#666] mb-10 max-w-lg mx-auto">Registriere dich und stelle deine erste Frage. Kostenlos im Analyzer-Plan (5 Nachrichten/Tag).</p>
             <Link href="/auth/register" className="gf-btn text-base !px-10 !py-4">FORGE Mentor testen &nbsp;&rarr;</Link>
@@ -191,8 +197,8 @@ export default function ForgeMentorPage() {
           </div>
         </div>
         <div className="max-w-6xl mx-auto mt-8 pt-6 text-xs" style={{ borderTop: "1px solid var(--gf-border)", color: "#555" }}>
-          <p className="mb-4">Risikohinweis: Der Handel mit Finanzinstrumenten ist mit erheblichen Risiken verbunden und kann zum Verlust des eingesetzten Kapitals fuehren. Vergangene Ergebnisse sind keine Garantie fuer zukuenftige Performance.</p>
-          <p className="text-center">&copy; 2025 Gold Foundry. Trading birgt Risiken.</p>
+          <p className="mb-4">Risikohinweis: Der Handel mit Finanzinstrumenten ist mit erheblichen Risiken verbunden und kann zum Verlust des eingesetzten Kapitals führen. Vergangene Ergebnisse sind keine Garantie für zukünftige Performance.</p>
+          <p className="text-center">&copy; 2026 Gold Foundry. Trading birgt Risiken.</p>
         </div>
       </footer>
     </div>

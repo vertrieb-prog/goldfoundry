@@ -6,7 +6,7 @@ interface Message { role: "user" | "assistant"; content: string; }
 
 const WELCOME_MESSAGE: Message = {
   role: "assistant",
-  content: "Hey Eric! Ich bin dein FORGE Mentor. Deine Konten laufen stabil \u2014 TEGAS FX bei 67.2% Buffer, TAG Markets bei 43.1%. Heute +\u20ac399.60 \u00fcber beide Konten. Der Copier hat 2 Trades wegen News-Events \u00fcbersprungen (NFP morgen). Frag mich alles!",
+  content: "Hey Eric! Ich bin dein FORGE Mentor. Deine Konten laufen stabil — TEGAS FX bei 67.2% Buffer, TAG Markets bei 43.1%. Heute +€399.60 über beide Konten. Der Copier hat 2 Trades wegen News-Events übersprungen (NFP morgen). Frag mich alles!",
 };
 
 const QUICK_ACTIONS = ["Status-Check", "Trades analysieren", "Markt-Update", "Strategie optimieren"];
@@ -19,17 +19,17 @@ const MENTOR_FEATURES = [
   },
   {
     title: "Risiko-Coaching",
-    desc: "Echtzeit-Feedback zu Drawdown, Positionsgr\u00f6\u00dfe und Risk Management.",
+    desc: "Echtzeit-Feedback zu Drawdown, Positionsgröße und Risk Management.",
     icon: "M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z",
   },
   {
     title: "Markt-Intel",
-    desc: "News-Events, Volatilit\u00e4t, Regime-Erkennung und Sentiment in Echtzeit.",
+    desc: "News-Events, Volatilität, Regime-Erkennung und Sentiment in Echtzeit.",
     icon: "M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064",
   },
   {
     title: "Strategie-Optimierung",
-    desc: "Vorschl\u00e4ge zur Verbesserung deiner Copier-Einstellungen und Multiplier.",
+    desc: "Vorschläge zur Verbesserung deiner Copier-Einstellungen und Multiplier.",
     icon: "M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z",
     icon2: "M15 12a3 3 0 11-6 0 3 3 0 016 0z",
   },
@@ -75,7 +75,7 @@ export default function ChatPage() {
         }
       }
     } catch {
-      setMessages(prev => [...prev, { role: "assistant", content: "Verbindungsfehler. Bitte erneut versuchen." }]);
+      setMessages(prev => [...prev.slice(0, -1), { role: "assistant", content: "Verbindungsfehler. Bitte erneut versuchen." }]);
     }
     setStreaming(false);
   }
@@ -140,7 +140,7 @@ export default function ChatPage() {
       {/* INPUT */}
       <form onSubmit={send} className="flex gap-3">
         <input className="gf-input flex-1" placeholder="Frag FORGE Mentor..." value={input} onChange={e => setInput(e.target.value)} disabled={streaming} />
-        <button type="submit" className="gf-btn !px-6" disabled={streaming}>{streaming ? "..." : "\u2192"}</button>
+        <button type="submit" className="gf-btn !px-6" disabled={streaming}>{streaming ? "..." : "→"}</button>
       </form>
     </div>
   );

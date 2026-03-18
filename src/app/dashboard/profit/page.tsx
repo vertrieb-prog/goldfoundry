@@ -79,7 +79,7 @@ export default function ProfitPage() {
       )}
 
       <h1 className="text-2xl font-bold mb-2" style={{ color: "var(--gf-text-bright)" }}>Profit Sharing</h1>
-      <p className="text-sm mb-8" style={{ color: "var(--gf-text-dim)" }}>40% Gold Foundry &middot; 60% Trader &middot; High Water Mark gesch\u00fctzt</p>
+      <p className="text-sm mb-8" style={{ color: "var(--gf-text-dim)" }}>40% Gold Foundry &middot; 60% Trader &middot; High Water Mark geschützt</p>
 
       {/* TRADER VIEW */}
       {rt && rt.followerCount > 0 && (
@@ -87,11 +87,11 @@ export default function ProfitPage() {
           <div className="text-xs tracking-widest mb-4" style={{ color: "var(--gf-text-dim)" }}>ALS SIGNAL PROVIDER</div>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
             <div className="gf-panel p-4 text-center">
-              <div className="text-2xl font-bold gf-gold-text">\u20ac{Number(e.lifetime_trader_payout ?? 0).toLocaleString("de-DE")}</div>
+              <div className="text-2xl font-bold gf-gold-text">€{Number(e.lifetime_trader_payout ?? 0).toLocaleString("de-DE")}</div>
               <div className="text-[10px]" style={{ color: "var(--gf-text-dim)" }}>Lifetime Verdient</div>
             </div>
             <div className="gf-panel p-4 text-center">
-              <div className="text-2xl font-bold" style={{ color: "var(--gf-text-bright)" }}>\u20ac{Number(e.pending_balance ?? 0).toFixed(2)}</div>
+              <div className="text-2xl font-bold" style={{ color: "var(--gf-text-bright)" }}>€{Number(e.pending_balance ?? 0).toFixed(2)}</div>
               <div className="text-[10px]" style={{ color: "var(--gf-text-dim)" }}>Auszahlbar</div>
             </div>
             <div className="gf-panel p-4 text-center">
@@ -99,14 +99,14 @@ export default function ProfitPage() {
               <div className="text-[10px]" style={{ color: "var(--gf-text-dim)" }}>Follower</div>
             </div>
             <div className="gf-panel p-4 text-center">
-              <div className="text-2xl font-bold gf-gold-text">\u20ac{rt.totalAUM?.toLocaleString("de-DE")}</div>
+              <div className="text-2xl font-bold gf-gold-text">€{rt.totalAUM?.toLocaleString("de-DE")}</div>
               <div className="text-[10px]" style={{ color: "var(--gf-text-dim)" }}>AUM</div>
             </div>
           </div>
 
           <div className="gf-panel p-5">
-            <div className="text-xs tracking-widest mb-3" style={{ color: "var(--gf-text-dim)" }}>ECHTZEIT-SCH\u00c4TZUNG (n\u00e4chstes Settlement)</div>
-            <div className="text-3xl font-bold gf-gold-text mb-4">~\u20ac{rt.totalEstimatedPayout?.toFixed(2)}</div>
+            <div className="text-xs tracking-widest mb-3" style={{ color: "var(--gf-text-dim)" }}>ECHTZEIT-SCHÄTZUNG (nächstes Settlement)</div>
+            <div className="text-3xl font-bold gf-gold-text mb-4">~€{rt.totalEstimatedPayout?.toFixed(2)}</div>
             <div className="space-y-0">
               {/* Header */}
               <div className="grid grid-cols-5 gap-2 py-2 text-[10px] tracking-widest uppercase" style={{ color: "var(--gf-text-dim)", borderBottom: "1px solid var(--gf-border)" }}>
@@ -120,12 +120,12 @@ export default function ProfitPage() {
                 <div key={i} className="grid grid-cols-5 gap-2 py-3 text-sm" style={{ borderBottom: "1px solid var(--gf-border)" }}>
                   <span className="mono" style={{ color: "var(--gf-text-dim)" }}>{f.login}</span>
                   <span style={{ color: "var(--gf-text-bright)" }}>{f.firm}</span>
-                  <span className="text-right mono" style={{ color: "var(--gf-text)" }}>\u20ac{f.equity?.toLocaleString("de-DE")}</span>
+                  <span className="text-right mono" style={{ color: "var(--gf-text)" }}>€{f.equity?.toLocaleString("de-DE")}</span>
                   <span className="text-right mono" style={{ color: f.profitable ? "var(--gf-green)" : "var(--gf-red)" }}>
-                    {f.profitable ? "+" : ""}\u20ac{f.unrealizedProfit?.toLocaleString("de-DE")}
+                    {f.profitable ? "+" : "-"}€{Math.abs(f.unrealizedProfit ?? 0).toLocaleString("de-DE")}
                   </span>
                   <span className="text-right mono font-semibold" style={{ color: f.profitable ? "var(--gf-gold)" : "var(--gf-text-dim)" }}>
-                    {f.profitable ? `\u20ac${f.estimatedTraderPayout?.toLocaleString("de-DE")}` : "HWM nicht erreicht"}
+                    {f.profitable ? `€${f.estimatedTraderPayout?.toLocaleString("de-DE")}` : "HWM nicht erreicht"}
                   </span>
                 </div>
               ))}
@@ -151,11 +151,11 @@ export default function ProfitPage() {
               </div>
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
-                  <div className="text-lg font-bold" style={{ color: "var(--gf-text-bright)" }}>\u20ac{sub.equity?.toLocaleString("de-DE")}</div>
+                  <div className="text-lg font-bold" style={{ color: "var(--gf-text-bright)" }}>€{sub.equity?.toLocaleString("de-DE")}</div>
                   <div className="text-[10px]" style={{ color: "var(--gf-text-dim)" }}>Equity</div>
                 </div>
                 <div>
-                  <div className="text-lg font-bold" style={{ color: sub.currentProfit > 0 ? "var(--gf-green)" : "var(--gf-text-dim)" }}>+\u20ac{sub.currentProfit?.toLocaleString("de-DE")}</div>
+                  <div className="text-lg font-bold" style={{ color: sub.currentProfit > 0 ? "var(--gf-green)" : "var(--gf-text-dim)" }}>{sub.currentProfit >= 0 ? "+" : "-"}€{Math.abs(sub.currentProfit ?? 0).toLocaleString("de-DE")}</div>
                   <div className="text-[10px]" style={{ color: "var(--gf-text-dim)" }}>Profit seit HWM</div>
                 </div>
                 <div>
@@ -170,7 +170,7 @@ export default function ProfitPage() {
 
       {/* Risikohinweis */}
       <div className="mt-8 pt-6 text-xs" style={{ borderTop: "1px solid var(--gf-border)", color: "var(--gf-text-dim)" }}>
-        <p>Profit Sharing basiert auf dem High Water Mark Prinzip. Auszahlungen erfolgen nur bei neuem Gewinn \u00fcber dem bisherigen H\u00f6chststand.</p>
+        <p>Profit Sharing basiert auf dem High Water Mark Prinzip. Auszahlungen erfolgen nur bei neuem Gewinn über dem bisherigen Höchststand.</p>
       </div>
     </div>
   );

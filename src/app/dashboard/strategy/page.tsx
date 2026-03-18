@@ -5,7 +5,7 @@ import { useState } from "react";
 const DEMO_ANALYSIS = {
   overallScore: 7.8,
   strategyType: "XAUUSD Asian Scalper",
-  summary: "Profitabler Scalper mit gutem Risk/Reward. Schwaeche bei News-Events.",
+  summary: "Profitabler Scalper mit gutem Risk/Reward. Schwäche bei News-Events.",
   metrics: {
     sharpe: 1.84,
     profitFactor: 2.1,
@@ -88,11 +88,11 @@ export default function StrategyPage() {
           <div className="grid md:grid-cols-2 gap-6">
             <div>
               <div className="text-xs tracking-widest mb-2" style={{ color: "var(--gf-text-dim)" }}>SCORE</div>
-              <div className="text-5xl font-bold gf-gold-text">{analysis.ai_analysis.overallScore ?? "\u2014"}<span className="text-lg">/10</span></div>
+              <div className="text-5xl font-bold gf-gold-text">{analysis.ai_analysis.overallScore ?? "—"}<span className="text-lg">/10</span></div>
             </div>
             <div>
               <div className="text-xs tracking-widest mb-2" style={{ color: "var(--gf-text-dim)" }}>TYP</div>
-              <div className="text-lg font-semibold" style={{ color: "var(--gf-text-bright)" }}>{analysis.ai_analysis.strategyType ?? "\u2014"}</div>
+              <div className="text-lg font-semibold" style={{ color: "var(--gf-text-bright)" }}>{analysis.ai_analysis.strategyType ?? "—"}</div>
               <div className="text-sm mt-1" style={{ color: "var(--gf-text-dim)" }}>{analysis.ai_analysis.summary}</div>
             </div>
           </div>
@@ -144,7 +144,7 @@ export default function StrategyPage() {
               <div>
                 <span className="font-semibold text-sm" style={{ color: "var(--gf-text-bright)" }}>{o.parameter}</span>
                 <span className="text-sm" style={{ color: "var(--gf-text)" }}>: {o.current}</span>
-                <span className="text-sm" style={{ color: "var(--gf-text-dim)" }}> {"\u2192"} </span>
+                <span className="text-sm" style={{ color: "var(--gf-text-dim)" }}> {"→"} </span>
                 <span className="text-sm font-semibold" style={{ color: "var(--gf-green)" }}>{o.recommended}</span>
                 <br />
                 <span className="text-xs" style={{ color: "var(--gf-text-dim)" }}>{o.reason}</span>

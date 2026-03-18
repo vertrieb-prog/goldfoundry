@@ -79,11 +79,11 @@ export default function TradesPage() {
           <div className="text-[10px] tracking-wider" style={{ color: "var(--gf-text-dim)" }}>WIN RATE</div>
         </div>
         <div className="gf-panel p-4 text-center">
-          <div className="text-2xl font-bold" style={{ color: "var(--gf-green)" }}>+{"\u20AC"}{DEMO_STATS.avgPnl.toFixed(2)}</div>
+          <div className="text-2xl font-bold" style={{ color: "var(--gf-green)" }}>+{"€"}{DEMO_STATS.avgPnl.toFixed(2)}</div>
           <div className="text-[10px] tracking-wider" style={{ color: "var(--gf-text-dim)" }}>AVG P&L</div>
         </div>
         <div className="gf-panel p-4 text-center">
-          <div className="text-2xl font-bold gf-gold-text">+{"\u20AC"}{DEMO_STATS.bestTrade.toFixed(2)}</div>
+          <div className="text-2xl font-bold gf-gold-text">+{"€"}{DEMO_STATS.bestTrade.toFixed(2)}</div>
           <div className="text-[10px] tracking-wider" style={{ color: "var(--gf-text-dim)" }}>BEST TRADE</div>
         </div>
         <div className="gf-panel p-4 text-center">
@@ -126,7 +126,7 @@ export default function TradesPage() {
                 <td className="p-3 mono" style={{ color: "var(--gf-text-dim)" }}>{t.openPrice}</td>
                 <td className="p-3 mono" style={{ color: "var(--gf-text-dim)" }}>{t.closePrice}</td>
                 <td className="p-3 font-bold" style={{ color: t.profit >= 0 ? "var(--gf-green)" : "var(--gf-red)" }}>
-                  {t.profit >= 0 ? "+" : ""}{"\u20AC"}{t.profit.toFixed(2)}
+                  {t.profit >= 0 ? "+" : ""}{"€"}{t.profit.toFixed(2)}
                 </td>
                 <td className="p-3 text-xs" style={{ color: "var(--gf-text)" }}>{t.session}</td>
                 <td className="p-3 text-xs mono" style={{ color: "var(--gf-text-dim)" }}>{t.duration}</td>

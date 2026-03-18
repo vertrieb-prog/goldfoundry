@@ -5,9 +5,8 @@ import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
-    // DEV MODE: Return empty accounts when using placeholder keys
-    const isDevMode = !process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder');
-    if (isDevMode) {
+    // DEV MODE: Return empty accounts only in development when not configured
+    if (process.env.NODE_ENV === "development" && !process.env.NEXT_PUBLIC_SUPABASE_URL) {
       return NextResponse.json({ accounts: [], intel: null, devMode: true });
     }
 

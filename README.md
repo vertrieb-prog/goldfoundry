@@ -1,73 +1,35 @@
-# MetaTrader AI Analytics Portal
+# GOLD FOUNDRY — MEGA PACK
 
-KI-gestütztes Trading-Dashboard für Prop-Firm und Quant-Setups.
+## What's Inside
+- CLAUDE.md + MEMORY.md — Brain of Claude Code
+- .claude/ — 14 Agents, 27 Commands, 12 Skills
+- .mcp.json — Supabase MCP connection
+- gf-pack/ — All backend modules, migrations
+- docs/ — 19 planning documents (Comp Plan, MLM, Crypto, CRM, etc.)
+- MEGA-AUTONOMOUS-PROMPT.md — THE prompt that builds everything
+- .env.example — All required environment variables
 
-## Phase 1 — Setup & MetaApi-Anbindung
+## How to Use
+1. Place goldfoundry-session-complete.zip in project root
+2. Place THIS mega-pack contents in project root
+3. Run: `claude --dangerously-skip-permissions`
+4. Paste contents of MEGA-AUTONOMOUS-PROMPT.md
+5. Walk away. It builds everything autonomously. 12 phases.
 
-### Voraussetzungen
+## Agents (14)
+orchestrator, backend-engineer, frontend-engineer, seo-engineer,
+trading-specialist, mlm-engineer, crypto-engineer, qa-tester,
+devops-engineer, integrator, code-reviewer, build-deploy,
+risk-auditor, project-status
 
-- Node.js 18+ und npm
-- Ein MetaApi.cloud Account mit provisioniertem MetaTrader-Konto
-- (Später) Supabase-Projekt und Anthropic API-Key
+## Skills (12)
+protrader-analyst, trading-backend, telegram-integration, seo-content,
+frontend-design, crm-lifecycle, supabase-db, deployment,
+mlm-network, partner-experience, exchange-integration, crypto-trading
 
-### Installation
-
-```bash
-# 1. Abhängigkeiten installieren
-npm install
-
-# 2. Umgebungsvariablen einrichten
-cp .env.example .env.local
-# → Dann .env.local mit echten Werten füllen (mindestens META_API_TOKEN und META_API_ACCOUNT_ID)
-
-# 3. Next.js Dev-Server starten (optional, für die Landing Page)
-npm run dev
-
-# 4. MetaApi-Verbindung testen
-npm run fetch-trades
-
-# Optional: Andere Zeiträume abfragen
-npx tsx scripts/fetch-trades.ts --hours=48
-```
-
-### Projektstruktur
-
-```
-metatrader-portal/
-├── scripts/
-│   └── fetch-trades.ts        # CLI-Skript zum Testen der MetaApi-Verbindung
-├── src/
-│   ├── app/                   # Next.js App Router
-│   │   ├── layout.tsx
-│   │   ├── page.tsx           # Landing Page mit Phasen-Übersicht
-│   │   └── globals.css
-│   ├── lib/
-│   │   ├── config.ts          # Env-Validierung & Config-Loader
-│   │   └── metaapi-client.ts  # MetaApi SDK Wrapper
-│   ├── types/
-│   │   └── trading.ts         # Zentrale TypeScript-Typen
-│   └── components/            # (Später) UI-Komponenten
-├── .env.example               # Vorlage für Umgebungsvariablen
-├── package.json
-├── tsconfig.json
-├── tailwind.config.ts
-└── next.config.js
-```
-
-### NPM-Pakete (Phase 1)
-
-| Paket | Zweck |
-|---|---|
-| `next`, `react`, `react-dom` | Web-Framework |
-| `metaapi.cloud-sdk` | MetaTrader-Anbindung über MetaApi |
-| `@supabase/supabase-js` | Datenbank (wird in Phase 2 genutzt) |
-| `@anthropic-ai/sdk` | Claude AI (wird in Phase 4 genutzt) |
-| `tsx` | TypeScript-Skripte direkt ausführen |
-| `dotenv` | `.env.local` in Skripten laden |
-| `tailwindcss` | Styling |
-
-### Nächste Schritte (Phase 2)
-
-- Supabase-Tabellen für Trades, Accounts und Reports anlegen
-- Trade-Daten nach dem Abruf automatisch in Supabase speichern
-- API-Route `/api/cron/fetch-trades` für den Cronjob erstellen
+## Commands (27)
+Developer: /integrate /review /deploy /build /audit /status /fix
+Session: /catchup /handoff /spec /orchestrate /team /recover
+Business: /morning-report /trader-report /new-page /content /partner-push
+MLM: /partner-setup /calc-commissions /network-stats /partner-onboard /partner-social
+Crypto: /crypto-setup /exchange-connect /seo-exchanges /seo-crypto

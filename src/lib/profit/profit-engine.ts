@@ -60,7 +60,7 @@ export async function createProfitAgreement(
     updated_at: new Date().toISOString(),
   }).eq("trader_user_id", traderUserId);
 
-  log(`Agreement erstellt: Follower ${followerUserId} → Trader ${traderUserId}, HWM: $${currentEquity}`);
+  log(`Agreement erstellt: Follower ${followerUserId} → Trader ${traderUserId}, HWM: €${currentEquity}`);
   return data;
 }
 
@@ -104,7 +104,7 @@ export async function runMonthlySettlement(): Promise<{
     const grossProfit = Math.max(currentEquity - hwm, 0);
 
     if (grossProfit <= 0) {
-      log(`Kein Profit für Agreement ${agreement.id}: Equity $${currentEquity} ≤ HWM $${hwm}`);
+      log(`Kein Profit für Agreement ${agreement.id}: Equity €${currentEquity} ≤ HWM €${hwm}`);
       
       // Trotzdem Settlement erstellen (für Transparenz)
       await db.from("profit_settlements").insert({
@@ -132,6 +132,31 @@ export async function runMonthlySettlement(): Promise<{
     // Neuer HWM = aktuelle Equity (Trader verdient erst wieder wenn es darüber geht)
     const newHWM = currentEquity;
 
+    // Idempotency: Check if settlement already exists for this period
+    const { data: existingSettlement } = await db.from("profit_settlements")
+      .select("id")
+      .eq("profit_sharing_id", agreement.id)
+      .eq("period_start", periodStart.toISOString().split("T")[0])
+      .eq("period_end", periodEnd.toISOString().split("T")[0])
+      .limit(1)
+      .single();
+
+    if (existingSettlement) {
+      log(`Settlement bereits vorhanden für Agreement ${agreement.id}, überspringe`);
+      continue;
+    }
+
+    // Optimistic concurrency: Only update HWM if it hasn't changed since we read it
+    const { data: hwmUpdate, error: hwmError } = await db.from("profit_sharing").update({
+      hwm_equity: newHWM,
+      hwm_set_at: new Date().toISOString(),
+    }).eq("id", agreement.id).eq("hwm_equity", hwm).select().single(); // CAS: only if HWM unchanged
+
+    if (hwmError || !hwmUpdate) {
+      log(`HWM-Conflict für Agreement ${agreement.id}: wurde parallel geändert, überspringe`);
+      continue;
+    }
+
     const { data: settlement } = await db.from("profit_settlements").insert({
       profit_sharing_id: agreement.id,
       period_start: periodStart.toISOString().split("T")[0],
@@ -142,15 +167,9 @@ export async function runMonthlySettlement(): Promise<{
       platform_fee: platformFee,
       trader_payout: traderPayout,
       follower_net_profit: followerNet,
-      status: "pending",
+      status: "completed",
       new_hwm: newHWM,
     }).select().single();
-
-    // HWM updaten
-    await db.from("profit_sharing").update({
-      hwm_equity: newHWM,
-      hwm_set_at: new Date().toISOString(),
-    }).eq("id", agreement.id);
 
     // Trader Earnings updaten
     await db.rpc("increment_trader_earnings", {
@@ -184,7 +203,7 @@ export async function runMonthlySettlement(): Promise<{
       traderPayout,
     });
 
-    log(`Settlement: Follower ${(agreement.slave_accounts as any)?.mt_login} | Profit: $${grossProfit} | Platform: $${platformFee} | Trader: $${traderPayout}`);
+    log(`Settlement: Follower ${(agreement.slave_accounts as any)?.mt_login} | Profit: €${grossProfit} | Platform: €${platformFee} | Trader: €${traderPayout}`);
   }
 
   // AUM Update für alle Trader
@@ -207,7 +226,7 @@ export async function runMonthlySettlement(): Promise<{
     }).eq("trader_user_id", traderId);
   }
 
-  log(`Settlement fertig: ${settlements.length} Abrechnungen, Platform: $${totalPlatformFee}, Trader: $${totalTraderPayout}`);
+  log(`Settlement fertig: ${settlements.length} Abrechnungen, Platform: €${totalPlatformFee}, Trader: €${totalTraderPayout}`);
 
   return { processed: settlements.length, totalPlatformFee, totalTraderPayout, settlements };
 }
@@ -342,11 +361,10 @@ export async function getFollowerProfitView(followerUserId: string) {
       equity,
       hwm,
       currentProfit: Math.round(unrealized * 100) / 100,
-      estimatedFee: Math.round(estFee * 100) / 100, // 100% des Profits geht als Fee
-      youKeep: Math.round((unrealized - estFee) * 100) / 100, // ~0 bei 40+60 split
-      // KLARSTELLUNG: Bei 40/60 Split geht alles an Platform+Trader
-      // Der Follower profitiert durch Kapitalwachstum (Equity steigt)
-      // Die Fee wird NICHT vom Konto abgezogen, sondern separat abgerechnet
+      estimatedFee: Math.round(estFee * 100) / 100,
+      // Klarstellung: Performance Fee wird separat abgerechnet, nicht vom Konto abgezogen.
+      // Der Follower profitiert durch Equity-Wachstum auf seinem Konto.
+      feeNote: "Die Performance Fee wird separat abgerechnet — dein Kontostand bleibt davon unberührt.",
       recentSettlements: setts ?? [],
       split: { platform: PLATFORM_CUT, trader: TRADER_CUT },
       active: a.active,

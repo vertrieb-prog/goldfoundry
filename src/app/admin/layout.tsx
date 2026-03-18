@@ -10,6 +10,10 @@ const ADMIN_NAV = [
   { href: "/admin/signals", label: "Signal-Konten", icon: "📡" },
   { href: "/admin/crm", label: "CRM", icon: "👥" },
   { href: "/admin/settlements", label: "Abrechnungen", icon: "💰" },
+  { href: "/admin/users", label: "Users", icon: "👤" },
+  { href: "/admin/partners", label: "Partners", icon: "🤝" },
+  { href: "/admin/tickets", label: "Tickets", icon: "🎫" },
+  { href: "/admin/system", label: "System", icon: "⚙" },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -56,7 +60,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         <nav className="flex flex-col gap-1 flex-1">
           {ADMIN_NAV.map(n => {
-            const active = path === n.href || (n.href !== "/admin" && path.startsWith(n.href));
+            const active = path === n.href || (n.href !== "/admin" && path.startsWith(n.href + "/"));
             return (
               <Link key={n.href} href={n.href} className={`flex items-center gap-3 px-3 py-2.5 rounded text-sm transition-all ${active ? "font-semibold" : "hover:bg-white/[0.02]"}`}
                 style={{ color: active ? "var(--gf-gold)" : "var(--gf-text-dim)", background: active ? "rgba(212,165,55,0.06)" : undefined, borderLeft: active ? "2px solid var(--gf-gold)" : "2px solid transparent" }}>
@@ -77,7 +81,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* Mobile Nav */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-50 flex border-b overflow-x-auto" style={{ background: "var(--gf-dark)", borderColor: "var(--gf-border)" }}>
         {ADMIN_NAV.map(n => {
-          const active = path === n.href || (n.href !== "/admin" && path.startsWith(n.href));
+          const active = path === n.href || (n.href !== "/admin" && path.startsWith(n.href + "/"));
           return (
             <Link key={n.href} href={n.href} className="flex items-center gap-1.5 px-4 py-3 text-xs whitespace-nowrap shrink-0" style={{ color: active ? "var(--gf-gold)" : "var(--gf-text-dim)", borderBottom: active ? "2px solid var(--gf-gold)" : "2px solid transparent" }}>
               <span>{n.icon}</span> {n.label}

@@ -4,7 +4,7 @@
 
 import { cachedCall, PROMPTS } from "@/lib/ai/cached-client";
 import { MODELS } from "@/lib/config";
-import { supabaseAdmin } from "@/lib/supabase-admin";
+import { createSupabaseAdmin } from "@/lib/supabase/server";
 
 export interface ParsedSignal {
     action: "BUY" | "SELL" | "MODIFY" | "CLOSE" | "UNKNOWN";
@@ -52,40 +52,66 @@ export async function parseSignal(message: string): Promise<ParsedSignal> {
     }
 }
 
-// ── Log Parsed Signal ───────────────────────────────────────
-export async function logSignal(channelId: string, signal: ParsedSignal, rawMessage: string) {
-    await supabaseAdmin.from("telegram_signals").insert({
+// ── Log Parsed Signal (passt zum DB-Schema aus 005-session-additions.sql) ──
+export async function logSignal(channelId: string, signal: ParsedSignal, rawMessage: string, messageId?: number) {
+    const db = createSupabaseAdmin();
+    await db.from("telegram_signals").insert({
         channel_id: channelId,
-        action: signal.action,
-        symbol: signal.symbol,
-        entry_price: signal.entryPrice,
-        stop_loss: signal.stopLoss,
-        take_profits: signal.takeProfits,
-        confidence: signal.confidence,
+        message_id: messageId ?? null,
         raw_message: rawMessage.slice(0, 2000),
-        parsed_at: new Date().toISOString(),
+        parsed: signal,                    // Ganzes ParsedSignal als JSONB
+        status: signal.action === "UNKNOWN" ? "parsed" : "parsed",
     });
+
+    // Channel-Statistik aktualisieren
+    if (signal.action !== "UNKNOWN") {
+        await db.from("telegram_channels")
+            .update({
+                last_signal_at: new Date().toISOString(),
+                total_signals: undefined, // Wird via DB-Trigger oder manuell aktualisiert
+            })
+            .eq("channel_id", channelId);
+
+        // total_signals inkrementieren
+        await db.rpc("increment_channel_signals", { p_channel_id: channelId }).catch(() => {
+            // Fallback: Manuell updaten wenn RPC nicht existiert
+            db.from("telegram_channels")
+                .update({ updated_at: new Date().toISOString() })
+                .eq("channel_id", channelId);
+        });
+    }
 }
 
 // ── Channel Statistics ──────────────────────────────────────
 export async function getChannelStats(channelId: string) {
-    const { data } = await supabaseAdmin
+    const db = createSupabaseAdmin();
+    const { data } = await db
         .from("telegram_signals")
-        .select("action, symbol, confidence")
+        .select("parsed, status, created_at")
         .eq("channel_id", channelId)
-        .order("parsed_at", { ascending: false })
+        .order("created_at", { ascending: false })
         .limit(100);
 
     if (!data?.length) return null;
 
-    const signals = data.filter(s => s.action !== "UNKNOWN");
-    const avgConfidence = signals.reduce((a, s) => a + (s.confidence || 0), 0) / (signals.length || 1);
+    const signals = data.filter(s => {
+        const p = s.parsed as ParsedSignal | null;
+        return p && p.action !== "UNKNOWN";
+    });
+
+    const parsedSignals = signals.map(s => s.parsed as ParsedSignal);
+    const avgConfidence = parsedSignals.reduce((a, s) => a + (s.confidence || 0), 0) / (parsedSignals.length || 1);
+
+    const executed = data.filter(s => s.status === "executed").length;
+    const blocked = data.filter(s => s.status === "blocked").length;
 
     return {
         totalSignals: data.length,
         validSignals: signals.length,
+        executedSignals: executed,
+        blockedSignals: blocked,
         parseRate: (signals.length / data.length) * 100,
         avgConfidence,
-        topSymbols: [...new Set(signals.map(s => s.symbol).filter(Boolean))].slice(0, 5),
+        topSymbols: [...new Set(parsedSignals.map(s => s.symbol).filter(Boolean))].slice(0, 5),
     };
 }

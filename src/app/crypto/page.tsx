@@ -1,4 +1,10 @@
 import Link from "next/link";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Krypto Trading | Gold Foundry",
+  description: "Bitcoin, Ethereum und 50+ Kryptowährungen. DeFi Yield, Portfolio Management und mehr.",
+};
 
 const EXCHANGES = [
   { name: "Binance", pairs: "500+", fee: "0.10%", color: "#f0b90b" },
@@ -8,7 +14,7 @@ const EXCHANGES = [
 ];
 
 const FEATURES = [
-  { icon: "⚡", title: "Copy Trading across Exchanges", desc: "Kopiere Top-Trader ueber alle 4 Exchanges hinweg. Ein Dashboard, alle Boersen. Automatische Lot-Anpassung.", tag: "CORE", color: "#d4a537" },
+  { icon: "⚡", title: "Copy Trading across Exchanges", desc: "Kopiere Top-Trader über alle 4 Exchanges hinweg. Ein Dashboard, alle Börsen. Automatische Lot-Anpassung.", tag: "CORE", color: "#d4a537" },
   { icon: "🛡️", title: "Liquidation Shield", desc: "Auto-Close bei <10% Margin. Schuetzt vor Liquidation bei Leverage-Trades. Reagiert in <200ms.", tag: "PROTECTION", color: "#ff6b6b" },
   { icon: "📊", title: "Funding Rate Alerts", desc: "Automatische Benachrichtigung bei extremen Funding Rates. Profitiere von Funding-Arbitrage.", tag: "INTEL", color: "#3b82f6" },
   { icon: "💼", title: "Portfolio Manager", desc: "Automatisches Rebalancing nach deiner Ziel-Allokation. Reduziert manuellen Aufwand auf null.", tag: "MANAGE", color: "#27ae60" },
@@ -19,7 +25,7 @@ const DEFI_COMPARISON = [
   { feature: "Risk Management", gf: "7-Faktor Engine", defi: "Manuell" },
   { feature: "Liquidation Schutz", gf: "Automatisch", defi: "Keine" },
   { feature: "Exchanges", gf: "4 CEX + DeFi", defi: "1 Protokoll" },
-  { feature: "Einstieg", gf: "Ab \u20ac9/Mo", defi: "Gas Fees + Slippage" },
+  { feature: "Einstieg", gf: "Ab €9/Mo", defi: "Gas Fees + Slippage" },
   { feature: "Support", gf: "24/7 + FORGE Mentor", defi: "Discord" },
 ];
 
@@ -75,7 +81,7 @@ export default function CryptoPage() {
         <div className="text-center mb-12 animate-in">
           <span className="gf-badge mb-6 inline-flex">Exchanges</span>
           <h2 className="font-serif text-3xl md:text-5xl leading-[1.1]">
-            <span className="italic text-white/40">4 Boersen.</span>{" "}
+            <span className="italic text-white/40">4 Börsen.</span>{" "}
             <span className="italic font-bold text-white">Ein Portal.</span>
           </h2>
         </div>
@@ -168,7 +174,7 @@ export default function CryptoPage() {
           <div className="relative">
             <div className="text-[10px] tracking-[4px] uppercase text-[#d4a537] mb-6 font-medium">Crypto Trading</div>
             <h2 className="font-serif text-4xl md:text-5xl font-bold italic text-white mb-4">Jetzt Crypto starten.</h2>
-            <p className="text-base text-[#666] mb-10 max-w-lg mx-auto">Verbinde deine Exchange, aktiviere den Copier und lass die AI fuer dich arbeiten. 24/7.</p>
+            <p className="text-base text-[#666] mb-10 max-w-lg mx-auto">Verbinde deine Exchange, aktiviere den Copier und lass die KI für dich arbeiten. 24/7.</p>
             <Link href="/auth/register" className="gf-btn text-base !px-10 !py-4">Jetzt starten &nbsp;&rarr;</Link>
           </div>
         </div>
@@ -195,8 +201,8 @@ export default function CryptoPage() {
           </div>
         </div>
         <div className="max-w-6xl mx-auto mt-8 pt-6 text-xs" style={{ borderTop: "1px solid var(--gf-border)", color: "#555" }}>
-          <p className="mb-4">Risikohinweis: Der Handel mit Kryptowaehrungen birgt erhebliche Risiken und kann zum Verlust des eingesetzten Kapitals fuehren. Vergangene Ergebnisse sind keine Garantie fuer zukuenftige Performance.</p>
-          <p className="text-center">&copy; 2025 Gold Foundry. Trading birgt Risiken.</p>
+          <p className="mb-4">Risikohinweis: Der Handel mit Kryptowährungen birgt erhebliche Risiken und kann zum Verlust des eingesetzten Kapitals führen. Vergangene Ergebnisse sind keine Garantie für zukünftige Performance.</p>
+          <p className="text-center">&copy; 2026 Gold Foundry. Trading birgt Risiken.</p>
         </div>
       </footer>
     </div>

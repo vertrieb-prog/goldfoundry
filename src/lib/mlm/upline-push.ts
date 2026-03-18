@@ -267,7 +267,7 @@ export async function runDailyUplinePush(): Promise<{
       noPurchasePushes++;
     }
 
-    // ── Weekly profit > $100 → congrats push ──
+    // ── Weekly profit > €100 → congrats push ──
     const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
     const { data: weekTrades } = await db.from("trades")
       .select("profit").eq("user_id", user.id).gte("close_time", weekAgo);

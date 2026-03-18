@@ -166,7 +166,7 @@ export default function AddAccountPage() {
                 color: step >= s ? "#0b0b0b" : "var(--gf-text-dim)",
               }}
             >
-              {step > s ? "\u2713" : s}
+              {step > s ? "✓" : s}
             </div>
             <span
               className="text-xs hidden sm:block"
@@ -176,7 +176,7 @@ export default function AddAccountPage() {
               }}
             >
               {s === 1
-                ? "Broker w\u00e4hlen"
+                ? "Broker wählen"
                 : s === 2
                   ? "Login-Daten"
                   : "Fertig"}
@@ -360,7 +360,7 @@ export default function AddAccountPage() {
                 border: "1px solid rgba(39,174,96,0.15)",
               }}
             >
-              <span style={{ color: "var(--gf-green)" }}>{"\u2713"}</span>
+              <span style={{ color: "var(--gf-green)" }}>{"✓"}</span>
               <div>
                 <div
                   className="text-sm font-medium"
@@ -415,7 +415,7 @@ export default function AddAccountPage() {
               border: "1px solid rgba(212,165,55,0.1)",
             }}
           >
-            <span className="text-lg">{"\uD83D\uDD12"}</span>
+            <span className="text-lg">{"🔒"}</span>
             <div
               className="text-xs"
               style={{ color: "var(--gf-text)" }}
@@ -570,7 +570,7 @@ export default function AddAccountPage() {
               border: "1px solid rgba(39,174,96,0.2)",
             }}
           >
-            <span className="text-3xl">{"\u2713"}</span>
+            <span className="text-3xl">{"✓"}</span>
           </div>
           <h2
             className="text-xl font-bold mb-2"
@@ -755,7 +755,7 @@ export default function AddAccountPage() {
           className="text-[10px] mt-3"
           style={{ color: "var(--gf-text-dim)" }}
         >
-          {"\uD83D\uDD12"} Wir nutzen nur Lese-Zugriff (Investor-Passwort). Es werden
+          {"🔒"} Wir nutzen nur Lese-Zugriff (Investor-Passwort). Es werden
           KEINE Trades ausgef&uuml;hrt.
         </p>
       </div>

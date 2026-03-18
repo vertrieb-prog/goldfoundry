@@ -66,7 +66,11 @@ export default function AffiliatePage() {
 
   async function requestPayout() {
     const amount = parseFloat(payoutAmount);
-    if (!amount) return;
+    if (!amount || amount <= 0) return;
+    if (amount > (s.currentBalance ?? 0)) {
+      alert("Guthaben nicht ausreichend");
+      return;
+    }
     if (!isDemo) {
       await fetch("/api/affiliate/payouts", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ amount }) }).catch(() => {});
     }
@@ -103,8 +107,8 @@ export default function AffiliatePage() {
       {/* STATS */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
         {[
-          { l: "Verdient (gesamt)", v: `\u20ac${s.totalEarned?.toFixed(2)}`, c: "var(--gf-green)" },
-          { l: "Auszahlbar", v: `\u20ac${s.currentBalance?.toFixed(2)}`, c: "var(--gf-gold)" },
+          { l: "Verdient (gesamt)", v: `€${s.totalEarned?.toFixed(2)}`, c: "var(--gf-green)" },
+          { l: "Auszahlbar", v: `€${s.currentBalance?.toFixed(2)}`, c: "var(--gf-gold)" },
           { l: "Aktive Referrals", v: s.activeReferrals },
           { l: "Klicks (gesamt)", v: s.weekClicks?.toLocaleString("de-DE") },
           { l: "Conversion Rate", v: `${s.conversionRate}%` },
@@ -164,14 +168,14 @@ export default function AffiliatePage() {
         {/* Payout */}
         <div className="gf-panel p-5">
           <div className="text-xs tracking-widest mb-3" style={{ color: "var(--gf-text-dim)" }}>AUSZAHLUNG</div>
-          <p className="text-sm mb-3" style={{ color: "var(--gf-text-dim)" }}>Guthaben: <span className="font-bold gf-gold-text">\u20ac{s.currentBalance?.toFixed(2)}</span></p>
+          <p className="text-sm mb-3" style={{ color: "var(--gf-text-dim)" }}>Guthaben: <span className="font-bold gf-gold-text">€{s.currentBalance?.toFixed(2)}</span></p>
           <div className="flex gap-2">
-            <input className="gf-input text-sm" type="number" placeholder="Betrag (\u20ac)" value={payoutAmount} onChange={e => setPayoutAmount(e.target.value)} />
+            <input className="gf-input text-sm" type="number" placeholder="Betrag (€)" value={payoutAmount} onChange={e => setPayoutAmount(e.target.value)} />
             <button className="gf-btn text-xs !px-4" onClick={requestPayout}>Auszahlen</button>
           </div>
           {data.pendingPayouts?.map((p: any) => (
             <div key={p.id} className="flex justify-between py-2 mt-2 text-xs" style={{ borderBottom: "1px solid var(--gf-border)" }}>
-              <span style={{ color: "var(--gf-gold)" }}>{p.amount} \u20ac</span>
+              <span style={{ color: "var(--gf-gold)" }}>{p.amount} €</span>
               <span className="px-2 py-0.5 rounded" style={{ background: "rgba(212,165,55,0.1)", color: "var(--gf-gold)" }}>{p.status}</span>
             </div>
           ))}
@@ -194,7 +198,7 @@ export default function AffiliatePage() {
                   <div className="text-[10px]" style={{ color: "var(--gf-text-dim)" }}>{c.product} &middot; {c.date}</div>
                 </div>
               </div>
-              <span className="text-sm font-bold" style={{ color: "var(--gf-green)" }}>+\u20ac{c.commission.toFixed(2)}</span>
+              <span className="text-sm font-bold" style={{ color: "var(--gf-green)" }}>+€{c.commission.toFixed(2)}</span>
             </div>
           ))}
         </div>
@@ -230,8 +234,8 @@ export default function AffiliatePage() {
               border: "1px solid rgba(212,165,55,0.12)",
             }}>
               <div className="text-lg font-bold gf-gold-text">{p.label}</div>
-              <div className="text-2xl font-bold mt-1" style={{ color: "var(--gf-text-bright)" }}>\u20ac{p.price}</div>
-              <div className="text-[10px] mt-1" style={{ color: "var(--gf-text-dim)" }}>\u20ac{(p.price / p.count).toFixed(2)} pro St\u00fcck</div>
+              <div className="text-2xl font-bold mt-1" style={{ color: "var(--gf-text-bright)" }}>€{p.price}</div>
+              <div className="text-[10px] mt-1" style={{ color: "var(--gf-text-dim)" }}>€{(p.price / p.count).toFixed(2)} pro Stück</div>
               <button className="gf-btn-outline text-xs !px-4 !py-1.5 mt-3 w-full">Kaufen</button>
             </div>
           ))}

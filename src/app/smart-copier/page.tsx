@@ -1,11 +1,17 @@
 import Link from "next/link";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Smart Copier | Gold Foundry",
+  description: "Automatisches Trade-Copying mit 7-Faktor Risk Engine. Kopiere Top-Trader sicher und intelligent.",
+};
 
 const FACTORS = [
-  { num: "01", code: "TIME", title: "Nacht-Boost", desc: "Hoehere Lots in ruhiger Asian Session. Weniger Slippage, bessere Fills, mehr Profit pro Trade.", color: "#d4a537" },
+  { num: "01", code: "TIME", title: "Nacht-Boost", desc: "Höhere Lots in ruhiger Asian Session. Weniger Slippage, bessere Fills, mehr Profit pro Trade.", color: "#d4a537" },
   { num: "02", code: "NEWS", title: "Auto-Pause", desc: "Automatische Pause 15 Minuten vor High-Impact Events. Kein NFP-Blowup mehr.", color: "#3b82f6" },
-  { num: "03", code: "DD", title: "Drawdown Buffer", desc: "Lots sinken automatisch wenn dein Challenge-Buffer schrumpft. Schutzt dein Konto vor dem Breach.", color: "#27ae60" },
+  { num: "03", code: "DD", title: "Drawdown Buffer", desc: "Lots sinken automatisch wenn dein Challenge-Buffer schrumpft. Schützt dein Konto vor dem Breach.", color: "#27ae60" },
   { num: "04", code: "PERF", title: "Momentum Scaling", desc: "Nach einer Gewinnserie steigen die Lots graduell. Nach Verlusten wird sofort reduziert.", color: "#d4a537" },
-  { num: "05", code: "VOL", title: "ATR-Anpassung", desc: "Lot-Groesse wird live anhand der aktuellen Marktvolatilitaet (ATR) berechnet.", color: "#a855f7" },
+  { num: "05", code: "VOL", title: "ATR-Anpassung", desc: "Lot-Größe wird live anhand der aktuellen Marktvolatilitaet (ATR) berechnet.", color: "#a855f7" },
   { num: "06", code: "DAY", title: "Wochentag-Filter", desc: "Freitag-Reduzierung vor Weekend-Gaps. Montag-Vorsicht bei illiquiden Opens.", color: "#3b82f6" },
   { num: "07", code: "INTEL", title: "Geopolitik + Regime", desc: "Erkennt Marktregime (Trend/Range/Crash) und passt Strategie autonom an.", color: "#27ae60" },
 ];
@@ -21,11 +27,11 @@ const STATS = [
   { value: "<50ms", label: "Copy-Latenz" },
   { value: "84%", label: "Challenge Pass-Rate" },
   { value: "2.400+", label: "Aktive Accounts" },
-  { value: "\u20ac12M+", label: "Managed Volume" },
+  { value: "€12M+", label: "Managed Volume" },
 ];
 
 const STEPS = [
-  { num: "01", title: "MT-Konto verbinden", desc: "Gib deine MT4/MT5 Zugangsdaten ein. Verschluesselte Verbindung in unter 30 Sekunden." },
+  { num: "01", title: "MT-Konto verbinden", desc: "Gib deine MT4/MT5 Zugangsdaten ein. Verschlüsselte Verbindung in unter 30 Sekunden." },
   { num: "02", title: "Firm-Profil waehlen", desc: "FTMO, MyForexFunds, The Funded Trader — wir kennen alle Regeln und konfigurieren automatisch." },
   { num: "03", title: "Copier aktiviert sich", desc: "Ab jetzt arbeitet die 7-Faktor Risk Engine autonom. Du bekommst Notifications bei jedem Trade." },
 ];
@@ -62,7 +68,7 @@ export default function SmartCopierPage() {
             <span className="italic font-bold gf-gold-text">7-Faktor Risk Engine.</span>
           </h1>
           <p className="text-lg max-w-2xl mx-auto mb-10 leading-relaxed text-[#888]">
-            Kopiert Trades in &lt;50ms. Pausiert bei News. Schuetzt vor Drawdown. 84% Challenge Pass-Rate.
+            Kopiert Trades in &lt;50ms. Pausiert bei News. Schützt vor Drawdown. 84% Challenge Pass-Rate.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/auth/register" className="gf-btn text-base !px-10 !py-4">Jetzt starten &nbsp;&rarr;</Link>
@@ -139,7 +145,7 @@ export default function SmartCopierPage() {
                 <div className="flex gap-1">
                   {[1,2,3,4,5,6,7].map(n => (
                     <div key={n} className="w-3 h-3 rounded-sm bg-[#28c840]/20 border border-[#28c840]/30 flex items-center justify-center">
-                      <span className="text-[6px] text-[#28c840]">{"\u2713"}</span>
+                      <span className="text-[6px] text-[#28c840]">{"✓"}</span>
                     </div>
                   ))}
                 </div>
@@ -217,8 +223,8 @@ export default function SmartCopierPage() {
           </div>
         </div>
         <div className="max-w-6xl mx-auto mt-8 pt-6 text-xs" style={{ borderTop: "1px solid var(--gf-border)", color: "#555" }}>
-          <p className="mb-4">Risikohinweis: Der Handel mit Finanzinstrumenten ist mit erheblichen Risiken verbunden und kann zum Verlust des eingesetzten Kapitals fuehren. Vergangene Ergebnisse sind keine Garantie fuer zukuenftige Performance.</p>
-          <p className="text-center">&copy; 2025 Gold Foundry. Trading birgt Risiken.</p>
+          <p className="mb-4">Risikohinweis: Der Handel mit Finanzinstrumenten ist mit erheblichen Risiken verbunden und kann zum Verlust des eingesetzten Kapitals führen. Vergangene Ergebnisse sind keine Garantie für zukünftige Performance.</p>
+          <p className="text-center">&copy; 2026 Gold Foundry. Trading birgt Risiken.</p>
         </div>
       </footer>
     </div>

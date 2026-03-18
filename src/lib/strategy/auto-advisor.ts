@@ -11,7 +11,7 @@
 
 import { cachedCall } from "@/lib/ai/cached-client";
 import { MODELS } from "@/lib/config";
-import { supabaseAdmin } from "@/lib/supabase-admin";
+import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { setUserData, getUserData, addMilestone } from "@/lib/user-db";
 
 // ══════════════════════════════════════════════════════════════
@@ -33,7 +33,7 @@ export interface StrategyProposal {
 }
 
 export async function generateStrategyProposal(userId: string): Promise<StrategyProposal> {
-  const db = supabaseAdmin;
+  const db = createSupabaseAdmin();
 
   // Load user profile
   const { data: profile } = await db.from("profiles").select("*").eq("id", userId).single();
@@ -103,7 +103,7 @@ Firm: ${accounts?.[0]?.firm_profile ?? "unbekannt"}`,
 // ══════════════════════════════════════════════════════════════
 
 export async function scheduleAutoDemo(userId: string, proposal: StrategyProposal): Promise<string> {
-  const db = supabaseAdmin;
+  const db = createSupabaseAdmin();
 
   const testId = `demo_${Date.now()}`;
 

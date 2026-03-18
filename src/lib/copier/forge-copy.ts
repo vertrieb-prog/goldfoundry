@@ -11,6 +11,7 @@ import {
   type RiskAssessment,
 } from "./risk-engine";
 import { runShieldAssessment } from "@/lib/shield/manipulation-shield";
+import { AITradeManager } from "@/lib/trade-manager";
 
 const log = (level: string, msg: string, data?: any) => {
   const ts = new Date().toISOString();
@@ -42,20 +43,40 @@ interface SlaveConfig {
   copierActive: boolean;
 }
 
-// ── Connection Pool ───────────────────────────────────────────
-const connectionPool: Map<string, any> = new Map();
+// ── Connection Pool (with TTL + Health Check) ─────────────────
+const connectionPool: Map<string, { conn: any; lastUsed: number }> = new Map();
+const CONN_TTL = 10 * 60 * 1000; // 10 Minuten
 
 async function getConnection(api: any, accountId: string) {
-  if (connectionPool.has(accountId)) {
-    return connectionPool.get(accountId);
+  const cached = connectionPool.get(accountId);
+  if (cached && Date.now() - cached.lastUsed < CONN_TTL) {
+    cached.lastUsed = Date.now();
+    try {
+      await cached.conn.getAccountInformation();
+      return cached.conn;
+    } catch {
+      connectionPool.delete(accountId);
+    }
   }
+
   const account = await api.metatraderAccountApi.getAccount(accountId);
   const conn = account.getRPCConnection();
   await conn.connect();
   await conn.waitSynchronized();
-  connectionPool.set(accountId, conn);
+  connectionPool.set(accountId, { conn, lastUsed: Date.now() });
   return conn;
 }
+
+// Cleanup abgelaufener Verbindungen
+setInterval(() => {
+  const now = Date.now();
+  for (const [id, entry] of connectionPool) {
+    if (now - entry.lastUsed > CONN_TTL) {
+      entry.conn.close?.();
+      connectionPool.delete(id);
+    }
+  }
+}, 60_000);
 
 // ── Master Trade Listener ─────────────────────────────────────
 export class MasterTradeListener {
@@ -167,7 +188,11 @@ export class MasterTradeListener {
     let stopPips = 0;
     if (signal.stopLoss && signal.price) {
       const diff = Math.abs(signal.price - signal.stopLoss);
-      stopPips = signal.instrument === "XAUUSD" ? diff * 100 : diff; // Gold: $1 = 100 pips
+      const pipSize = signal.instrument.includes("JPY") ? 0.01
+        : signal.instrument === "XAUUSD" ? 0.01
+        : signal.instrument === "XAGUSD" ? 0.001
+        : 0.0001;
+      stopPips = diff / pipSize;
     }
 
     // Execute on ALL slaves in parallel
@@ -220,7 +245,9 @@ export class MasterTradeListener {
         const histAvg = changes.reduce((s, c) => s + c, 0) / Math.max(changes.length, 1);
         atrRatio = histAvg > 0 ? recentAvg / histAvg : 1.0;
       }
-    } catch {}
+    } catch (atrErr) {
+      console.warn("[FORGE-COPY] ATR-Berechnung fehlgeschlagen, nutze Default atrRatio=1.0:", (atrErr as Error).message);
+    }
 
     // Live spread check via MetaApi (if connection available)
     try {
@@ -320,6 +347,10 @@ export class MasterTradeListener {
         if (tick) currentSpread = (tick.ask - tick.bid) * (signal.instrument === "XAUUSD" ? 100 : 1);
       } catch {}
 
+      // Get gold/dxy change from market intel (fallback 0 if unavailable)
+      const goldChange = intel?.xauusdChangePct ?? 0;
+      const dxyChange = intel?.dxyChangePct ?? 0;
+
       const shieldResult = runShieldAssessment(
         priceSnapshots,
         signal.instrument,
@@ -327,8 +358,8 @@ export class MasterTradeListener {
         currentSpread,
         priceSnapshots[0]?.volume ?? 500,
         events.length > 0 ? events[0].time : null,
-        0, // gold change — calculated from candles in production
-        0, // dxy change
+        goldChange,
+        dxyChange,
       );
 
       if (shieldResult.action === "CLOSE_ALL" || shieldResult.action === "BLOCK") {
@@ -528,6 +559,14 @@ export async function startForgeCopy() {
     await connection.waitSynchronized();
 
     log("INFO", "FORGE COPY Engine läuft! Warte auf Trades vom Master...");
+
+    // AI Trade Manager starten — analysiert offene Positionen alle 30s
+    const rpcConnection = account.getRPCConnection();
+    await rpcConnection.connect();
+    await rpcConnection.waitSynchronized();
+    const tradeManager = new AITradeManager(rpcConnection);
+    await tradeManager.start(30000);
+    log("INFO", "AI Trade Manager gestartet (30s Intervall)");
   } catch (err) {
     log("ERROR", "FORGE COPY Start fehlgeschlagen", { error: (err as Error).message });
   }

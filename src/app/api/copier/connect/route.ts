@@ -10,6 +10,16 @@ export async function POST(request: Request) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+    // Subscription check: copier requires paid tier
+    const db0 = createSupabaseAdmin();
+    const { data: userProfile } = await db0.from("profiles")
+      .select("subscription_tier, subscription_active")
+      .eq("id", user.id).single();
+
+    if (!userProfile?.subscription_active || !["copier", "pro", "provider", "enterprise"].includes(userProfile.subscription_tier)) {
+      return NextResponse.json({ error: "Ein aktives Copier-, Pro- oder Provider-Abo ist erforderlich." }, { status: 403 });
+    }
+
     const { firmProfile, brokerServer, mtLogin, mtPassword, platform } = await request.json();
 
     if (!firmProfile || !brokerServer || !mtLogin || !mtPassword || !platform) {
@@ -19,6 +29,8 @@ export async function POST(request: Request) {
     if (!["tegas_24x", "tag_12x"].includes(firmProfile)) {
       return NextResponse.json({ error: "Ungültiges Firm-Profil" }, { status: 400 });
     }
+
+    const warnings: string[] = [];
 
     const api = new MetaApi(process.env.META_API_TOKEN!);
 
@@ -100,11 +112,12 @@ export async function POST(request: Request) {
       }
     } catch (psErr) {
       console.error("[PROFIT-SHARING] Auto-create failed:", (psErr as Error).message);
-      // Non-blocking — copier works without profit sharing
+      warnings.push("Profit-Sharing konnte nicht automatisch eingerichtet werden. Bitte kontaktiere den Support.");
     }
 
     return NextResponse.json({
       success: true,
+      warnings: warnings.length > 0 ? warnings : undefined,
       account: {
         id: savedAccount.id,
         name: info.name,

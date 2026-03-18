@@ -272,7 +272,12 @@ export function calculateCopyLots(
 ): number {
   if (riskMultiplier <= 0) return 0;
 
-  const pipValue = instrument === "XAUUSD" ? 10 : 1; // Adjust for broker
+  // Pip value per standard lot (1.0 lot)
+  const pipValue = instrument === "XAUUSD" ? 10
+    : instrument === "XAGUSD" ? 50
+    : instrument.includes("JPY") ? 6.70
+    : instrument.startsWith("US") || instrument.startsWith("NAS") || instrument.startsWith("DE") ? 1
+    : 10; // Standard Forex pairs (EURUSD, GBPUSD etc.)
   const maxRiskPct = firmProfile === "tegas_24x" ? 0.003 : 0.005;
   const riskBudget = equity * maxRiskPct * riskMultiplier;
 
