@@ -67,7 +67,7 @@ export default function Home() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 mb-8">
               <Link href="/auth/register" className="gf-btn text-base !px-8 !py-4">
-                Kostenlos starten
+                Jetzt starten
               </Link>
               <Link href="#terminal" className="gf-btn-outline text-base !px-8 !py-4">
                 Live Terminal &nbsp;&darr;
@@ -381,11 +381,11 @@ export default function Home() {
               Starte jetzt.
             </h2>
             <p className="text-base text-[#666] mb-10 max-w-lg mx-auto">
-              Kostenloser Account. Keine Kreditkarte. Sofortiger Zugang zum kompletten Trading-Ökosystem.
+              Account erstellen. Keine Kreditkarte. Sofortiger Zugang zum kompletten Trading-Ökosystem.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/auth/register" className="gf-btn text-base !px-10 !py-4">
-                Kostenlos starten &nbsp;&rarr;
+                Jetzt starten &nbsp;&rarr;
               </Link>
               <Link href="/pricing" className="gf-btn-outline text-base !px-10 !py-4">
                 Pricing ansehen

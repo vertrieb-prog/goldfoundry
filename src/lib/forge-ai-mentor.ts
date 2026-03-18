@@ -1,6 +1,6 @@
 // src/lib/forge-ai-mentor.ts
 // ============================================================
-// FORGE AI — Persönlicher Trading-Mentor & Upline
+// FORGE Mentor — Persönlicher Trading-Mentor & Upline
 //
 // Nicht nur ein Analyst — ein MENTOR der:
 // - Persönliche Infos speichert und sich erinnert
@@ -130,7 +130,7 @@ export async function buildMentorPrompt(userId: string, userMessage: string): Pr
 
   // ── THE MENTOR PROMPT ───────────────────────────────────────
 
-  return `Du bist FORGE AI — der persönliche Trading-Mentor von ${name} auf Gold Foundry (goldfoundry.de).
+  return `Du bist FORGE Mentor — der persönliche Trading-Mentor von ${name} auf Gold Foundry (goldfoundry.de).
 
 ═══ DEINE ROLLE ═══
 Du bist NICHT nur ein Analyst. Du bist wie eine Upline, ein Coach, ein Freund der sich um ${name}s Trading kümmert. Du baust eine ECHTE BINDUNG auf. Du erinnerst dich an alles. Du motivierst, warnst, feierst Erfolge, und tröstest bei Verlusten.

@@ -253,7 +253,7 @@ Gib JSON-Array zurück. Jedes Event: {"type":"contest|sprint|flash_bonus|milesto
       startDate: new Date(now.getFullYear(), now.getMonth(), 15).toISOString().split("T")[0],
       endDate: new Date(now.getFullYear(), now.getMonth(), 22).toISOString().split("T")[0],
       rules: "Nur neue zahlende Signups zählen. Min. Copier-Tier.",
-      prizes: ["1. Platz: 1 Monat kostenlos + Feature auf Homepage", "2. Platz: 50% Rabatt", "3. Platz: Custom Landing Page"],
+      prizes: ["1. Platz: 1 Monat gratis + Feature auf Homepage", "2. Platz: 50% Rabatt", "3. Platz: Custom Landing Page"],
       targetSegment: "all",
       status: "planned",
       promotionPlan: [
@@ -296,7 +296,7 @@ Gib JSON zurück:
   "comparisonPoints": ["5 Argumente warum Gold Foundry besser ist als Myfxbook/4X/manuelles Trading"],
   "objectionHandlers": {"Einwand": "Antwort", ...}
 }`,
-      message: `Echte Daten diese Woche: ${weekTrades} Trades, ${weekPnl >= 0 ? "+" : ""}$${weekPnl.toFixed(0)} P&L. AI Copier läuft seit Launch ohne DD-Breach. Prop-Firm Challenge Pass-Rate: 84%.`,
+      message: `Echte Daten diese Woche: ${weekTrades} Trades, ${weekPnl >= 0 ? "+" : ""}$${weekPnl.toFixed(0)} P&L. Smart Copier läuft seit Launch ohne DD-Breach. Prop-Firm Challenge Pass-Rate: 84%.`,
       model: MODELS.smart,
       maxTokens: 1200,
     });
@@ -304,11 +304,11 @@ Gib JSON zurück:
   } catch {
     return {
       socialPosts: [
-        `Gold Foundry AI Copier: ${weekTrades} Trades diese Woche, automatisch. Kein Stress, kein manuelles Trading. Link in Bio.`,
+        `Gold Foundry Smart Copier: ${weekTrades} Trades diese Woche, automatisch. Kein Stress, kein manuelles Trading. Link in Bio.`,
       ],
       storyTemplates: ["Mein AI Trading Bot hat diese Woche wieder geliefert 🔥 Wer will auch? DM me"],
       comparisonPoints: ["AI-gesteuerte Risikoanpassung die Myfxbook nicht hat"],
-      objectionHandlers: { "Ist das sicher?": "Der AI Copier hat 12 Schutzebenen und pausiert automatisch bei News und Drawdown." },
+      objectionHandlers: { "Ist das sicher?": "Der Smart Copier hat 12 Schutzebenen und pausiert automatisch bei News und Drawdown." },
     };
   }
 }

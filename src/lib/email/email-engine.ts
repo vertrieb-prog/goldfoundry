@@ -50,7 +50,7 @@ export async function sendWelcomeEmail(email: string, name: string) {
     <div style="background:#110f0a;border:1px solid rgba(212,165,55,0.1);border-radius:4px;padding:20px;margin:20px 0;">
       <p style="color:#d4a537;margin:0 0 8px;">→ Schritt 1: MetaTrader-Konto verbinden</p>
       <p style="color:#d4a537;margin:0 0 8px;">→ Schritt 2: Firm-Profil wählen (Tegas 24x oder Tag 12x)</p>
-      <p style="color:#d4a537;margin:0 0 8px;">→ Schritt 3: AI Copier aktivieren</p>
+      <p style="color:#d4a537;margin:0 0 8px;">→ Schritt 3: Smart Copier aktivieren</p>
       <p style="color:#d4a537;margin:0;">→ Schritt 4: Zurücklehnen. Die Forge arbeitet.</p>
     </div>
     <a href="https://goldfoundry.de/dashboard" style="display:inline-block;padding:12px 32px;background:linear-gradient(135deg,#d4a537,#8a6a1a);color:#0a0908;font-weight:600;text-decoration:none;border-radius:2px;">Zum Dashboard →</a>
@@ -104,7 +104,7 @@ export async function sendPaymentFailed(email: string, name: string, daysUntilSu
   return sendEmail(email, `⚠️ Zahlung fehlgeschlagen — Account wird in ${daysUntilSuspend} Tagen pausiert`, baseTemplate(`
     <h2 style="color:#c0392b;font-size:20px;">Zahlung fehlgeschlagen</h2>
     <p style="color:#a09070;line-height:1.7;">${name}, deine letzte Zahlung konnte nicht verarbeitet werden. Dein Account wird in <strong style="color:#c0392b;">${daysUntilSuspend} Tagen</strong> pausiert wenn keine gültige Zahlungsmethode hinterlegt wird.</p>
-    <p style="color:#a09070;">Der AI Copier wird bei Pausierung automatisch gestoppt.</p>
+    <p style="color:#a09070;">Der Smart Copier wird bei Pausierung automatisch gestoppt.</p>
     <a href="https://goldfoundry.de/settings/billing" style="display:inline-block;padding:12px 32px;background:linear-gradient(135deg,#d4a537,#8a6a1a);color:#0a0908;font-weight:600;text-decoration:none;border-radius:2px;margin-top:16px;">Zahlungsmethode aktualisieren →</a>
   `));
 }
@@ -113,7 +113,7 @@ export async function sendPaymentFailed(email: string, name: string, daysUntilSu
 export async function sendReEngagement(email: string, name: string, botPnl: number) {
   return sendEmail(email, `${name}, dein Bot hat $${botPnl.toFixed(2)} gemacht — ohne dich`, baseTemplate(`
     <h2 style="color:#d4a537;font-size:20px;">Wir vermissen dich, ${name}.</h2>
-    <p style="color:#a09070;line-height:1.7;">Während du weg warst, hat der FORGE AI Copier weiter gearbeitet:</p>
+    <p style="color:#a09070;line-height:1.7;">Während du weg warst, hat der FORGE Smart Copier weiter gearbeitet:</p>
     <p style="color:#d4a537;font-size:28px;font-weight:700;margin:20px 0;">${botPnl >= 0 ? "+" : ""}$${botPnl.toFixed(2)}</p>
     <p style="color:#a09070;">Schau rein und sieh dir die Details an.</p>
     <a href="https://goldfoundry.de/dashboard" style="display:inline-block;padding:12px 32px;background:linear-gradient(135deg,#d4a537,#8a6a1a);color:#0a0908;font-weight:600;text-decoration:none;border-radius:2px;margin-top:16px;">Zurück zum Dashboard →</a>

@@ -34,7 +34,7 @@ export const COMPETITORS = {
       "TradingView Integration",
       "Forex Sentiment Indicator",
       "Economic Calendar + Market Hours",
-      "Kostenlos für Basis-Features",
+      "Gratis für Basis-Features",
     ],
     weaknesses: [
       "KEIN AI Risk Management",
@@ -122,7 +122,7 @@ export const COMPETITORS = {
       "Zuverlässige Execution",
     ],
     weaknesses: [
-      "KEIN AI Risk Engine",
+      "KEIN Risk Engine",
       "KEINE dynamische Lot-Anpassung",
       "KEIN Manipulation Shield",
       "KEINE Strategie-Analyse",
@@ -179,7 +179,7 @@ export const GF_ADVANTAGES = [
   "Cryptomus Crypto-Payment (kein Stripe nötig — Trader lieben Crypto)",
   "Obsidian+Gold Industrial Luxury Design (kein generisches Bootstrap-UI)",
   "Broker-agnostisch via MetaApi (Tegas, Tag, IC Markets, Pepperstone...)",
-  "FORGE AI Chat mit RAG (kennt deine Trades, dein DD, deine Strategie)",
+  "FORGE Mentor Chat mit RAG (kennt deine Trades, dein DD, deine Strategie)",
 ];
 
 // ══════════════════════════════════════════════════════════════
@@ -365,7 +365,7 @@ Schreibe die Vergleichsseite. Title max 60 Zeichen, Meta max 155.`,
 
   return {
     title: `Gold Foundry vs ${competitor.name} — Der komplette Vergleich`,
-    metaDescription: `Gold Foundry vs ${competitor.name}: ${comparison.scores["Gold Foundry"]} vs ${comparison.scores[competitor.name as keyof typeof comparison.scores] ?? 0} Features im direkten Vergleich. AI Copier, Shield, Strategy Lab.`,
+    metaDescription: `Gold Foundry vs ${competitor.name}: ${comparison.scores["Gold Foundry"]} vs ${comparison.scores[competitor.name as keyof typeof comparison.scores] ?? 0} Features im direkten Vergleich. Smart Copier, Shield, Strategy Lab.`,
     content: text,
     features: comparison.features,
   };

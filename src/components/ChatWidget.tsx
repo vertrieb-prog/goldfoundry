@@ -1,6 +1,6 @@
 // src/components/ChatWidget.tsx
 // ============================================================
-// FORGE AI Chat Widget — Begleitet den User auf JEDER Seite
+// FORGE Mentor Chat Widget — Begleitet den User auf JEDER Seite
 // Kontextueller Guide + Auto-Greeting + Streamed Responses
 // ============================================================
 
@@ -16,16 +16,16 @@ interface Message {
 /* ── Page-specific context messages ── */
 const PAGE_CONTEXT: Record<string, { greeting: string; actions: { label: string; q: string }[] }> = {
   "/": {
-    greeting: "Hey! Ich bin FORGE AI — dein Trading-Mentor.\n\nDu bist auf der Startseite von Gold Foundry. Das hier ist kein normales Trading-Tool — es ist ein komplettes AI-Trading-Ökosystem.\n\n🔥 Copier, Risk Engine, Market Intel, Strategy Lab — alles in einem.\n\nFrag mich alles oder erstell dir einen Account — ich begleite dich durch jeden Schritt.",
+    greeting: "Hey! Ich bin FORGE Mentor — dein Trading-Mentor.\n\nDu bist auf der Startseite von Gold Foundry. Das hier ist kein normales Trading-Tool — es ist ein komplettes AI-Trading-Ökosystem.\n\n🔥 Copier, Risk Engine, Market Intel, Strategy Lab — alles in einem.\n\nFrag mich alles oder erstell dir einen Account — ich begleite dich durch jeden Schritt.",
     actions: [
       { label: "Was ist Gold Foundry?", q: "Erkläre mir Gold Foundry in 3 Sätzen. Was macht euch besser?" },
-      { label: "Wie funktioniert der Copier?", q: "Wie funktioniert der AI Copier genau? Was sind die 7 Schutz-Faktoren?" },
+      { label: "Wie funktioniert der Copier?", q: "Wie funktioniert der Smart Copier genau? Was sind die 7 Schutz-Faktoren?" },
       { label: "Pricing erklären", q: "Welche Pläne gibt es und was ist der Unterschied?" },
       { label: "Account erstellen", q: "Ich will starten. Was muss ich tun?" },
     ],
   },
   "/auth/login": {
-    greeting: "Willkommen zurück! 👋\n\nGib deine E-Mail und dein Passwort ein um dich einzuloggen.\n\nNach dem Login siehst du sofort dein Dashboard mit:\n• Live Equity & P/L\n• Copier Status & Risk Engine\n• FORGE AI Analyse\n\nNoch keinen Account? Klick unten auf \"Registrieren\".",
+    greeting: "Willkommen zurück! 👋\n\nGib deine E-Mail und dein Passwort ein um dich einzuloggen.\n\nNach dem Login siehst du sofort dein Dashboard mit:\n• Live Equity & P/L\n• Copier Status & Risk Engine\n• FORGE Mentor Analyse\n\nNoch keinen Account? Klick unten auf \"Registrieren\".",
     actions: [
       { label: "Passwort vergessen", q: "Ich habe mein Passwort vergessen. Was kann ich tun?" },
       { label: "Account erstellen", q: "Ich habe noch keinen Account. Wie registriere ich mich?" },
@@ -33,15 +33,15 @@ const PAGE_CONTEXT: Record<string, { greeting: string; actions: { label: string;
     ],
   },
   "/auth/register": {
-    greeting: "Gute Entscheidung! 🚀\n\nIn 60 Sekunden hast du deinen Account.\n\n📝 So geht's:\n1. E-Mail & Passwort eingeben\n2. Bestätigungsmail klicken\n3. Dashboard öffnet sich\n4. MT-Konto verbinden → Copier läuft!\n\nDer Free-Plan gibt dir Zugang zum Dashboard und FORGE AI. Für den Copier brauchst du mindestens den Analyzer-Plan ($9/mo).",
+    greeting: "Gute Entscheidung! 🚀\n\nIn 60 Sekunden hast du deinen Account.\n\n📝 So geht's:\n1. E-Mail & Passwort eingeben\n2. Bestätigungsmail klicken\n3. Dashboard öffnet sich\n4. MT-Konto verbinden → Copier läuft!\n\nDer Free-Plan gibt dir Zugang zum Dashboard und FORGE Mentor. Für den Copier brauchst du mindestens den Analyzer-Plan ($9/mo).",
     actions: [
       { label: "Welcher Plan für mich?", q: "Ich bin Anfänger. Welchen Plan empfiehlst du mir?" },
-      { label: "Ist es kostenlos?", q: "Was bekomme ich kostenlos und was kostet extra?" },
+      { label: "Was kostet es?", q: "Was bekomme ich im Basis-Plan und was kostet ein Upgrade?" },
       { label: "Demo möglich?", q: "Kann ich erstmal auf einem Demo-Konto testen?" },
     ],
   },
   "/pricing": {
-    greeting: "Du schaust dir die Pläne an — gute Idee.\n\nKurz-Überblick:\n\n💡 Analyzer ($9/mo) — Dashboard + FORGE AI\n⚡ Copier ($29/mo) — Alles + AI Copier\n🔥 Pro ($59/mo) — Alles + Strategy Lab + Priority\n👑 Provider ($99/mo) — Signale anbieten + Revenue Share\n\nAlle Pläne haben die 7-Faktor Risk Engine. Frag mich wenn du unsicher bist!",
+    greeting: "Du schaust dir die Pläne an — gute Idee.\n\nKurz-Überblick:\n\n💡 Analyzer ($9/mo) — Dashboard + FORGE Mentor\n⚡ Copier ($29/mo) — Alles + Smart Copier\n🔥 Pro ($59/mo) — Alles + Strategy Lab + Priority\n👑 Provider ($99/mo) — Signale anbieten + Revenue Share\n\nAlle Pläne haben die 7-Faktor Risk Engine. Frag mich wenn du unsicher bist!",
     actions: [
       { label: "Was ist der Unterschied?", q: "Erkläre mir den Unterschied zwischen Copier und Pro Plan genau." },
       { label: "Lohnt sich Pro?", q: "Lohnt sich der Pro Plan? Was bekomme ich extra?" },
@@ -119,7 +119,7 @@ function getPageContext(path: string) {
 
   // Generic fallback
   return {
-    greeting: "Hey! Ich bin FORGE AI — dein Trading-Mentor. 🧠\n\nIch begleite dich durch Gold Foundry. Frag mich was du wissen willst!",
+    greeting: "Hey! Ich bin FORGE Mentor — dein Trading-Mentor. 🧠\n\nIch begleite dich durch Gold Foundry. Frag mich was du wissen willst!",
     actions: [
       { label: "Was kann ich hier tun?", q: "Was kann ich auf dieser Seite machen?" },
       { label: "Hilfe", q: "Ich brauche Hilfe. Erkläre mir was gerade passiert." },
@@ -388,7 +388,7 @@ export default function ChatWidget() {
             <span style={{ fontSize: 16 }}>🧠</span>
           </div>
           <div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: C.tb, letterSpacing: 0.5 }}>FORGE AI</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: C.tb, letterSpacing: 0.5 }}>FORGE Mentor</div>
             <div style={{ fontSize: 9, color: C.g, letterSpacing: 2, fontWeight: 500 }}>DEIN TRADING-MENTOR</div>
           </div>
         </div>
@@ -414,7 +414,7 @@ export default function ChatWidget() {
           }}>
             {m.role !== "user" && (
               <span style={{ fontSize: 8, color: C.td, marginBottom: 3, letterSpacing: 1.5, fontWeight: 500 }}>
-                {m.role === "greeting" ? "FORGE AI" : "FORGE AI"}
+                {m.role === "greeting" ? "FORGE Mentor" : "FORGE Mentor"}
               </span>
             )}
             <div style={{

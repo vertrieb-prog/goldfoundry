@@ -55,8 +55,8 @@ export async function generateTradeResults(): Promise<GeneratedContent[]> {
   const wr = count > 0 ? ((winners / count) * 100).toFixed(0) : "0";
 
   const text = await cachedCall({
-    prompt: `Erstelle einen Trade-Results Social Media Post für Gold Foundry. Kurz, datengetrieben, professionell. Zeige dass der AI Copier funktioniert.`,
-    message: `Heute: ${count} Trades, ${wr}% Win Rate, ${totalPnl >= 0 ? "+" : ""}$${totalPnl.toFixed(2)} P&L. AI Copier lief ${count > 0 ? "aktiv" : "pausiert"}.`,
+    prompt: `Erstelle einen Trade-Results Social Media Post für Gold Foundry. Kurz, datengetrieben, professionell. Zeige dass der Smart Copier funktioniert.`,
+    message: `Heute: ${count} Trades, ${wr}% Win Rate, ${totalPnl >= 0 ? "+" : ""}$${totalPnl.toFixed(2)} P&L. Smart Copier lief ${count > 0 ? "aktiv" : "pausiert"}.`,
     model: MODELS.fast,
     maxTokens: 200,
   });
@@ -72,7 +72,7 @@ const EDUCATIONAL_TOPICS = [
   "Warum 80% der Prop-Firm Challenges scheitern — und wie du bestehst",
   "Trailing vs Fixed Drawdown: Was ist sicherer für dein Kapital?",
   "Die 3 besten Trading-Sessions für XAUUSD",
-  "Wie der FORGE AI Copier dein Risiko automatisch managed",
+  "Wie der FORGE Smart Copier dein Risiko automatisch managed",
   "Stop Hunts erkennen: So schützt du dich vor Marktmanipulation",
   "Die goldene Regel: Warum Nacht-Trading profitabler ist als du denkst",
   "MQL4 Code optimieren mit KI: So wird dein EA 30% profitabler",

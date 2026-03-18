@@ -5,6 +5,12 @@ import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
+    // DEV MODE: Return empty accounts when using placeholder keys
+    const isDevMode = !process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder');
+    if (isDevMode) {
+      return NextResponse.json({ accounts: [], intel: null, devMode: true });
+    }
+
     const supabase = createSupabaseServer();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

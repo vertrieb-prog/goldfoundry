@@ -6,7 +6,7 @@
 
 export interface PageContext {
   page: string;        // z.B. "/dashboard", "/dashboard/copier", "/pricing"
-  view?: string;       // z.B. "Command Center", "AI Copier"
+  view?: string;       // z.B. "Command Center", "Smart Copier"
   visibleData?: Record<string, any>; // Was der User auf dem Screen sieht
 }
 
@@ -18,15 +18,15 @@ export function getPageGuidance(ctx: PageContext): string {
 Der User ist auf der LANDING PAGE. Er ist wahrscheinlich neu oder noch nicht eingeloggt.
 → Erkläre was Gold Foundry ist und warum es einzigartig ist
 → Führe ihn zum Registrieren oder Einloggen
-→ Zeig die 3 stärksten Features: AI Copier, Shield, Strategy Lab
+→ Zeig die 3 stärksten Features: Smart Copier, Shield, Strategy Lab
 → "Klick oben rechts auf 'Starten' — in 2 Minuten hast du deinen Account."`;
 
   if (p === "/pricing") return `
 Der User schaut sich die PRICING PAGE an. Er überlegt ob er zahlen soll.
-→ Er sieht: 4 Abo-Tiers (Analyzer $9, Copier $29, Pro $79, Provider $149)
+→ Er sieht: 4 Abo-Tiers (Analyzer 9€, Copier 29€, Pro 79€, Provider 149€)
 → Hilf ihm den richtigen Plan zu wählen basierend auf seinen Bedürfnissen
 → Frag: "Was tradest du? Wie viele Accounts?" → empfiehl den passenden Tier
-→ Betone: "Ab $29 bekommst du den AI Copier der dein Kapital schützt. Das ist weniger als ein verlorener Trade."
+→ Betone: "Ab 29€ bekommst du den Smart Copier der dein Kapital schützt. Das ist weniger als ein verlorener Trade."
 → Wenn er zögert: "Du kannst jederzeit kündigen. Kein Vertrag."
 → Zahlung läuft über Cryptomus (Crypto) oder Stripe (Karte).`;
 
@@ -39,7 +39,7 @@ Der User ist im COMMAND CENTER (Hauptdashboard).
 → "Deine Equity Curve zeigt den Verlauf der letzten 90 Tage. Der goldene Bereich ist dein Profit."`;
 
   if (p === "/dashboard/copier") return `
-Der User schaut den AI COPIER an.
+Der User schaut den SMART COPIER an.
 → Er sieht: 7-Faktor Multiplier Balken, Account-Cards, Risk Radar
 → Erkläre jeden Faktor wenn er fragt: TIME (Nacht-Boost), NEWS (Auto-Pause), DD (Buffer-Schutz), etc.
 → Wenn ein Account pausiert ist: Erkläre warum und wann er wieder startet
@@ -47,7 +47,7 @@ Der User schaut den AI COPIER an.
 → Bei "Connect" Frage: Führe ihn durch den Onboarding-Prozess Schritt für Schritt`;
 
   if (p === "/dashboard/chat") return `
-Der User ist im FORGE AI Chat.
+Der User ist im FORGE Mentor Chat.
 → Er hat den Chat explizit geöffnet → will aktiv kommunizieren
 → Sei ausführlicher als beim Widget. Gib detaillierte Analysen.
 → Frag proaktiv nach seinen Zielen wenn du sie noch nicht kennst`;
@@ -68,7 +68,7 @@ Der User ist im STRATEGY LAB.
   if (p === "/dashboard/affiliate") return `
 Der User schaut das AFFILIATE/PARTNER Dashboard an.
 → Er sieht: Referral-Statistiken, Provision-Aufteilung, Struktur-Baum, Affiliate-Link
-→ Motiviere ihn: "Jeder Referral mit Copier-Abo bringt dir $8.70/Monat passiv."
+→ Motiviere ihn: "Jeder Referral mit Copier-Abo bringt dir 8,70€/Monat passiv."
 → Gib Marketing-Tipps: "Poste deinen Link in deine Instagram Bio + Story mit deinen Ergebnissen."
 → Wenn Guthaben > $50: "Du hast $X zum Auszahlen — vergiss nicht dein Geld abzuheben!"`;
 

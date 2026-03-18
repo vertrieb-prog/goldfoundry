@@ -62,7 +62,7 @@ export const PLATFORMS = {
   telegram: {
     name: "Telegram Groups",
     groups: ["Forex Signals DE", "Gold Trading", "Prop Firm Community"],
-    style: "Kurz, direkt, mit Ergebnissen. Screenshots. 'Heute +$X mit dem AI Copier'.",
+    style: "Kurz, direkt, mit Ergebnissen. Screenshots. 'Heute +$X mit dem Smart Copier'.",
     postTypes: ["result_share", "tip", "discussion"],
   },
 };
@@ -108,7 +108,7 @@ const CONTENT_ANGLES = [
   },
   {
     angle: "result_share",
-    prompt: "Teile ein Wochen-Ergebnis: 'Mein AI Copier hat diese Woche X Trades gemacht, Y% Win Rate, +$Z. Der interessanteste Moment: NFP am Freitag — Copier hat automatisch 45min vorher pausiert.' Mach es authentisch, nicht werblich.",
+    prompt: "Teile ein Wochen-Ergebnis: 'Mein Smart Copier hat diese Woche X Trades gemacht, Y% Win Rate, +$Z. Der interessanteste Moment: NFP am Freitag — Copier hat automatisch 45min vorher pausiert.' Mach es authentisch, nicht werblich.",
     platforms: ["reddit", "telegram", "forexFactory"],
   },
 ];

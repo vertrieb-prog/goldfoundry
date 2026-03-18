@@ -11,20 +11,20 @@ export const PLANS = {
     name: "Analyzer",
     price: 9,
     priceId: process.env.STRIPE_PRICE_ANALYZER!,
-    features: ["Trade-History Upload + Analyse", "1 MT-Account", "FORGE AI (5/Tag)", "Community Read-Only", "Leaderboard"],
+    features: ["Trade-History Upload + Analyse", "1 MT-Account", "FORGE Mentor (5/Tag)", "Community Read-Only", "Leaderboard"],
   },
   copier: {
     name: "Copier",
     price: 29,
     priceId: process.env.STRIPE_PRICE_COPIER!,
-    features: ["Alles aus Analyzer", "AI Copier (1 Account)", "7-Faktor Risk Engine", "Market Intel Feed", "News Auto-Pause", "FORGE AI (unbegrenzt)", "Affiliate Link"],
+    features: ["Alles aus Analyzer", "Smart Copier (1 Account)", "7-Faktor Risk Engine", "Market Intel Feed", "News Auto-Pause", "FORGE Mentor (unbegrenzt)", "Affiliate Link"],
     popular: true,
   },
   pro: {
     name: "Pro Trader",
     price: 79,
     priceId: process.env.STRIPE_PRICE_PRO!,
-    features: ["Alles aus Copier", "AI Copier (5 Accounts)", "MQL4/MQL5 Upload + AI-Optimierung", "Backtest-Analyse", "Strategy Marketplace", "MLM Trader Partner", "Priority Support"],
+    features: ["Alles aus Copier", "Smart Copier (5 Accounts)", "MQL4/MQL5 Upload + AI-Optimierung", "Backtest-Analyse", "Strategy Marketplace", "MLM Trader Partner", "Priority Support"],
   },
   provider: {
     name: "Signal Provider",

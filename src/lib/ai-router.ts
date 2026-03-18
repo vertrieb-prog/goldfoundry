@@ -1,6 +1,6 @@
 // src/lib/ai-router.ts
 // ============================================================
-// FORGE AI ROUTER — Kostenoptimiertes AI Model Routing
+// FORGE Mentor ROUTER — Kostenoptimiertes AI Model Routing
 //
 // Routet jeden AI-Call zum günstigsten Modell das die Aufgabe
 // QUALITATIV lösen kann. Trackt Token-Verbrauch und Kosten.

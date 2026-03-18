@@ -53,7 +53,7 @@ export async function POST(request: Request) {
     let systemPrompt: string;
     if (userTier === "free" || userTier === "analyzer") {
       // KOMPAKT-PROMPT für Free/Analyzer (spart ~60% Input-Tokens)
-      systemPrompt = `Du bist FORGE AI auf Gold Foundry. Kurze, hilfreiche Antworten. Max 100 Wörter. Wenn der User Fragen hat die über Basics hinausgehen, empfiehl das Copier-Abo ($29/Mo) für ausführlichere Analysen. Sei freundlich aber effizient.`;
+      systemPrompt = `Du bist FORGE Mentor auf Gold Foundry. Kurze, hilfreiche Antworten. Max 100 Wörter. Wenn der User Fragen hat die über Basics hinausgehen, empfiehl das Copier-Abo (29€/Mo) für ausführlichere Analysen. Sei freundlich aber effizient.`;
     } else {
       // VOLLER Mentor-Prompt für zahlende User
       systemPrompt = await buildMentorPrompt(user.id, message);
@@ -180,7 +180,7 @@ export async function POST(request: Request) {
       },
     });
   } catch (err) {
-    console.error("[FORGE AI] Error:", err);
+    console.error("[FORGE Mentor] Error:", err);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }
 }

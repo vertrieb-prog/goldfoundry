@@ -1,0 +1,48 @@
+graph LR
+    subgraph "Data Collection"
+        MQL5[MQL5 Scraper]
+        MFB[MyFxBook Scraper]
+        TG[Telegram Listener]
+        EXCH[Exchange APIs]
+    end
+    subgraph "Intelligence"
+        IE[Intelligence Engine]
+        SENT[Sentiment Tracker]
+        ONCHAIN[On-Chain Intel]
+    end
+    subgraph "Trading"
+        TM[Trade Manager]
+        RE[Risk Engine]
+        KS[Kill Switch]
+        MS[Momentum Scaling]
+        CC[Crypto Copier]
+    end
+    subgraph "Partner/MLM"
+        CE[Commission Engine]
+        FP[FORGE Points]
+        NT[Network Tree]
+        BP[Builder Packs]
+    end
+    subgraph "Frontend"
+        DASH[Dashboard]
+        PD[Partner Dashboard]
+        LP[Landing Pages]
+        SEO[SEO Engine]
+    end
+    MQL5 --> IE
+    MFB --> IE
+    TG --> TM
+    EXCH --> CC
+    ONCHAIN --> IE
+    IE --> TM
+    IE --> RE
+    TM --> RE
+    RE --> KS
+    RE --> MS
+    CE --> FP
+    NT --> CE
+    BP --> NT
+    DASH --> TM
+    DASH --> FP
+    PD --> CE
+    SEO --> LP

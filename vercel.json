@@ -51,6 +51,10 @@
     {
       "path": "/api/cron/upline-push",
       "schedule": "0 9 * * 1-5"
+    },
+    {
+      "path": "/api/cron/master",
+      "schedule": "0 * * * *"
     }
   ]
 }

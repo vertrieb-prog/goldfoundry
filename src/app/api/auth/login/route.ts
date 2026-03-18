@@ -6,6 +6,13 @@ import { NextResponse } from "next/server";
 export async function POST(request: Request) {
   try {
     const { email, password } = await request.json();
+
+    // DEV MODE: Skip Supabase when using placeholder keys
+    const isDevMode = !process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder');
+    if (isDevMode) {
+      return NextResponse.json({ success: true, user: { id: 'dev-user', email }, devMode: true });
+    }
+
     const supabase = createSupabaseServer();
 
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });

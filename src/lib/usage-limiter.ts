@@ -119,11 +119,11 @@ export async function checkUsageLimit(userId: string): Promise<UsageCheck> {
     }
 
     const upgradeMsg = tier === "free"
-      ? `Du hast deine 5 kostenlosen Nachrichten diesen Monat aufgebraucht. Mit dem Copier-Abo ($29/Mo) bekommst du 100 Nachrichten + den AI Copier der dein Kapital schützt.`
+      ? `Du hast deine 5 Nachrichten im Basis-Plan diesen Monat aufgebraucht. Mit dem Copier-Abo (29€/Mo) bekommst du 100 Nachrichten + den Smart Copier der dein Kapital schützt.`
       : tier === "analyzer"
-      ? `Du hast dein Analyzer-Limit von 30 Nachrichten erreicht. Upgrade auf Copier ($29/Mo) für 100 Nachrichten + AI Copier.`
+      ? `Du hast dein Analyzer-Limit von 30 Nachrichten erreicht. Upgrade auf Copier (29€/Mo) für 100 Nachrichten + Smart Copier.`
       : tier === "copier"
-      ? `Du hast dein Copier-Limit von 100 Nachrichten erreicht. Upgrade auf Pro ($79/Mo) für 300 Nachrichten + Strategy Lab.`
+      ? `Du hast dein Copier-Limit von 100 Nachrichten erreicht. Upgrade auf Pro (79€/Mo) für 300 Nachrichten + Strategy Lab.`
       : `Dein monatliches Nachrichten-Limit ist erreicht. Es wird am 1. des nächsten Monats zurückgesetzt.`;
 
     return {

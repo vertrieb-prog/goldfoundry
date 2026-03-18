@@ -107,7 +107,7 @@ export async function pushInactiveReferral(referrerUserId: string, referral: {
         <p style="color:#f39c12;font-weight:600;margin:0 0 6px;font-size:13px;">Was du tun kannst:</p>
         <p style="color:#a09070;font-size:12px;line-height:1.7;margin:0;">
           → Schick eine kurze WhatsApp/DM: "Hey, alles klar bei dir? Dein Copier läuft noch..."<br/>
-          → Teile ein aktuelles Ergebnis: "Gestern +$X mit dem AI Copier — du verpasst was!"<br/>
+          → Teile ein aktuelles Ergebnis: "Gestern +$X mit dem Smart Copier — du verpasst was!"<br/>
           → Biete einen Call an: "Lass uns 10 Min reden, ich zeig dir die neuen Features"
         </p>
       </div>
@@ -142,7 +142,7 @@ export async function pushNoPurchase(referrerUserId: string, referral: {
       <div style="background:rgba(212,165,55,0.04);border-radius:4px;padding:14px;margin:16px 0;">
         <p style="color:#d4a537;font-weight:600;margin:0 0 6px;font-size:13px;">Closing-Tipps:</p>
         <p style="color:#a09070;font-size:12px;line-height:1.7;margin:0;">
-          → "Der Copier-Tier ist nur $29/Monat — günstiger als ein Starbucks pro Tag"<br/>
+          → "Der Copier-Tier ist nur 29€/Monat — günstiger als ein Starbucks pro Tag"<br/>
           → "Du kannst jederzeit kündigen, kein Vertrag"<br/>
           → "Zeig ihm deine eigenen Ergebnisse — Social Proof wirkt am besten"<br/>
           → "Biete an gemeinsam den ersten Account zu verbinden — 5 Min"
@@ -217,7 +217,7 @@ async function generateTalkingPoints(scenario: string, referralName: string): Pr
     });
     return text || "Frag nach seiner Trading-Erfahrung und zeig ihm den Copier.";
   } catch {
-    return "→ Frag was er tradet und welche Prop-Firm er nutzt\n→ Zeig ihm den AI Copier und die 7 Schutzfaktoren\n→ Biete an beim Setup zu helfen\n→ Erwähne deine eigenen Ergebnisse";
+    return "→ Frag was er tradet und welche Prop-Firm er nutzt\n→ Zeig ihm den Smart Copier und die 7 Schutzfaktoren\n→ Biete an beim Setup zu helfen\n→ Erwähne deine eigenen Ergebnisse";
   }
 }
 

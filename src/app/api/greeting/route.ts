@@ -59,7 +59,7 @@ Memory: Exp:${memory.tradingExperience ?? "?"} Goal:${memory.propFirmGoal ?? "?"
     const res = await anthropic.messages.create({
       model: "claude-sonnet-4-20250514",
       max_tokens: 400,
-      system: `Du bist FORGE AI. Begrüße ${name} beim Login. Max 120 Wörter. Struktur:
+      system: `Du bist FORGE Mentor. Begrüße ${name} beim Login. Max 120 Wörter. Struktur:
 1. Persönliche Begrüßung + wichtigste Zahl
 2. Was seit letztem Mal passiert ist (2 Sätze)
 3. 1 konkreter CTA der ihn zum HANDELN bringt
@@ -77,7 +77,7 @@ Ton: Direkt, warm, kompetent. Wie ein Mentor der sich kümmert. Deutsch.`,
   } catch {
     greeting = isPaying
       ? `Hey ${name}! ${todayPnl >= 0 ? `Heute: +$${todayPnl.toFixed(0)}` : "Dein Copier arbeitet."} Buffer: ${accs[0]?.buf ?? 0}%.`
-      : `Hey ${name}! Dein AI Copier wartet. Verbinde dein MT-Konto → 3 Minuten Setup.`;
+      : `Hey ${name}! Dein Smart Copier wartet. Verbinde dein MT-Konto → 3 Minuten Setup.`;
   }
 
   return NextResponse.json({

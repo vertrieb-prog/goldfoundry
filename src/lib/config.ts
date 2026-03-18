@@ -12,11 +12,11 @@ export const MODELS = {
 // ── Pricing ─────────────────────────────────────────────────
 export const PRICING = {
   plans: {
-    copier:    { name: "Smart Copier",     price: 29,  firstMonth: 6,  discount: 80 },
-    starter:   { name: "Signal Starter",   price: 49,  firstMonth: 10, discount: 80 },
-    pro:       { name: "Signal Pro",       price: 79,  firstMonth: 16, discount: 80 },
+    copier: { name: "Smart Copier", price: 29, firstMonth: 6, discount: 80 },
+    starter: { name: "Signal Starter", price: 49, firstMonth: 10, discount: 80 },
+    pro: { name: "Signal Pro", price: 79, firstMonth: 16, discount: 80 },
     unlimited: { name: "Signal Unlimited", price: 149, firstMonth: 30, discount: 80 },
-    partner:   { name: "Partner",          price: 29,  firstMonth: 6,  discount: 80 },
+    partner: { name: "Partner", price: 29, firstMonth: 6, discount: 80 },
   },
   currency: "€",
   profitSplit: { investor: 60, platform: 40 },
@@ -25,24 +25,24 @@ export const PRICING = {
 
 // ── Partner/Affiliate Tiers ─────────────────────────────────
 export const PARTNER_TIERS = {
-  bronze:  { name: "Bronze",  minPartners: 1,  l1: 30, l2: 0,  l3: 0 },
-  silber:  { name: "Silber",  minPartners: 5,  l1: 35, l2: 10, l3: 0 },
-  gold:    { name: "Gold",    minPartners: 15, l1: 40, l2: 12, l3: 5 },
+  bronze: { name: "Bronze", minPartners: 1, l1: 30, l2: 0, l3: 0 },
+  silber: { name: "Silber", minPartners: 5, l1: 35, l2: 10, l3: 0 },
+  gold: { name: "Gold", minPartners: 15, l1: 40, l2: 12, l3: 5 },
   diamond: { name: "Diamond", minPartners: 50, l1: 50, l2: 15, l3: 8 },
 } as const;
 
 // ── Broker Models ───────────────────────────────────────────
 export const BROKERS = {
-  tag:    { name: "Tag Markets",     leverage: 12, dd: 10, ddType: "Fixed",    minDeposit: 500,  currency: "€" },
-  tegas:  { name: "Tegas FX",       leverage: 24, dd: 5,  ddType: "Trailing", minDeposit: 200,  currency: "€" },
-  standard: { name: "Standard Broker", leverage: 1,  dd: 100, ddType: "None",  minDeposit: 100,  currency: "€" },
+  tag: { name: "Tag Markets", leverage: 12, dd: 10, ddType: "Fixed", minDeposit: 500, currency: "€" },
+  tegas: { name: "Tegas FX", leverage: 24, dd: 5, ddType: "Trailing", minDeposit: 200, currency: "€" },
+  standard: { name: "Standard Broker", leverage: 1, dd: 100, ddType: "None", minDeposit: 100, currency: "€" },
 } as const;
 
 // ── Tier Limits (Messages/Month) ────────────────────────────
 export const TIER_LIMITS = {
-  free:   { messages: 5,   model: MODELS.fast,  label: "Free" },
+  free: { messages: 5, model: MODELS.fast, label: "Free" },
   copier: { messages: 100, model: MODELS.smart, label: "Copier" },
-  pro:    { messages: 300, model: MODELS.smart, label: "Pro" },
+  pro: { messages: 300, model: MODELS.smart, label: "Pro" },
 } as const;
 
 // ── Risk Engine Thresholds ──────────────────────────────────
@@ -121,6 +121,70 @@ export const PRODUCT_NAMES = {
   riskEngine: "7-Faktor Risk Engine",
   platform: "Gold Foundry",
   agent: "FORGE Agent",
+} as const;
+
+// ── Exchanges ───────────────────────────────────────────────
+export const EXCHANGES = {
+  binance: { name: "Binance", type: "crypto", fees: 0.1, leverage: 125 },
+  bybit: { name: "Bybit", type: "crypto", fees: 0.06, leverage: 100 },
+  bitget: { name: "Bitget", type: "crypto", fees: 0.06, leverage: 125 },
+  okx: { name: "OKX", type: "crypto", fees: 0.08, leverage: 100 },
+  kucoin: { name: "KuCoin", type: "crypto", fees: 0.1, leverage: 100 },
+  mexc: { name: "MEXC", type: "crypto", fees: 0.02, leverage: 200 },
+  gateio: { name: "Gate.io", type: "crypto", fees: 0.15, leverage: 100 },
+  htx: { name: "HTX", type: "crypto", fees: 0.2, leverage: 50 },
+  bingx: { name: "BingX", type: "crypto", fees: 0.04, leverage: 150 },
+  phemex: { name: "Phemex", type: "crypto", fees: 0.06, leverage: 100 },
+} as const;
+
+// ── Assets ──────────────────────────────────────────────────
+export const ASSETS = {
+  crypto: ["BTCUSD", "ETHUSD", "SOLUSD", "XRPUSD", "BNBUSD", "ADAUSD", "DOTUSD", "AVAXUSD", "LINKUSD", "MATICUSD"],
+  forex: ["EURUSD", "GBPUSD", "USDJPY", "AUDUSD", "USDCHF", "USDCAD", "NZDUSD", "EURGBP", "EURJPY", "GBPJPY"],
+  indices: ["US500", "US30", "NAS100", "DE40", "UK100", "JP225", "AU200", "FR40", "HK50", "EU50"],
+  commodities: ["XAUUSD", "XAGUSD", "USOIL", "UKOIL", "NATGAS", "COPPER"],
+} as const;
+
+// ── Rank Requirements (7 Ranks) ─────────────────────────────
+export const RANK_REQUIREMENTS = {
+  starter: { name: "Starter", minRefs: 0, minVolume: 0, minTeamSize: 0, minActiveRefs: 0, bonus: 0 },
+  bronze: { name: "Bronze", minRefs: 3, minVolume: 500, minTeamSize: 3, minActiveRefs: 2, bonus: 100 },
+  silber: { name: "Silber", minRefs: 10, minVolume: 2000, minTeamSize: 15, minActiveRefs: 5, bonus: 300 },
+  gold: { name: "Gold", minRefs: 25, minVolume: 5000, minTeamSize: 50, minActiveRefs: 15, bonus: 1000 },
+  diamond: { name: "Diamond", minRefs: 50, minVolume: 15000, minTeamSize: 150, minActiveRefs: 30, bonus: 3000 },
+  crown: { name: "Crown", minRefs: 100, minVolume: 50000, minTeamSize: 500, minActiveRefs: 60, bonus: 10000 },
+  legendary: { name: "Legendary", minRefs: 250, minVolume: 150000, minTeamSize: 2000, minActiveRefs: 150, bonus: 50000 },
+} as const;
+
+// ── Builder Packs ───────────────────────────────────────────
+export const BUILDER_PACKS = {
+  pack5: { name: "Starter Pack", quantity: 5, price: 99, pricePerCode: 19.80 },
+  pack10: { name: "Growth Pack", quantity: 10, price: 179, pricePerCode: 17.90 },
+  pack25: { name: "Builder Pack", quantity: 25, price: 399, pricePerCode: 15.96 },
+  pack50: { name: "Enterprise Pack", quantity: 50, price: 699, pricePerCode: 13.98 },
+} as const;
+
+// ── Contest Config ──────────────────────────────────────────
+export const CONTEST_CONFIG = {
+  weeklyChallenge: { minParticipants: 10, prizePool: 5000, currency: "FP" },
+  monthlyContest: { minParticipants: 25, prizePool: 25000, currency: "FP" },
+  leaderboardRefresh: 3600, // seconds
+} as const;
+
+// ── Momentum Scaling ────────────────────────────────────────
+export const MOMENTUM_SCALING = {
+  baseRisk: 1.0,            // 1% base risk
+  winIncrement: 0.2,        // +0.2% per consecutive win
+  maxMultiplier: 1.5,       // cap at 1.5x base
+  resetOnLoss: true,        // reset to base on loss
+} as const;
+
+// ── FORGE Points Config ─────────────────────────────────────
+export const FORGE_POINTS = {
+  valuePerFP: 0.10,         // 1 FP = €0.10
+  minPayout: 5000,          // min 5000 FP for payout
+  vestingMonths: 3,         // 3-month vesting
+  poolPercentage: 5,        // 5% pool for Gold+
 } as const;
 
 // ── MetaAPI Config (für Scripts) ────────────────────────────

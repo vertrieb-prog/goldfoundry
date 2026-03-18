@@ -19,7 +19,7 @@ const LANGUAGES = [
 ];
 
 const COMPETITORS = [
-  { name: "Myfxbook", slug: "myfxbook", weaknesses: ["No AI copier", "No prop-firm optimization", "No code analysis", "Outdated UI"] },
+  { name: "Myfxbook", slug: "myfxbook", weaknesses: ["No smart copier", "No prop-firm optimization", "No code analysis", "Outdated UI"] },
   { name: "4X Solutions", slug: "4xsolutions", weaknesses: ["No AI risk management", "No strategy optimization", "No MLM system", "High pricing"] },
   { name: "ZuluTrade", slug: "zulutrade", weaknesses: ["No AI autopilot", "No manipulation detection", "No MQL4 analysis", "No prop-firm focus"] },
   { name: "Darwinex", slug: "darwinex", weaknesses: ["Complex onboarding", "No MetaTrader copier", "No XAUUSD focus", "No trailing DD protection"] },
@@ -44,7 +44,7 @@ export async function generateComparisonPage(competitorSlug: string, lang: strin
 
   const text = await cachedCall({
     prompt: `Du bist ein SEO-Texter für Gold Foundry (goldfoundry.de). Schreibe einen Vergleichsartikel Gold Foundry vs ${competitor.name}. Sprache: ${language?.name ?? "English"}. SEO-optimiert, H2-Tags für Sections, ehrlich aber Gold Foundry klar im Vorteil. 800-1200 Wörter. Gib auch einen meta-Title (max 60 Zeichen) und meta-Description (max 155 Zeichen) am Anfang in JSON an: {"title":"...","metaDescription":"...","content":"...Markdown..."}`,
-    message: `Vergleich: Gold Foundry vs ${competitor.name}. Gold Foundry Vorteile: AI Copier mit 7-Faktor Risk Engine, Manipulation Shield, MQL4 Code-Optimierung, Prop-Firm Playbooks, MLM System, autonome Strategie-Generierung, Nacht-Boost. ${competitor.name} Schwächen: ${competitor.weaknesses.join(", ")}.`,
+    message: `Vergleich: Gold Foundry vs ${competitor.name}. Gold Foundry Vorteile: Smart Copier mit 7-Faktor Risk Engine, Manipulation Shield, MQL4 Code-Optimierung, Prop-Firm Playbooks, MLM System, autonome Strategie-Generierung, Nacht-Boost. ${competitor.name} Schwächen: ${competitor.weaknesses.join(", ")}.`,
     model: MODELS.smart,
     maxTokens: 1500,
   });
@@ -64,7 +64,7 @@ export async function generateComparisonPage(competitorSlug: string, lang: strin
   } catch {
     return {
       slug: `vs-${competitorSlug}`, lang, title: `Gold Foundry vs ${competitor.name}`,
-      metaDescription: `Vergleich: Gold Foundry vs ${competitor.name}. AI Copier, Prop-Firm Tools, und mehr.`,
+      metaDescription: `Vergleich: Gold Foundry vs ${competitor.name}. Smart Copier, Prop-Firm Tools, und mehr.`,
       content: text, keywords: [], type: "comparison",
     };
   }
