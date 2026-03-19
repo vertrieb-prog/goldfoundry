@@ -226,30 +226,230 @@ function featureRow(icon: string, title: string, desc: string): string {
 // ── Welcome Email ────────────────────────────────────────────
 export async function sendWelcomeEmail(email: string, name: string) {
   const content = `
-    ${heading(`Willkommen in der Forge, ${name}.`, "Dein Account ist aktiv. In 4 einfachen Schritten bist du live.")}
+    <!-- Hero Banner with gradient -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:-40px -36px 0;width:calc(100% + 72px);">
+      <tr><td style="background:linear-gradient(135deg,${C.bg} 0%,#1a1228 40%,#1e1610 70%,${C.bg} 100%);padding:48px 36px 40px;border-bottom:1px solid ${C.goldBorder};">
 
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:8px 0 0;">
-      ${stepItem(1, "MetaTrader-Konto verbinden")}
-      ${stepItem(2, "Firm-Profil w&auml;hlen (Tegas 24x oder Tag 12x)")}
-      ${stepItem(3, "Smart Copier aktivieren")}
-      ${stepItem(4, "Zur&uuml;cklehnen. Die Forge arbeitet.")}
+        <!-- Status Badge -->
+        <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+          <tr><td style="background:rgba(46,204,113,0.08);border:1px solid rgba(46,204,113,0.2);border-radius:999px;padding:5px 14px;">
+            <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+              <td style="width:8px;"><div style="width:6px;height:6px;border-radius:50%;background:${C.success};"></div></td>
+              <td style="padding-left:8px;font-family:'JetBrains Mono',monospace;font-size:10px;color:${C.success};letter-spacing:1.5px;text-transform:uppercase;">Account aktiv</td>
+            </tr></table>
+          </td></tr>
+        </table>
+
+        <!-- Big Welcome Heading -->
+        <h1 style="margin:0 0 6px;font-family:'Outfit','Inter',sans-serif;font-size:32px;font-weight:800;color:${C.text};line-height:1.15;letter-spacing:-0.03em;">
+          Willkommen in der Forge,
+        </h1>
+        <h1 style="margin:0 0 16px;font-family:'Outfit','Inter',sans-serif;font-size:32px;font-weight:800;color:${C.gold};line-height:1.15;letter-spacing:-0.03em;">
+          ${name}.
+        </h1>
+        <p style="margin:0;font-family:'Inter',sans-serif;font-size:15px;color:${C.textDim};line-height:1.7;max-width:420px;">
+          Dein Trading l&auml;uft ab jetzt auf Autopilot. Unser System kopiert Trades, sch&uuml;tzt dein Kapital und optimiert in Echtzeit.
+        </p>
+      </td></tr>
+    </table>
+
+    <!-- Spacer -->
+    <div style="height:36px;"></div>
+
+    <!-- Stats Row -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td style="width:33%;padding:16px 12px;background:${C.bgCardAlt};border:1px solid ${C.goldBorder};border-radius:10px;text-align:center;">
+          <div style="font-family:'Outfit','Inter',sans-serif;font-size:28px;font-weight:800;color:${C.gold};line-height:1;">24/5</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:${C.textMuted};margin-top:6px;text-transform:uppercase;letter-spacing:1.5px;">Automatisch</div>
+        </td>
+        <td style="width:8px;"></td>
+        <td style="width:33%;padding:16px 12px;background:${C.bgCardAlt};border:1px solid ${C.goldBorder};border-radius:10px;text-align:center;">
+          <div style="font-family:'Outfit','Inter',sans-serif;font-size:28px;font-weight:800;color:${C.gold};line-height:1;">7x</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:${C.textMuted};margin-top:6px;text-transform:uppercase;letter-spacing:1.5px;">Risk Faktoren</div>
+        </td>
+        <td style="width:8px;"></td>
+        <td style="width:33%;padding:16px 12px;background:${C.bgCardAlt};border:1px solid ${C.goldBorder};border-radius:10px;text-align:center;">
+          <div style="font-family:'Outfit','Inter',sans-serif;font-size:28px;font-weight:800;color:${C.success};line-height:1;">&lt;2s</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:${C.textMuted};margin-top:6px;text-transform:uppercase;letter-spacing:1.5px;">Ausf&uuml;hrung</div>
+        </td>
+      </tr>
     </table>
 
     ${divider()}
 
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-      ${featureRow("&#9889;", "Smart Copier", "Automatisch Trades kopieren mit intelligentem Risk Management.")}
-      ${featureRow("&#128737;", "Risk Shield", "7-Faktor Risk Engine sch&uuml;tzt dein Kapital in Echtzeit.")}
-      ${featureRow("&#129302;", "FORGE Mentor", "Dein KI-Mentor f&uuml;r Strategie und Trading-Fragen.")}
+    <!-- Section: Dein Schnellstart -->
+    <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 20px;">
+      <tr>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:10px;color:${C.gold};letter-spacing:2px;text-transform:uppercase;padding:4px 12px;background:${C.goldSubtle};border:1px solid ${C.goldBorder};border-radius:6px;">
+          &#9670;&nbsp; Schnellstart
+        </td>
+      </tr>
     </table>
 
-    ${ctaButton("Dashboard &ouml;ffnen &rarr;", `${BASE_URL}/dashboard`)}
+    <h2 style="margin:0 0 4px;font-family:'Outfit','Inter',sans-serif;font-size:22px;font-weight:800;color:${C.text};letter-spacing:-0.02em;">
+      In 4 Schritten live.
+    </h2>
+    <p style="margin:0 0 24px;font-family:'Inter',sans-serif;font-size:14px;color:${C.textDim};line-height:1.6;">
+      Folge diesen Schritten und dein erster Trade kommt automatisch.
+    </p>
+
+    <!-- Steps with connecting line -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 8px;">
+      <!-- Step 1 -->
+      <tr><td style="padding:0 0 4px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+          <tr>
+            <td style="width:48px;vertical-align:top;padding-top:2px;">
+              <div style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,${C.gold},${C.goldDim});text-align:center;line-height:40px;font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:${C.bg};">01</div>
+            </td>
+            <td style="padding-left:16px;vertical-align:top;">
+              <div style="font-family:'Outfit','Inter',sans-serif;font-size:16px;font-weight:700;color:${C.text};margin:0 0 2px;">MetaTrader verbinden</div>
+              <div style="font-family:'Inter',sans-serif;font-size:13px;color:${C.textDim};line-height:1.5;">Login-Daten deines MT4/MT5 Brokers eingeben. Dauert 30 Sekunden.</div>
+            </td>
+          </tr>
+        </table>
+      </td></tr>
+      <!-- Connector -->
+      <tr><td style="padding:0 0 4px;"><table role="presentation" cellpadding="0" cellspacing="0"><tr><td style="width:48px;text-align:center;"><div style="width:2px;height:16px;background:${C.goldBorder};margin:0 auto;"></div></td><td></td></tr></table></td></tr>
+      <!-- Step 2 -->
+      <tr><td style="padding:0 0 4px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+          <tr>
+            <td style="width:48px;vertical-align:top;padding-top:2px;">
+              <div style="width:40px;height:40px;border-radius:12px;background:${C.goldSubtle};border:2px solid ${C.goldBorder};text-align:center;line-height:36px;font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:${C.gold};">02</div>
+            </td>
+            <td style="padding-left:16px;vertical-align:top;">
+              <div style="font-family:'Outfit','Inter',sans-serif;font-size:16px;font-weight:700;color:${C.text};margin:0 0 2px;">Firm-Profil w&auml;hlen</div>
+              <div style="font-family:'Inter',sans-serif;font-size:13px;color:${C.textDim};line-height:1.5;">Tegas 24x Hebel oder Tag Markets 12x Amplify &mdash; je nach Strategie.</div>
+            </td>
+          </tr>
+        </table>
+      </td></tr>
+      <tr><td style="padding:0 0 4px;"><table role="presentation" cellpadding="0" cellspacing="0"><tr><td style="width:48px;text-align:center;"><div style="width:2px;height:16px;background:${C.goldBorder};margin:0 auto;"></div></td><td></td></tr></table></td></tr>
+      <!-- Step 3 -->
+      <tr><td style="padding:0 0 4px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+          <tr>
+            <td style="width:48px;vertical-align:top;padding-top:2px;">
+              <div style="width:40px;height:40px;border-radius:12px;background:${C.goldSubtle};border:2px solid ${C.goldBorder};text-align:center;line-height:36px;font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:${C.gold};">03</div>
+            </td>
+            <td style="padding-left:16px;vertical-align:top;">
+              <div style="font-family:'Outfit','Inter',sans-serif;font-size:16px;font-weight:700;color:${C.text};margin:0 0 2px;">Smart Copier aktivieren</div>
+              <div style="font-family:'Inter',sans-serif;font-size:13px;color:${C.textDim};line-height:1.5;">Ein Klick. Der Copier &uuml;bernimmt und handelt automatisch f&uuml;r dich.</div>
+            </td>
+          </tr>
+        </table>
+      </td></tr>
+      <tr><td style="padding:0 0 4px;"><table role="presentation" cellpadding="0" cellspacing="0"><tr><td style="width:48px;text-align:center;"><div style="width:2px;height:16px;background:${C.goldBorder};margin:0 auto;"></div></td><td></td></tr></table></td></tr>
+      <!-- Step 4 -->
+      <tr><td style="padding:0 0 0;">
+        <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+          <tr>
+            <td style="width:48px;vertical-align:top;padding-top:2px;">
+              <div style="width:40px;height:40px;border-radius:12px;background:${C.goldSubtle};border:2px solid ${C.goldBorder};text-align:center;line-height:36px;font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:${C.gold};">04</div>
+            </td>
+            <td style="padding-left:16px;vertical-align:top;">
+              <div style="font-family:'Outfit','Inter',sans-serif;font-size:16px;font-weight:700;color:${C.text};margin:0 0 2px;">Zur&uuml;cklehnen</div>
+              <div style="font-family:'Inter',sans-serif;font-size:13px;color:${C.textDim};line-height:1.5;">Die Forge arbeitet 24/5. Du bekommst Reports &amp; Alerts per Mail.</div>
+            </td>
+          </tr>
+        </table>
+      </td></tr>
+    </table>
+
+    ${divider()}
+
+    <!-- Section: Was du bekommst -->
+    <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 20px;">
+      <tr>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:10px;color:${C.gold};letter-spacing:2px;text-transform:uppercase;padding:4px 12px;background:${C.goldSubtle};border:1px solid ${C.goldBorder};border-radius:6px;">
+          &#9670;&nbsp; Deine Tools
+        </td>
+      </tr>
+    </table>
+
+    <!-- Feature Cards (stacked) -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 12px;">
+      <tr><td style="padding:20px;background:${C.bgCardAlt};border:1px solid ${C.goldBorder};border-radius:12px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" width="100%"><tr>
+          <td style="width:48px;vertical-align:top;">
+            <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,rgba(212,165,55,0.15),rgba(212,165,55,0.05));border:1px solid ${C.goldBorder};text-align:center;line-height:44px;font-size:22px;">&#9889;</div>
+          </td>
+          <td style="padding-left:16px;vertical-align:top;">
+            <div style="font-family:'Outfit','Inter',sans-serif;font-size:16px;font-weight:700;color:${C.text};margin:0 0 4px;">Smart Copier</div>
+            <div style="font-family:'Inter',sans-serif;font-size:13px;color:${C.textDim};line-height:1.6;">Kopiert Trades von profitablen Mastern automatisch auf dein Konto. Intelligentes Lot-Sizing passt sich deinem Kapital an.</div>
+          </td>
+        </tr></table>
+      </td></tr>
+    </table>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 12px;">
+      <tr><td style="padding:20px;background:${C.bgCardAlt};border:1px solid ${C.goldBorder};border-radius:12px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" width="100%"><tr>
+          <td style="width:48px;vertical-align:top;">
+            <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,rgba(46,204,113,0.15),rgba(46,204,113,0.05));border:1px solid ${C.successBorder};text-align:center;line-height:44px;font-size:22px;">&#128737;</div>
+          </td>
+          <td style="padding-left:16px;vertical-align:top;">
+            <div style="font-family:'Outfit','Inter',sans-serif;font-size:16px;font-weight:700;color:${C.text};margin:0 0 4px;">Risk Shield</div>
+            <div style="font-family:'Inter',sans-serif;font-size:13px;color:${C.textDim};line-height:1.6;">7-Faktor Risk Engine. Drawdown-Schutz, Session-Filter, News-Guard und automatische Lot-Reduktion sch&uuml;tzen dein Kapital.</div>
+          </td>
+        </tr></table>
+      </td></tr>
+    </table>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+      <tr><td style="padding:20px;background:${C.bgCardAlt};border:1px solid ${C.goldBorder};border-radius:12px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" width="100%"><tr>
+          <td style="width:48px;vertical-align:top;">
+            <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,rgba(168,85,247,0.15),rgba(168,85,247,0.05));border:1px solid rgba(168,85,247,0.15);text-align:center;line-height:44px;font-size:22px;">&#129302;</div>
+          </td>
+          <td style="padding-left:16px;vertical-align:top;">
+            <div style="font-family:'Outfit','Inter',sans-serif;font-size:16px;font-weight:700;color:${C.text};margin:0 0 4px;">FORGE Mentor</div>
+            <div style="font-family:'Inter',sans-serif;font-size:13px;color:${C.textDim};line-height:1.6;">Dein KI-Trading-Mentor. Stell Fragen zu Strategie, Risiko, Marktlage &mdash; bekomme sofort fundierte Antworten.</div>
+          </td>
+        </tr></table>
+      </td></tr>
+    </table>
+
+    <!-- Spacer -->
+    <div style="height:12px;"></div>
+
+    ${divider()}
+
+    <!-- WhatsApp Community CTA -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;">
+      <tr><td style="padding:20px 24px;background:rgba(37,211,102,0.06);border:1px solid rgba(37,211,102,0.15);border-radius:12px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" width="100%"><tr>
+          <td style="vertical-align:middle;">
+            <div style="font-family:'Outfit','Inter',sans-serif;font-size:15px;font-weight:700;color:#25D366;margin:0 0 2px;">WhatsApp Community</div>
+            <div style="font-family:'Inter',sans-serif;font-size:13px;color:${C.textDim};line-height:1.5;">Tritt unserer Gruppe bei f&uuml;r Support, Updates und Austausch mit anderen Tradern.</div>
+          </td>
+          <td style="width:100px;text-align:right;vertical-align:middle;">
+            <a href="https://chat.whatsapp.com/goldfoundry" target="_blank" style="display:inline-block;padding:10px 18px;background:#25D366;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:#fff;text-decoration:none;text-transform:uppercase;letter-spacing:0.5px;">Join</a>
+          </td>
+        </tr></table>
+      </td></tr>
+    </table>
+
+    <!-- Main CTA -->
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+      <tr><td style="border-radius:10px;background:linear-gradient(135deg,${C.gold},${C.goldDim});text-align:center;">
+        <a href="${BASE_URL}/dashboard" target="_blank" style="display:block;padding:18px 40px;color:${C.bg};font-family:'JetBrains Mono','Courier New',monospace;font-size:13px;font-weight:700;text-decoration:none;letter-spacing:1px;text-transform:uppercase;">
+          Dashboard &ouml;ffnen &rarr;
+        </a>
+      </td></tr>
+    </table>
+
+    <!-- Subtle note -->
+    <p style="margin:20px 0 0;font-family:'Inter',sans-serif;font-size:12px;color:${C.textMuted};text-align:center;line-height:1.6;">
+      Du erh&auml;ltst w&ouml;chentliche Performance-Reports und Echtzeit-Alerts per Mail.
+      <br>Bei Fragen steht dir unser Team jederzeit &uuml;ber WhatsApp zur Verf&uuml;gung.
+    </p>
   `;
 
   return sendEmail(
     email,
     `Willkommen bei ${BRAND_NAME}, ${name}!`,
-    baseTemplate(content, `${name}, dein Gold Foundry Account ist bereit. Starte jetzt.`)
+    baseTemplate(content, `${name}, dein Gold Foundry Account ist bereit. Smart Copier, Risk Shield und FORGE Mentor warten auf dich.`)
   );
 }
 
