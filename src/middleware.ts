@@ -32,7 +32,7 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
 
   // Protected routes — redirect to login if not authenticated
-  const protectedPaths = ["/dashboard", "/chat", "/copier", "/leaderboard", "/admin"];
+  const protectedPaths = ["/dashboard", "/admin"];
   const isProtected = protectedPaths.some(p => request.nextUrl.pathname.startsWith(p));
 
   if (isProtected && !user) {
@@ -42,34 +42,18 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Dashboard access — only for paying users (check subscription tier)
-  if (request.nextUrl.pathname.startsWith("/dashboard") && user) {
-    // Allow upgrade page for everyone (that's where they pay)
-    if (request.nextUrl.pathname === "/dashboard/upgrade") {
-      return supabaseResponse;
-    }
+  // Auth pages (login/register) — redirect to dashboard if already logged in
+  // But allow verify-email and callback pages
+  const authRedirectPaths = ["/auth/login", "/auth/register"];
+  const isAuthPage = authRedirectPaths.some(p => request.nextUrl.pathname === p);
 
-    // Check subscription tier from user metadata or profiles
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("subscription_tier")
-      .eq("id", user.id)
-      .single();
-
-    const tier = profile?.subscription_tier || "free";
-    if (tier === "free") {
-      return NextResponse.redirect(new URL("/pricing", request.url));
-    }
-  }
-
-  // Auth pages — redirect to pricing if already logged in (they pick a plan first)
-  if (request.nextUrl.pathname.startsWith("/auth/") && user) {
-    return NextResponse.redirect(new URL("/pricing", request.url));
+  if (isAuthPage && user) {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
   return supabaseResponse;
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/chat/:path*", "/copier/:path*", "/leaderboard/:path*", "/admin/:path*", "/auth/:path*", "/pricing"],
+  matcher: ["/dashboard/:path*", "/admin/:path*", "/auth/:path*"],
 };
