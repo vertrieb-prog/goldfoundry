@@ -17,12 +17,12 @@ export async function POST(request: Request) {
     const admin = createSupabaseAdmin();
     const { data: session } = await admin
       .from("telegram_sessions")
-      .select("phone_code_hash, phone_number")
+      .select("phone_code_hash, phone_number, session_string")
       .eq("user_id", user.id)
       .single();
 
-    if (!session) {
-      return NextResponse.json({ error: "Keine ausstehende Verifizierung" }, { status: 400 });
+    if (!session || !session.phone_code_hash) {
+      return NextResponse.json({ error: "Keine ausstehende Verifizierung. Bitte Code erneut senden." }, { status: 400 });
     }
 
     const apiId = Number(process.env.TELEGRAM_API_ID);
@@ -38,7 +38,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Telegram Modul nicht verfuegbar" }, { status: 500 });
     }
 
-    const client = new TelegramClient(new StringSession(""), apiId, apiHash, { connectionRetries: 3 });
+    // IMPORTANT: Reuse the session from send-code step
+    const client = new TelegramClient(
+      new StringSession(session.session_string || ""),
+      apiId, apiHash, { connectionRetries: 3 }
+    );
     await client.connect();
 
     try {
@@ -51,16 +55,28 @@ export async function POST(request: Request) {
         })
       );
 
-      const sessionString = (client.session as any).save();
+      // Save updated session string (now authenticated)
+      const newSessionString = (client.session as any).save();
       await admin
         .from("telegram_sessions")
-        .update({ session_string: sessionString, status: "connected", connected_at: new Date().toISOString() })
+        .update({
+          session_string: newSessionString,
+          status: "connected",
+          connected_at: new Date().toISOString(),
+        })
         .eq("user_id", user.id);
 
       await client.disconnect();
       return NextResponse.json({ success: true, requires2FA: false });
     } catch (err: any) {
       if (err.message?.includes("SESSION_PASSWORD_NEEDED")) {
+        // Save intermediate session for 2FA step
+        const intermediateSession = (client.session as any).save();
+        await admin
+          .from("telegram_sessions")
+          .update({ session_string: intermediateSession, status: "needs_2fa" })
+          .eq("user_id", user.id);
+        await client.disconnect();
         return NextResponse.json({ success: false, requires2FA: true });
       }
       await client.disconnect();

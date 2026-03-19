@@ -8,7 +8,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Ungueltige Telefonnummer" }, { status: 400 });
     }
 
-    // Get user from session
     const supabase = createSupabaseServer();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
@@ -21,7 +20,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Telegram API nicht konfiguriert" }, { status: 500 });
     }
 
-    // Dynamic import to avoid build issues
     let TelegramClient: any, StringSession: any;
     try {
       const tg = await import("telegram" as any);
@@ -29,7 +27,7 @@ export async function POST(request: Request) {
       TelegramClient = tg.TelegramClient;
       StringSession = sessions.StringSession;
     } catch {
-      return NextResponse.json({ error: "Telegram Modul nicht verfuegbar. Bitte kontaktiere den Support." }, { status: 500 });
+      return NextResponse.json({ error: "Telegram Modul nicht verfuegbar" }, { status: 500 });
     }
 
     const client = new TelegramClient(new StringSession(""), apiId, apiHash, { connectionRetries: 3 });
@@ -37,13 +35,16 @@ export async function POST(request: Request) {
 
     const result = await client.sendCode({ apiId, apiHash }, phoneNumber);
 
-    // Save to DB via admin client (bypasses RLS)
+    // Save session string + code hash so verify can reuse this session
+    const sessionString = (client.session as any).save();
+
     const admin = createSupabaseAdmin();
     await admin.from("telegram_sessions").upsert(
       {
         user_id: user.id,
         phone_number: phoneNumber,
         phone_code_hash: result.phoneCodeHash,
+        session_string: sessionString,
         status: "code_sent",
         updated_at: new Date().toISOString(),
       },
