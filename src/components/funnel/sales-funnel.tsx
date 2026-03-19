@@ -144,7 +144,17 @@ function spawnConfetti() {
 /*  SUB-COMPONENTS                                                     */
 /* ------------------------------------------------------------------ */
 
-function ProgressBar({ step, total }: { step: number; total: number }) {
+function ProgressBar({
+  step,
+  total,
+  onBack,
+  showBack,
+}: {
+  step: number;
+  total: number;
+  onBack?: () => void;
+  showBack?: boolean;
+}) {
   const pct = (step / total) * 100;
   return (
     <div style={{ width: "100%", padding: "16px 20px 8px" }}>
@@ -152,13 +162,35 @@ function ProgressBar({ step, total }: { step: number; total: number }) {
         style={{
           display: "flex",
           justifyContent: "space-between",
+          alignItems: "center",
           marginBottom: 6,
           fontSize: 12,
           color: TEXT,
           opacity: 0.6,
         }}
       >
-        <span>Schritt {step} von {total}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {showBack && (
+            <button
+              onClick={onBack}
+              style={{
+                background: "transparent",
+                border: "none",
+                color: TEXT,
+                opacity: 0.7,
+                fontSize: 14,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: 4,
+                padding: 0,
+              }}
+            >
+              <span style={{ fontSize: 16 }}>&larr;</span> Zurück
+            </button>
+          )}
+          <span>Schritt {step} von {total}</span>
+        </div>
         <span>{Math.round(pct)}%</span>
       </div>
       <div
@@ -1859,32 +1891,13 @@ export default function SalesFunnel() {
           color: TEXT,
         }}
       >
-        {/* Progress bar */}
-        <ProgressBar step={step} total={7} />
-
-        {/* Back button */}
-        {showBack && (
-          <button
-            onClick={() => goTo((step - 1) as Step)}
-            style={{
-              position: "absolute",
-              top: 16,
-              left: 16,
-              background: "transparent",
-              border: "none",
-              color: TEXT,
-              opacity: 0.5,
-              fontSize: 14,
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: 4,
-              zIndex: 10,
-            }}
-          >
-            <span style={{ fontSize: 18 }}>&larr;</span> Zurück
-          </button>
-        )}
+        {/* Progress bar with integrated back button */}
+        <ProgressBar
+          step={step}
+          total={7}
+          showBack={showBack}
+          onBack={() => goTo((step - 1) as Step)}
+        />
 
         {/* Step content with animation */}
         <div
