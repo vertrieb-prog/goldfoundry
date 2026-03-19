@@ -10,8 +10,8 @@ export default function Footer() {
           <p className="text-xs text-zinc-500 leading-relaxed mb-4">
             Das All-in-One Trading Terminal fuer Prop-Firm Trader und Profis. Forex, Gold, Indices, Crypto.
           </p>
-          <Link href="/auth/register" className="gf-btn gf-btn-sm text-xs">
-            Jetzt starten &rarr;
+          <Link href="/#pricing" className="gf-btn gf-btn-sm text-xs">
+            Plan w&auml;hlen &rarr;
           </Link>
         </div>
         {/* Produkte */}

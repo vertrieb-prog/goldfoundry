@@ -12,16 +12,22 @@ export const MODELS = {
 // ── Pricing ─────────────────────────────────────────────────
 export const PRICING = {
   plans: {
-    copier: { name: "Smart Copier", price: 29, firstMonth: 6, discount: 80 },
-    starter: { name: "Signal Starter", price: 49, firstMonth: 10, discount: 80 },
-    pro: { name: "Signal Pro", price: 79, firstMonth: 16, discount: 80 },
-    unlimited: { name: "Signal Unlimited", price: 149, firstMonth: 30, discount: 80 },
-    partner: { name: "Partner", price: 29, firstMonth: 6, discount: 80 },
+    starter: { name: "Starter", price: 9, firstMonth: 2, discount: 80 },
+    copier:  { name: "Smart Copier", price: 29, firstMonth: 6, discount: 80 },
+    pro:     { name: "Pro", price: 79, firstMonth: 16, discount: 80 },
   },
   currency: "€",
   profitSplit: { investor: 60, platform: 40 },
   firstMonthDiscount: 80,
+  affiliatePercent: 50,
 } as const;
+
+// ── Coupon Codes ──────────────────────────────────────────────
+export const COUPON_CODES: Record<string, { type: string; value: number; label: string }> = {
+  FORGE50:  { type: "percent", value: 50, label: "50% Rabatt" },
+  FREETRIAL: { type: "trial", value: 14, label: "14 Tage Testphase" },
+  PROPFIRM: { type: "trial", value: 30, label: "1 Monat Testphase" },
+};
 
 // ── Partner/Affiliate Tiers ─────────────────────────────────
 export const PARTNER_TIERS = {

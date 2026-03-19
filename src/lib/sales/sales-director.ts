@@ -253,7 +253,7 @@ Gib JSON-Array zurück. Jedes Event: {"type":"contest|sprint|flash_bonus|milesto
       startDate: new Date(now.getFullYear(), now.getMonth(), 15).toISOString().split("T")[0],
       endDate: new Date(now.getFullYear(), now.getMonth(), 22).toISOString().split("T")[0],
       rules: "Nur neue zahlende Signups zählen. Min. Copier-Tier.",
-      prizes: ["1. Platz: 1 Monat gratis + Feature auf Homepage", "2. Platz: 50% Rabatt", "3. Platz: Custom Landing Page"],
+      prizes: ["1. Platz: 1 Monat geschenkt + Feature auf Homepage", "2. Platz: 50% Rabatt", "3. Platz: Custom Landing Page"],
       targetSegment: "all",
       status: "planned",
       promotionPlan: [

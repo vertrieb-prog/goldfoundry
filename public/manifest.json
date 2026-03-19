@@ -1,10 +1,10 @@
 {
-  "name": "Gold Foundry — Trading Terminal",
+  "name": "Gold Foundry — Trading Portal",
   "short_name": "Gold Foundry",
-  "description": "Autonomes Trading-Ökosystem. Smart Copier, Strategy Lab, Market Intel.",
+  "description": "Autonomes Trading Portal. Smart Copier, Telegram Copier, FORGE Mentor.",
   "start_url": "/dashboard",
   "display": "standalone",
-  "background_color": "#0a0908",
+  "background_color": "#040302",
   "theme_color": "#d4a537",
   "orientation": "portrait-primary",
   "icons": [

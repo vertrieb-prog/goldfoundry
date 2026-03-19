@@ -171,7 +171,7 @@ export default function ForgeMentorPage() {
           <div className="relative">
             <div className="text-[10px] tracking-[4px] uppercase text-[#d4a537] mb-6 font-medium">KI-gestuetzt</div>
             <h2 className="font-serif text-4xl md:text-5xl font-bold italic text-white mb-4">FORGE Mentor testen.</h2>
-            <p className="text-base text-[#666] mb-10 max-w-lg mx-auto">Registriere dich und stelle deine erste Frage. Kostenlos im Analyzer-Plan (5 Nachrichten/Tag).</p>
+            <p className="text-base text-[#666] mb-10 max-w-lg mx-auto">Stelle deine erste Frage. Im Starter-Plan (5 Nachrichten/Tag) ab nur €2 im 1. Monat.</p>
             <Link href="/auth/register" className="gf-btn text-base !px-10 !py-4">FORGE Mentor testen &nbsp;&rarr;</Link>
           </div>
         </div>

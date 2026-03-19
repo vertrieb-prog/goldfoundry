@@ -24,14 +24,14 @@ const MANAGEMENT_STEPS = [
   { time: "09:14:02", event: "Signal erkannt", detail: "BUY XAUUSD @ 2341.50 | Confidence 96%", status: "parsed", profit: null },
   { time: "09:14:03", event: "Risk Engine: COPY", detail: "Multiplier 0.92 | News in 45min | DD Buffer 72%", status: "checked", profit: null },
   { time: "09:14:03", event: "4 Orders platziert", detail: "0.42L + 0.26L + 0.21L + 0.16L = 1.05L total", status: "executed", profit: null },
-  { time: "09:28:17", event: "TP1 getroffen", detail: "0.42L @ 2348 geschlossen", status: "tp", profit: "+$273" },
+  { time: "09:28:17", event: "TP1 getroffen", detail: "0.42L @ 2348 geschlossen", status: "tp", profit: "+€273" },
   { time: "09:28:18", event: "Auto-Breakeven aktiviert", detail: "SL aller verbleibenden Orders auf 2341.70", status: "managed", profit: null },
-  { time: "09:41:05", event: "TP2 getroffen", detail: "0.26L @ 2355 geschlossen", status: "tp", profit: "+$351" },
+  { time: "09:41:05", event: "TP2 getroffen", detail: "0.26L @ 2355 geschlossen", status: "tp", profit: "+€351" },
   { time: "09:41:06", event: "AI: TIGHTEN_SL", detail: "Momentum sinkt. SL nachgezogen auf 2349.50", status: "managed", profit: null },
-  { time: "09:55:33", event: "TP3 getroffen", detail: "0.21L @ 2362 geschlossen", status: "tp", profit: "+$430" },
+  { time: "09:55:33", event: "TP3 getroffen", detail: "0.21L @ 2362 geschlossen", status: "tp", profit: "+€430" },
   { time: "09:55:34", event: "Trailing Stop aktiv", detail: "Runner 0.16L trailing bei 15 Pips Abstand", status: "managed", profit: null },
-  { time: "10:12:41", event: "Runner geschlossen", detail: "Trailing SL bei 2368.20 getriggert", status: "closed", profit: "+$431" },
-  { time: "10:12:42", event: "Trade komplett", detail: "4/4 TPs | 0% Risiko nach TP1", status: "done", profit: "+$1,485" },
+  { time: "10:12:41", event: "Runner geschlossen", detail: "Trailing SL bei 2368.20 getriggert", status: "closed", profit: "+€431" },
+  { time: "10:12:42", event: "Trade komplett", detail: "4/4 TPs | 0% Risiko nach TP1", status: "done", profit: "+€1.485" },
 ];
 
 const AI_DECISIONS = [
@@ -397,7 +397,7 @@ export default function TelegramCopierPage() {
                   <div className="text-sm text-[#d4a537] font-bold mb-1">Ein Trade. 11 automatische Entscheidungen.</div>
                   <div className="text-xs text-zinc-500">0% Risiko nach Minute 14. Kein manuelles Eingreifen.</div>
                 </div>
-                <div className="text-3xl font-bold text-emerald-400 font-mono">+$1,485</div>
+                <div className="text-3xl font-bold text-emerald-400 font-mono">+€1.485</div>
               </div>
             </div>
           )}

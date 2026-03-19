@@ -33,7 +33,7 @@ export const COMPETITORS = {
       "TradingView Integration",
       "Forex Sentiment Indicator",
       "Economic Calendar + Market Hours",
-      "Gratis für Basis-Features",
+      "Guenstiger Einstieg fuer Basis-Features",
     ],
     weaknesses: [
       "KEIN AI Risk Management",
