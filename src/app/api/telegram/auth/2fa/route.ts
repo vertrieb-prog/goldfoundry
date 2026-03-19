@@ -1,21 +1,27 @@
 import { NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase-admin";
+import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server";
 
 export async function POST(request: Request) {
   try {
-    const { password, userId } = await request.json();
-    if (!password || !userId) {
-      return NextResponse.json({ error: "Passwort und UserId erforderlich" }, { status: 400 });
+    const { password } = await request.json();
+    if (!password) {
+      return NextResponse.json({ error: "Passwort erforderlich" }, { status: 400 });
+    }
+
+    const supabase = createSupabaseServer();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: "Nicht eingeloggt" }, { status: 401 });
     }
 
     const apiId = Number(process.env.TELEGRAM_API_ID);
     const apiHash = process.env.TELEGRAM_API_HASH || "";
+    const admin = createSupabaseAdmin();
 
-    // Get stored session
-    const { data: session } = await supabaseAdmin
+    const { data: session } = await admin
       .from("telegram_sessions")
       .select("session_string, phone_number")
-      .eq("user_id", userId)
+      .eq("user_id", user.id)
       .single();
 
     if (!session) {
@@ -34,9 +40,7 @@ export async function POST(request: Request) {
 
     const client = new TelegramClient(
       new StringSession(session.session_string || ""),
-      apiId,
-      apiHash,
-      { connectionRetries: 3 }
+      apiId, apiHash, { connectionRetries: 3 }
     );
     await client.connect();
 
@@ -48,12 +52,11 @@ export async function POST(request: Request) {
       const srpResult = await computeCheck(passwordInfo, password);
       await client.invoke(new Api.auth.CheckPassword({ password: srpResult }));
 
-      // Save updated session
       const sessionString = (client.session as any).save();
-      await supabaseAdmin
+      await admin
         .from("telegram_sessions")
         .update({ session_string: sessionString, status: "connected", connected_at: new Date().toISOString() })
-        .eq("user_id", userId);
+        .eq("user_id", user.id);
 
       await client.disconnect();
       return NextResponse.json({ success: true });

@@ -1,18 +1,24 @@
 import { NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase-admin";
+import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server";
 
 export async function POST(request: Request) {
   try {
-    const { code, phoneNumber, userId } = await request.json();
-    if (!code || !userId) {
-      return NextResponse.json({ error: "Code und UserId erforderlich" }, { status: 400 });
+    const { code, phoneNumber } = await request.json();
+    if (!code) {
+      return NextResponse.json({ error: "Code erforderlich" }, { status: 400 });
     }
 
-    // Get stored session data
-    const { data: session } = await supabaseAdmin
+    const supabase = createSupabaseServer();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: "Nicht eingeloggt" }, { status: 401 });
+    }
+
+    const admin = createSupabaseAdmin();
+    const { data: session } = await admin
       .from("telegram_sessions")
       .select("phone_code_hash, phone_number")
-      .eq("user_id", userId)
+      .eq("user_id", user.id)
       .single();
 
     if (!session) {
@@ -45,12 +51,11 @@ export async function POST(request: Request) {
         })
       );
 
-      // Save session string
       const sessionString = (client.session as any).save();
-      await supabaseAdmin
+      await admin
         .from("telegram_sessions")
         .update({ session_string: sessionString, status: "connected", connected_at: new Date().toISOString() })
-        .eq("user_id", userId);
+        .eq("user_id", user.id);
 
       await client.disconnect();
       return NextResponse.json({ success: true, requires2FA: false });
