@@ -14,7 +14,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    // Forex Factory API (kostenlos, kein API-Key nötig)
+    // Forex Factory API (public, kein API-Key noetig)
     const resp = await fetch("https://nfs.faireconomy.media/ff_calendar_thisweek.json", {
       headers: { "User-Agent": "Mozilla/5.0 (compatible; GoldFoundry/1.0)" },
     });
