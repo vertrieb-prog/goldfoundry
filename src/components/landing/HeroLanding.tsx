@@ -286,6 +286,138 @@ export default function HeroLanding() {
         </div>
       </section>
 
+      {/* ══ TRADER PROFILES ═════════════════════════════════ */}
+      <section className="relative z-10 gf-section">
+        <div className="gf-separator mb-16" />
+        <Section>
+          <div className="text-center mb-16">
+            <div className="gf-eyebrow mb-4">{"\u25c6"} Unsere Trader</div>
+            <h2 className="gf-heading text-4xl md:text-5xl mb-4">Profis traden. Du kopierst.</h2>
+            <p className="text-zinc-500 max-w-lg mx-auto">3 verifizierte Trader mit 3 Jahren Track Record. W&auml;hle deinen Favoriten.</p>
+          </div>
+        </Section>
+        <div className="grid md:grid-cols-3 gap-4 max-w-5xl mx-auto">
+          {[
+            { name: "GoldForge Alpha", asset: "XAUUSD", color: "#FAEF70", perf: "+1%/Tag", dd: "4.5%", wr: "72%", pf: "2.1", desc: "Gold-Spezialist. Konservativ. Prop-Firm optimiert." },
+            { name: "TechForge", asset: "NAS100", color: "#3b82f6", perf: "+0.8%/Tag", dd: "5.2%", wr: "68%", pf: "1.9", desc: "Nasdaq-Spezialist. US-Session fokussiert." },
+            { name: "IndexForge", asset: "US500", color: "#22c55e", perf: "+0.7%/Tag", dd: "4.8%", wr: "70%", pf: "2.0", desc: "S&P 500 Spezialist. London + NY Session." },
+          ].map((t, i) => (
+            <Section key={t.name} delay={i * 0.1}>
+              <div className="gf-panel p-6 h-full">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center text-sm font-bold" style={{ background: `${t.color}15`, border: `2px solid ${t.color}30`, color: t.color }}>
+                    {t.name.split(" ").map(w => w[0]).join("")}
+                  </div>
+                  <div>
+                    <div className="text-sm font-bold text-white">{t.name}</div>
+                    <span className="text-[9px] font-mono px-2 py-0.5 rounded" style={{ background: `${t.color}15`, color: t.color }}>{t.asset}</span>
+                  </div>
+                </div>
+                <p className="text-xs text-zinc-500 mb-4">{t.desc}</p>
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div className="p-2 rounded-lg text-center" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
+                    <div className="text-lg font-bold" style={{ color: "var(--gf-green)" }}>{t.perf}</div>
+                    <div className="text-[8px] font-mono text-zinc-600">PERFORMANCE</div>
+                  </div>
+                  <div className="p-2 rounded-lg text-center" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
+                    <div className="text-lg font-bold text-white">{t.wr}</div>
+                    <div className="text-[8px] font-mono text-zinc-600">WIN RATE</div>
+                  </div>
+                  <div className="p-2 rounded-lg text-center" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
+                    <div className="text-lg font-bold" style={{ color: "var(--gf-gold)" }}>{t.dd}</div>
+                    <div className="text-[8px] font-mono text-zinc-600">MAX DD</div>
+                  </div>
+                  <div className="p-2 rounded-lg text-center" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
+                    <div className="text-lg font-bold text-white">{t.pf}</div>
+                    <div className="text-[8px] font-mono text-zinc-600">PROFIT FACTOR</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 text-[10px] text-zinc-600">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                  3 Jahre verifiziert &middot; Prop-Firm geeignet
+                </div>
+              </div>
+            </Section>
+          ))}
+        </div>
+        <Section delay={0.3}>
+          <p className="text-center text-xs text-zinc-600 mt-6">Alle Trader: Tegas FX (24&times;) + TAG Markets (12&times;) kompatibel. 100% der Gewinne geh&ouml;ren dir.</p>
+        </Section>
+      </section>
+
+      {/* ══ SIGNAL PIPELINE ═══════════════════════════════════ */}
+      <section className="relative z-10 gf-section">
+        <div className="gf-separator mb-16" />
+        <Section>
+          <div className="text-center mb-12">
+            <div className="gf-eyebrow mb-4">{"\u25c6"} Signal Pipeline</div>
+            <h2 className="gf-heading text-4xl md:text-5xl mb-4">Von Signal zu Trade. Unter 2 Sekunden.</h2>
+          </div>
+        </Section>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
+          {[
+            { step: "01", icon: "\ud83d\udce8", title: "Signal kommt", desc: "Telegram-Channel sendet ein Trading-Signal", color: "#4d9fff" },
+            { step: "02", icon: "\ud83e\udd16", title: "KI parsed sofort", desc: "Entry, Stop-Loss und Ziele erkannt in 200ms", color: "#FAEF70" },
+            { step: "03", icon: "\ud83d\udee1\ufe0f", title: "7 Checks laufen", desc: "Risk Engine pr\u00fcft ob der Trade sicher ist", color: "#00e6a0" },
+            { step: "04", icon: "\u26a1", title: "Trade ausgef\u00fchrt", desc: "4 Orders mit gestaffelten Gewinn-Zielen", color: "#f0d060" },
+          ].map((s, i) => (
+            <Section key={s.step} delay={i * 0.12}>
+              <div className="text-center">
+                <div className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center text-2xl" style={{ background: `${s.color}12`, border: `1px solid ${s.color}25`, boxShadow: `0 0 20px ${s.color}10` }}>
+                  {s.icon}
+                </div>
+                <div className="text-[9px] font-mono tracking-[3px] mb-1" style={{ color: s.color }}>STEP {s.step}</div>
+                <h3 className="text-sm font-bold text-white mb-1">{s.title}</h3>
+                <p className="text-[11px] text-zinc-500">{s.desc}</p>
+              </div>
+            </Section>
+          ))}
+        </div>
+      </section>
+
+      {/* ══ LIVE TRADE TIMELINE ═══════════════════════════════ */}
+      <section className="relative z-10 gf-section">
+        <div className="gf-separator mb-16" />
+        <Section>
+          <div className="text-center mb-12">
+            <div className="gf-eyebrow mb-4">{"\u25c6"} Live Beispiel</div>
+            <h2 className="gf-heading text-4xl md:text-5xl mb-4">So sieht ein Trade aus.</h2>
+            <p className="text-zinc-500">Echtes Beispiel. Vollautomatisch. Kein manuelles Eingreifen.</p>
+          </div>
+        </Section>
+        <div className="max-w-2xl mx-auto relative">
+          {/* Timeline line */}
+          <div className="absolute left-6 top-0 bottom-0 w-0.5 rounded-full" style={{ background: "rgba(250,239,112,0.12)" }} />
+          {[
+            { time: "09:14", icon: "\ud83d\udce8", text: "Signal erkannt", detail: "BUY XAUUSD @ 2341.50", color: "#4d9fff", profit: "" },
+            { time: "09:14", icon: "\ud83d\udee1\ufe0f", text: "Risk Engine: COPY", detail: "Multiplier 0.92 \u00b7 DD Buffer 72%", color: "#00e6a0", profit: "" },
+            { time: "09:14", icon: "\u26a1", text: "4 Orders platziert", detail: "0.42L + 0.26L + 0.21L + 0.16L", color: "#FAEF70", profit: "" },
+            { time: "09:28", icon: "\u2713", text: "Gewinn-Ziel 1 erreicht", detail: "Auto-Breakeven \u2014 0% Risiko", color: "#22c55e", profit: "+\u20ac273" },
+            { time: "09:41", icon: "\u2713", text: "Gewinn-Ziel 2 erreicht", detail: "KI: Stop-Loss nachgezogen", color: "#22c55e", profit: "+\u20ac351" },
+            { time: "09:55", icon: "\u2713", text: "Gewinn-Ziel 3 erreicht", detail: "Trailing Stop aktiv", color: "#22c55e", profit: "+\u20ac430" },
+            { time: "10:12", icon: "\ud83c\udfc6", text: "Trade komplett", detail: "4/4 Ziele erreicht \u00b7 0% Risiko nach Ziel 1", color: "#FAEF70", profit: "+\u20ac1.485", highlight: true },
+          ].map((e, i) => (
+            <Section key={i} delay={i * 0.1}>
+              <div className={`flex items-start gap-4 ml-2 mb-4 p-4 rounded-xl relative ${e.highlight ? "" : ""}`} style={e.highlight ? { background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.15)" } : {}}>
+                {/* Dot */}
+                <div className="w-3 h-3 rounded-full flex-shrink-0 mt-1.5 -ml-[22px] z-10" style={{ background: e.color, border: "3px solid var(--gf-obsidian)", boxShadow: `0 0 8px ${e.color}40` }} />
+                {/* Time */}
+                <span className="text-[10px] font-mono text-zinc-600 w-10 flex-shrink-0 mt-0.5">{e.time}</span>
+                {/* Icon */}
+                <span className="text-base flex-shrink-0">{e.icon}</span>
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-semibold text-white">{e.text}</div>
+                  <div className="text-xs text-zinc-500">{e.detail}</div>
+                </div>
+                {/* Profit */}
+                {e.profit && <span className={`font-bold font-mono flex-shrink-0 ${e.highlight ? "text-lg" : "text-sm"}`} style={{ color: "var(--gf-green)" }}>{e.profit}</span>}
+              </div>
+            </Section>
+          ))}
+        </div>
+      </section>
+
       {/* ══ PRICING ═══════════════════════════════════════════ */}
       <section id="pricing" className="relative z-10 gf-section">
         <div className="gf-separator mb-16" />
