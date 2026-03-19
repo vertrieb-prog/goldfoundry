@@ -104,12 +104,16 @@ export default function TelegramPage() {
     if (data?.success) { setConnected(true); loadChannels(); setStep(4); }
   };
 
-  // Resend code
+  // Resend code (stay on step 2, just resend)
   const resendCode = async () => {
-    setStep(1);
     setCode("");
     setError("");
-    setTimeout(() => sendCode(), 100);
+    const cleaned = phone.replace(/\s/g, "");
+    const data = await api("/api/telegram/auth/send-code", { phoneNumber: cleaned });
+    if (data?.success) {
+      setCodeSentAt(Date.now());
+      setStep(2);
+    }
   };
 
   // Load channels

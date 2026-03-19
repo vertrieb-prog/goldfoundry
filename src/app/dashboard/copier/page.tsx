@@ -154,6 +154,14 @@ export default function CopierPage() {
       )}
 
       {/* Accounts */}
+      {accounts.length === 0 && (
+        <div className="gf-panel p-8 text-center mb-8">
+          <div className="text-3xl mb-3">{"\u26a1"}</div>
+          <h3 className="text-lg font-bold text-white mb-2">Kein Konto verbunden</h3>
+          <p className="text-sm text-zinc-500 mb-5 max-w-md mx-auto">Verbinde dein MetaTrader-Konto um den Smart Copier zu nutzen. Der Copier kopiert Trades automatisch auf dein Konto.</p>
+          <a href="/dashboard/accounts/add" className="gf-btn gf-btn-sm">Konto verbinden &rarr;</a>
+        </div>
+      )}
       <div className="space-y-4 mb-8">
         {accounts.map((acc: any) => (
           <div key={acc.id} className="gf-panel p-6">

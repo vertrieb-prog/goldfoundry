@@ -65,10 +65,12 @@ export default function AffiliatePage() {
     setNewLink("");
   }
 
+  const s = data.stats;
+
   async function requestPayout() {
     const amount = parseFloat(payoutAmount);
     if (!amount || amount <= 0) return;
-    if (amount > (s.currentBalance ?? 0)) {
+    if (amount > (s?.currentBalance ?? 0)) {
       alert("Guthaben nicht ausreichend");
       return;
     }
@@ -77,8 +79,6 @@ export default function AffiliatePage() {
     }
     setPayoutAmount("");
   }
-
-  const s = data.stats;
 
   return (
     <FeatureGate minTier="analyzer" featureName="Partner" landingPage="/partner">

@@ -114,6 +114,9 @@ export default function TradesPage() {
             </tr>
           </thead>
           <tbody>
+            {filtered.length === 0 && (
+              <tr><td colSpan={10} className="p-8 text-center text-sm text-zinc-500">Keine Trades gefunden. {filter !== "all" ? "Versuche einen anderen Filter." : "Verbinde ein Konto um Trades zu sehen."}</td></tr>
+            )}
             {filtered.map((t: any, i: number) => (
               <tr key={i} style={{ borderBottom: "1px solid var(--gf-border)" }}>
                 <td className="p-3 mono text-xs" style={{ color: "var(--gf-text-dim)" }}>{t.closeTime}</td>
