@@ -5,13 +5,30 @@ import { NextResponse } from "next/server";
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const redirect = searchParams.get("redirect") ?? "/dashboard";
 
   if (code) {
     const supabase = createSupabaseServer();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      return NextResponse.redirect(`${origin}${redirect}`);
+      // Check if user completed onboarding
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("onboarding_completed")
+          .eq("id", user.id)
+          .single();
+
+        // New user or onboarding not done → onboarding wizard
+        if (!profile?.onboarding_completed) {
+          return NextResponse.redirect(`${origin}/dashboard/onboarding`);
+        }
+      }
+
+      return NextResponse.redirect(`${origin}/dashboard`);
     }
   }
 

@@ -17,7 +17,7 @@ function RegisterForm() {
     e.preventDefault(); setLoading(true); setErr("");
     const res = await fetch("/api/auth/register", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password: pw, fullName: name, referralCode: ref }) });
     const data = await res.json();
-    if (data.error) { setErr(data.error); setLoading(false); } else router.push("/pricing");
+    if (data.error) { setErr(data.error); setLoading(false); } else router.push(`/auth/verify-email?email=${encodeURIComponent(email)}`);
   }
 
   return (
