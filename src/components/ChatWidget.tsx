@@ -334,7 +334,7 @@ export default function ChatWidget() {
       <button
         onClick={() => { setOpen(true); setHasUnread(false); }}
         style={{
-          position: "fixed", bottom: 20, right: 20, zIndex: 9999,
+          position: "fixed", bottom: 90, right: 20, zIndex: 9999,
           width: 56, height: 56, borderRadius: "50%",
           background: `linear-gradient(135deg, ${C.g}, ${C.gd})`,
           border: "none", cursor: "pointer",
@@ -362,7 +362,7 @@ export default function ChatWidget() {
   // ── CHAT PANEL (expanded) ───────────────────────────────────
   return (
     <div style={{
-      position: "fixed", bottom: 16, right: 16, zIndex: 9999,
+      position: "fixed", bottom: 86, right: 16, zIndex: 9999,
       width: "min(400px, calc(100vw - 32px))",
       height: "min(560px, calc(100vh - 100px))",
       borderRadius: 16, overflow: "hidden",
