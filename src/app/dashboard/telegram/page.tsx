@@ -182,19 +182,35 @@ export default function TelegramPage() {
     }
   };
 
-  // Remove channel
+  // Remove channel (with error handling)
   const removeChannel = async (channelId: string) => {
-    await fetch("/api/telegram/channels/remove", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ channelId }),
-    });
+    try {
+      const res = await fetch("/api/telegram/channels/remove", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ channelId }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        setError(friendlyError(data.error || "Channel konnte nicht entfernt werden"));
+        return;
+      }
+    } catch {
+      setError({ message: "Netzwerkfehler beim Entfernen. Bitte versuche es nochmal." });
+      return;
+    }
     await loadChannels();
   };
 
-  // Disconnect
+  // Disconnect (explicit POST)
   const disconnect = async () => {
-    await api("/api/telegram/disconnect", {});
+    try {
+      await fetch("/api/telegram/disconnect", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+    } catch { /* continue anyway */ }
     setConnected(false);
     setStep(1);
     setActive([]);
