@@ -24,6 +24,7 @@ export const PRICING = {
 
 // ── Coupon Codes ──────────────────────────────────────────────
 export const COUPON_CODES: Record<string, { type: string; value: number; label: string }> = {
+  FORGE:    { type: "percent", value: 100, label: "100% Rabatt — Kostenlos!" },
   FORGE50:  { type: "percent", value: 50, label: "50% Rabatt" },
   FREETRIAL: { type: "trial", value: 14, label: "14 Tage Testphase" },
   PROPFIRM: { type: "trial", value: 30, label: "1 Monat Testphase" },

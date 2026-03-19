@@ -161,7 +161,7 @@ export default function PricingPage() {
           />
           <button
             onClick={() => {
-              if (["FORGE50", "FREETRIAL", "PROPFIRM"].includes(coupon)) setCouponApplied(true);
+              if (["FORGE", "FORGE50", "FREETRIAL", "PROPFIRM"].includes(coupon.toUpperCase())) setCouponApplied(true);
             }}
             className="px-4 py-2.5 rounded text-sm font-bold"
             style={{ background: "#d4a537", color: "#040302" }}

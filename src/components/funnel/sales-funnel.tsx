@@ -855,7 +855,7 @@ export default function SalesFunnel() {
   };
 
   const handleCouponValidate = () => {
-    const valid = ["FORGE50", "FREETRIAL", "PROPFIRM"];
+    const valid = ["FORGE", "FORGE50", "FREETRIAL", "PROPFIRM"];
     const upper = coupon.toUpperCase().trim();
     if (valid.includes(upper)) {
       setCouponValid(true);
