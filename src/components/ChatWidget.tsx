@@ -145,12 +145,9 @@ export default function ChatWidget() {
     const ctx = getPageContext(pathname);
     setContextActions(ctx.actions);
 
-    // If navigating to a new page, show short context note (NOT the full greeting)
+    // Page navigation — just update actions, NO message spam
     if (prevPathRef.current !== pathname) {
       prevPathRef.current = pathname;
-      setMsgs(prev => [...prev, { role: "greeting", text: `📍 Du bist jetzt auf ${getPageLabel(pathname)}.` }]);
-      setHasUnread(true);
-      // Do NOT auto-open — let the bubble pulse instead
       return;
     }
 
