@@ -1886,7 +1886,7 @@ export default function SalesFunnel() {
           overflowY: "auto",
           WebkitOverflowScrolling: "touch",
           fontFamily:
-            '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+            "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
           fontSize: 14,
           color: TEXT,
         }}

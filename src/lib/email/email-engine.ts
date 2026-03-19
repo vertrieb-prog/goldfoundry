@@ -67,9 +67,12 @@ function baseTemplate(content: string, preheader?: string): string {
   <meta name="color-scheme" content="dark">
   <meta name="supported-color-schemes" content="dark">
   <title>${BRAND_NAME}</title>
-  <!--[if mso]><style>table,td{font-family:Arial,Helvetica,sans-serif!important}</style><![endif]-->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <!--[if mso]><style>table,td,h1,h2,h3,div,span,p{font-family:Arial,Helvetica,sans-serif!important}</style><![endif]-->
 </head>
-<body style="margin:0;padding:0;background-color:${C.bg};font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;">
+<body style="margin:0;padding:0;background-color:${C.bg};font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;font-size:15px;line-height:1.6;">
   ${preheader ? `<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">${preheader}${"&nbsp;&zwnj;".repeat(30)}</div>` : ""}
 
   <!-- Outer wrapper -->
@@ -83,8 +86,8 @@ function baseTemplate(content: string, preheader?: string): string {
         <tr><td style="padding:0 0 32px;text-align:center;">
           <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;">
             <tr><td style="padding:24px 40px;border-bottom:1px solid ${C.divider};">
-              <div style="font-size:28px;font-weight:800;letter-spacing:2px;color:${C.gold};">GOLD FOUNDRY</div>
-              <div style="font-size:9px;letter-spacing:5px;color:${C.textMuted};margin-top:6px;text-transform:uppercase;">Forge Terminal</div>
+              <div style="font-family:'Outfit','Inter',sans-serif;font-size:28px;font-weight:800;letter-spacing:3px;color:${C.gold};">GOLD FOUNDRY</div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:5px;color:${C.textMuted};margin-top:6px;text-transform:uppercase;">Forge Terminal</div>
             </td></tr>
           </table>
         </td></tr>
@@ -102,14 +105,14 @@ function baseTemplate(content: string, preheader?: string): string {
         <tr><td style="padding:32px 20px 0;">
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
             <tr><td style="text-align:center;padding:20px 0;border-top:1px solid ${C.divider};">
-              <p style="margin:0 0 8px;font-size:12px;color:${C.textMuted};">
+              <p style="margin:0 0 8px;font-family:'JetBrains Mono',monospace;font-size:11px;color:${C.textMuted};letter-spacing:0.5px;">
                 <a href="${BASE_URL}/dashboard" style="color:${C.gold};text-decoration:none;">Dashboard</a>
                 &nbsp;&nbsp;·&nbsp;&nbsp;
-                <a href="${BASE_URL}/dashboard/settings" style="color:${C.gold};text-decoration:none;">Einstellungen</a>
+                <a href="${BASE_URL}/dashboard/settings" style="color:${C.gold};text-decoration:none;">Settings</a>
                 &nbsp;&nbsp;·&nbsp;&nbsp;
                 <a href="https://chat.whatsapp.com/goldfoundry" style="color:${C.gold};text-decoration:none;">WhatsApp</a>
               </p>
-              <p style="margin:8px 0 0;font-size:11px;color:${C.textMuted};line-height:1.6;">
+              <p style="margin:8px 0 0;font-family:'Inter',sans-serif;font-size:11px;color:${C.textMuted};line-height:1.6;">
                 Gold Foundry · goldfoundry.de<br>
                 Risikohinweis: Der Handel mit Forex und CFDs birgt ein hohes Risiko.
               </p>
@@ -130,7 +133,7 @@ function ctaButton(text: string, href: string): string {
   return `
     <table role="presentation" cellpadding="0" cellspacing="0" style="margin:28px auto 0;">
       <tr><td style="border-radius:8px;background:linear-gradient(135deg,${C.gold},${C.goldDim});">
-        <a href="${href}" target="_blank" style="display:inline-block;padding:16px 40px;color:${C.bg};font-size:15px;font-weight:700;text-decoration:none;letter-spacing:0.5px;">
+        <a href="${href}" target="_blank" style="display:inline-block;padding:16px 40px;color:${C.bg};font-family:'JetBrains Mono','Courier New',monospace;font-size:13px;font-weight:700;text-decoration:none;letter-spacing:0.5px;text-transform:uppercase;">
           ${text}
         </a>
       </td></tr>
@@ -144,8 +147,8 @@ function statBox(
 ): string {
   return `
     <td style="padding:12px 16px;background:${C.bgCardAlt};border:1px solid ${C.goldBorder};border-radius:8px;text-align:center;width:33%;">
-      <div style="font-size:22px;font-weight:800;color:${color || C.gold};line-height:1.2;">${value}</div>
-      <div style="font-size:11px;color:${C.textMuted};margin-top:4px;text-transform:uppercase;letter-spacing:1px;">${label}</div>
+      <div style="font-family:'Outfit','Inter',sans-serif;font-size:22px;font-weight:800;color:${color || C.gold};line-height:1.2;">${value}</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:${C.textMuted};margin-top:4px;text-transform:uppercase;letter-spacing:1.5px;">${label}</div>
     </td>`;
 }
 
@@ -185,8 +188,8 @@ function alertBox(
   return `
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0;">
       <tr><td style="background:${bg};border:1px solid ${border};border-left:4px solid ${titleColor};border-radius:8px;padding:20px 24px;">
-        <div style="font-size:14px;font-weight:700;color:${titleColor};margin:0 0 8px;text-transform:uppercase;letter-spacing:1px;">${title}</div>
-        <div style="font-size:14px;color:${C.text};line-height:1.7;">${body}</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:${titleColor};margin:0 0 8px;text-transform:uppercase;letter-spacing:1.5px;">${title}</div>
+        <div style="font-family:'Inter',sans-serif;font-size:14px;color:${C.text};line-height:1.7;">${body}</div>
       </td></tr>
     </table>`;
 }
@@ -197,8 +200,8 @@ function divider(): string {
 
 function heading(text: string, subtitle?: string): string {
   return `
-    <h1 style="margin:0 0 ${subtitle ? "4px" : "20px"};font-size:24px;font-weight:800;color:${C.gold};line-height:1.3;">${text}</h1>
-    ${subtitle ? `<p style="margin:0 0 24px;font-size:15px;color:${C.textDim};line-height:1.6;">${subtitle}</p>` : ""}`;
+    <h1 style="margin:0 0 ${subtitle ? "4px" : "20px"};font-family:'Outfit','Inter',sans-serif;font-size:26px;font-weight:800;color:${C.gold};line-height:1.2;letter-spacing:-0.02em;">${text}</h1>
+    ${subtitle ? `<p style="margin:0 0 24px;font-family:'Inter',sans-serif;font-size:15px;color:${C.textDim};line-height:1.7;font-weight:400;">${subtitle}</p>` : ""}`;
 }
 
 function featureRow(icon: string, title: string, desc: string): string {
@@ -210,8 +213,8 @@ function featureRow(icon: string, title: string, desc: string): string {
             <div style="width:40px;height:40px;border-radius:10px;background:${C.goldSubtle};border:1px solid ${C.goldBorder};text-align:center;line-height:40px;font-size:20px;">${icon}</div>
           </td>
           <td style="padding-left:14px;vertical-align:top;">
-            <div style="font-size:15px;font-weight:700;color:${C.text};margin:0 0 2px;">${title}</div>
-            <div style="font-size:13px;color:${C.textDim};line-height:1.5;">${desc}</div>
+            <div style="font-family:'Outfit','Inter',sans-serif;font-size:15px;font-weight:700;color:${C.text};margin:0 0 2px;">${title}</div>
+            <div style="font-family:'Inter',sans-serif;font-size:13px;color:${C.textDim};line-height:1.5;font-weight:400;">${desc}</div>
           </td>
         </tr>
       </table>
