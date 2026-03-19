@@ -3,146 +3,173 @@
 import { useState, useRef, useEffect } from "react";
 import FeatureGate from "@/components/FeatureGate";
 
-interface Message { role: "user" | "assistant"; content: string; }
+interface Message { role: "user" | "assistant"; content: string }
 
-const WELCOME_MESSAGE: Message = {
-  role: "assistant",
-  content: "Hey Eric! Ich bin dein FORGE Mentor. Deine Konten laufen stabil — TEGAS FX bei 67.2% Buffer, TAG Markets bei 43.1%. Heute +€399.60 über beide Konten. Der Copier hat 2 Trades wegen News-Events übersprungen (NFP morgen). Frag mich alles!",
-};
+const WELCOME = "Hey! Ich bin FORGE Mentor \u2014 dein KI-Trading-Analyst.\n\nIch kenne deine Konten, analysiere Trades in Echtzeit und optimiere deine Strategie. Frag mich alles!";
 
-const QUICK_ACTIONS = ["Status-Check", "Trades analysieren", "Markt-Update", "Strategie optimieren"];
-
-const MENTOR_FEATURES = [
-  {
-    title: "Trade-Analyse",
-    desc: "Detaillierte Analyse deiner letzten Trades mit Win Rate, R:R und Muster-Erkennung.",
-    icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z",
-  },
-  {
-    title: "Risiko-Coaching",
-    desc: "Echtzeit-Feedback zu Drawdown, Positionsgröße und Risk Management.",
-    icon: "M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z",
-  },
-  {
-    title: "Markt-Intel",
-    desc: "News-Events, Volatilität, Regime-Erkennung und Sentiment in Echtzeit.",
-    icon: "M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064",
-  },
-  {
-    title: "Strategie-Optimierung",
-    desc: "Vorschläge zur Verbesserung deiner Copier-Einstellungen und Multiplier.",
-    icon: "M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z",
-    icon2: "M15 12a3 3 0 11-6 0 3 3 0 016 0z",
-  },
+const QUICK_ACTIONS = [
+  { label: "Status-Check", icon: "\ud83d\udcca", q: "Wie steht mein Account? Gib mir einen kompletten Status-Check." },
+  { label: "Trades analysieren", icon: "\ud83d\udd2c", q: "Analysiere meine letzten Trades. Wo kann ich mich verbessern?" },
+  { label: "Markt-Update", icon: "\ud83c\udf0d", q: "Was passiert gerade am Markt? Gibt es Risiken?" },
+  { label: "Strategie", icon: "\u2699\ufe0f", q: "Schlage mir eine optimale Strategie vor basierend auf meinen Daten." },
 ];
 
 export default function ChatPage() {
-  const [messages, setMessages] = useState<Message[]>([WELCOME_MESSAGE]);
+  const [messages, setMessages] = useState<Message[]>([{ role: "assistant", content: WELCOME }]);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
-  async function send(e: React.FormEvent) {
-    e.preventDefault();
-    if (!input.trim() || streaming) return;
-    const userMsg = input.trim();
+  async function send(text?: string) {
+    const msg = (text || input).trim();
+    if (!msg || streaming) return;
     setInput("");
-    setMessages(prev => [...prev, { role: "user", content: userMsg }]);
+    setMessages(prev => [...prev, { role: "user", content: msg }]);
     setStreaming(true);
 
     try {
-      const res = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: userMsg }) });
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: msg }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Anfrage fehlgeschlagen");
+      }
+
       const reader = res.body?.getReader();
       const decoder = new TextDecoder();
       let assistantMsg = "";
-
       setMessages(prev => [...prev, { role: "assistant", content: "" }]);
 
       while (reader) {
         const { done, value } = await reader.read();
         if (done) break;
         const chunk = decoder.decode(value);
-        const lines = chunk.split("\n").filter(l => l.startsWith("data: "));
-        for (const line of lines) {
+        for (const line of chunk.split("\n").filter(l => l.startsWith("data: "))) {
           try {
             const data = JSON.parse(line.slice(6));
             if (data.text) {
               assistantMsg += data.text;
               setMessages(prev => [...prev.slice(0, -1), { role: "assistant", content: assistantMsg }]);
             }
-          } catch {}
+          } catch { /* skip malformed chunks */ }
         }
       }
-    } catch {
-      setMessages(prev => [...prev.slice(0, -1), { role: "assistant", content: "Verbindungsfehler. Bitte erneut versuchen." }]);
+
+      if (!assistantMsg) {
+        setMessages(prev => [...prev.slice(0, -1), { role: "assistant", content: "Keine Antwort erhalten. Bitte versuche es nochmal." }]);
+      }
+    } catch (e: any) {
+      setMessages(prev => [
+        ...prev.slice(0, prev[prev.length - 1]?.content === "" ? -1 : prev.length),
+        { role: "assistant", content: `Fehler: ${e.message || "Verbindungsproblem"}. Bitte versuche es nochmal.` },
+      ]);
     }
     setStreaming(false);
+    inputRef.current?.focus();
   }
 
-  function handleQuickAction(action: string) {
-    setInput(action);
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    send();
   }
 
   return (
     <FeatureGate minTier="analyzer" featureName="FORGE Mentor" landingPage="/forge-mentor">
-    <div className="flex flex-col" style={{ height: "calc(100vh - 4rem)" }}>
-      <div className="mb-4">
-        <h1 className="text-2xl font-bold" style={{ color: "var(--gf-text-bright)" }}>FORGE Mentor</h1>
-        <p className="text-sm" style={{ color: "var(--gf-text-dim)" }}>Dein Quant-Analyst. Kennt deine Trades, Konten, und den Markt.</p>
-      </div>
+    <div className="flex flex-col" style={{ height: "calc(100vh - 8rem)" }}>
 
-      {/* MENTOR FEATURES */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-        {MENTOR_FEATURES.map((f) => (
-          <div key={f.title} className="gf-panel p-4" style={{
-            background: "linear-gradient(135deg, var(--gf-panel), rgba(212,165,55,0.02))",
-          }}>
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-2" style={{
-              background: "rgba(212,165,55,0.08)",
-              border: "1px solid rgba(212,165,55,0.12)",
-            }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d4a537" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d={f.icon} />
-                {f.icon2 && <path d={f.icon2} />}
-              </svg>
+      {/* Features Bar */}
+      {messages.length <= 1 && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+          {[
+            { icon: "\ud83d\udcca", title: "Trade-Analyse", desc: "Win Rate, R:R, Muster" },
+            { icon: "\ud83d\udee1\ufe0f", title: "Risk-Coaching", desc: "DD, Lots, Risk Management" },
+            { icon: "\ud83c\udf0d", title: "Markt-Intel", desc: "News, Sentiment, Regime" },
+            { icon: "\u2699\ufe0f", title: "Strategie-Lab", desc: "Copier-Settings optimieren" },
+          ].map(f => (
+            <div key={f.title} className="gf-panel p-4">
+              <div className="text-xl mb-2">{f.icon}</div>
+              <div className="text-xs font-semibold text-white mb-0.5">{f.title}</div>
+              <div className="text-[10px] text-zinc-600">{f.desc}</div>
             </div>
-            <div className="text-xs font-semibold mb-1" style={{ color: "var(--gf-text-bright)" }}>{f.title}</div>
-            <div className="text-[10px] leading-relaxed" style={{ color: "var(--gf-text-dim)" }}>{f.desc}</div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
-      {/* MESSAGES */}
-      <div className="flex-1 overflow-auto space-y-4 pr-2 mb-4">
+      {/* Messages */}
+      <div className="flex-1 overflow-auto space-y-3 mb-4 pr-1">
         {messages.map((m, i) => (
           <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-            <div className={`max-w-[85%] md:max-w-[70%] p-4 rounded`}
+            <div className={`max-w-[85%] md:max-w-[70%] rounded-2xl ${m.role === "user" ? "rounded-br-md" : "rounded-bl-md"}`}
               style={{
-                background: m.role === "user" ? "rgba(212,165,55,0.08)" : "var(--gf-panel)",
-                border: "1px solid var(--gf-border)",
-                color: "var(--gf-text)",
-              }}>
-              {m.role === "assistant" && <div className="text-[10px] tracking-widest mb-2" style={{ color: "var(--gf-gold)" }}>FORGE Mentor</div>}
-              <div className="text-sm leading-relaxed whitespace-pre-wrap">{m.content}{streaming && i === messages.length - 1 && m.role === "assistant" && <span className="animate-pulse" style={{ color: "var(--gf-gold)" }}>&#9612;</span>}</div>
+                padding: "14px 18px",
+                background: m.role === "user"
+                  ? "rgba(250,239,112,0.06)"
+                  : "var(--gf-panel)",
+                border: `1px solid ${m.role === "user" ? "rgba(250,239,112,0.12)" : "var(--gf-border)"}`,
+              }}
+            >
+              {m.role === "assistant" && i > 0 && (
+                <div className="text-[9px] font-mono tracking-[2px] mb-2" style={{ color: "var(--gf-gold)" }}>FORGE MENTOR</div>
+              )}
+              {m.role === "assistant" && i === 0 && (
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center text-sm" style={{ background: "rgba(250,239,112,0.08)", border: "1px solid rgba(250,239,112,0.12)" }}>{"\ud83e\udde0"}</div>
+                  <div className="text-[9px] font-mono tracking-[2px]" style={{ color: "var(--gf-gold)" }}>FORGE MENTOR</div>
+                </div>
+              )}
+              <div className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: m.role === "user" ? "var(--gf-text-bright)" : "var(--gf-text)" }}>
+                {m.content}
+                {streaming && i === messages.length - 1 && m.role === "assistant" && (
+                  <span className="inline-block w-2 h-4 ml-0.5 rounded-sm animate-pulse" style={{ background: "var(--gf-gold)" }} />
+                )}
+              </div>
             </div>
           </div>
         ))}
         <div ref={endRef} />
       </div>
 
-      {/* QUICK ACTIONS */}
-      <div className="flex flex-wrap gap-2 mb-3">
+      {/* Quick Actions */}
+      <div className="flex gap-2 mb-3 overflow-x-auto pb-1">
         {QUICK_ACTIONS.map(q => (
-          <button key={q} onClick={() => handleQuickAction(q)} className="gf-btn-outline text-xs !px-3 !py-1.5">{q}</button>
+          <button
+            key={q.label}
+            onClick={() => send(q.q)}
+            disabled={streaming}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs whitespace-nowrap transition-all hover:scale-[1.02]"
+            style={{ background: "rgba(250,239,112,0.04)", border: "1px solid rgba(250,239,112,0.1)", color: "var(--gf-gold)" }}
+          >
+            <span>{q.icon}</span> {q.label}
+          </button>
         ))}
       </div>
 
-      {/* INPUT */}
-      <form onSubmit={send} className="flex gap-3">
-        <input className="gf-input flex-1" placeholder="Frag FORGE Mentor..." value={input} onChange={e => setInput(e.target.value)} disabled={streaming} />
-        <button type="submit" className="gf-btn !px-6" disabled={streaming}>{streaming ? "..." : "→"}</button>
+      {/* Input */}
+      <form onSubmit={handleSubmit} className="flex gap-3">
+        <input
+          ref={inputRef}
+          className="gf-input flex-1 !py-3"
+          placeholder="Frag FORGE Mentor..."
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          disabled={streaming}
+        />
+        <button type="submit" className="gf-btn !px-6 !py-3" disabled={streaming || !input.trim()}>
+          {streaming ? (
+            <span className="flex gap-1">
+              {[0, 1, 2].map(i => (
+                <span key={i} className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" style={{ animationDelay: `${i * 0.15}s` }} />
+              ))}
+            </span>
+          ) : "\u2192"}
+        </button>
       </form>
     </div>
     </FeatureGate>

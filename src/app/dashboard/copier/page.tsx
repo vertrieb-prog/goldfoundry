@@ -1,253 +1,210 @@
 // src/app/dashboard/copier/page.tsx
 "use client";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import FeatureGate from "@/components/FeatureGate";
 
 const DEMO_INTEL = {
-  risk_level: "GREEN",
-  risk_score: 18,
-  regime: "TRENDING",
+  risk_level: "GREEN", risk_score: 18, regime: "TRENDING",
   geopolitical_risk: "LOW",
-  forecast_text: "Stabile Marktlage. Gold im Aufwärtstrend, moderate Volatilität. Keine relevanten News-Events in den nächsten 4h. Optimale Bedingungen für Trend-Following-Strategien.",
+  forecast_text: "Stabile Marktlage. Gold im Aufwärtstrend, moderate Volatilität. Optimale Bedingungen für Trend-Following.",
 };
 
 const DEMO_ACCOUNTS = [
   {
-    id: "acc-1",
-    firmProfile: "TEGAS FX 24x",
-    platform: "MT5",
-    mtLogin: "88401234",
-    brokerServer: "TegasFX-Live",
-    equity: 48250,
-    ddBuffer: 67.2,
-    lastMultiplier: 0.92,
-    todayPnl: 312.40,
-    copierActive: true,
-    todayCopied: 8,
-    todaySkipped: 2,
+    id: "acc-1", firmProfile: "TEGAS FX 24x", platform: "MT5", mtLogin: "88401234",
+    equity: 48250, ddBuffer: 67.2, lastMultiplier: 0.92, todayPnl: 312.40,
+    copierActive: true, todayCopied: 8, todaySkipped: 2, pausedReason: null,
     lastFactors: { Time: 1.0, News: 1.0, DD: 0.92, Perf: 0.95, Vol: 0.88, Day: 1.0, Intel: 1.0 },
-    pausedReason: null,
   },
   {
-    id: "acc-2",
-    firmProfile: "TAG Markets 12x",
-    platform: "MT5",
-    mtLogin: "77203456",
-    brokerServer: "TagMarkets-Live",
-    equity: 24100,
-    ddBuffer: 43.1,
-    lastMultiplier: 0.65,
-    todayPnl: 87.20,
-    copierActive: true,
-    todayCopied: 5,
-    todaySkipped: 1,
+    id: "acc-2", firmProfile: "TAG Markets 12x", platform: "MT5", mtLogin: "77203456",
+    equity: 24100, ddBuffer: 43.1, lastMultiplier: 0.65, todayPnl: 87.20,
+    copierActive: true, todayCopied: 5, todaySkipped: 1, pausedReason: null,
     lastFactors: { Time: 1.0, News: 0.7, DD: 0.65, Perf: 0.85, Vol: 0.92, Day: 1.0, Intel: 0.9 },
-    pausedReason: null,
   },
 ];
 
-const DEMO_TELEGRAM = {
-  active: true,
-  groups: [
-    { name: "XAUUSD VIP Signals", count: 247 },
-    { name: "Forex Elite", count: 189 },
-    { name: "Gold Scalper Pro", count: 312 },
-  ],
-  lastSignal: {
-    text: "BUY XAUUSD @ 2341.50, TP 2358.00, SL 2334.00",
-    status: "KOPIERT",
-  },
-  smartOrders: ["4-Split TP aktiv", "Auto-BE aktiv", "Trailing Runner aktiv"],
+const RISK_COLORS: Record<string, string> = {
+  GREEN: "var(--gf-green)", YELLOW: "var(--gf-gold)", ORANGE: "#f97316", RED: "var(--gf-red)", BLACK: "#666",
 };
+
+function StatCard({ label, value, color, sub }: { label: string; value: string; color?: string; sub?: string }) {
+  return (
+    <div className="text-center p-3 rounded-xl" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
+      <div className="text-xl font-bold font-['Outfit']" style={{ color: color || "var(--gf-text-bright)" }}>{value}</div>
+      <div className="text-[9px] font-mono uppercase tracking-[1.5px] mt-1" style={{ color: "var(--gf-text-dim)" }}>{label}</div>
+      {sub && <div className="text-[10px] mt-0.5" style={{ color: "var(--gf-text-dim)" }}>{sub}</div>}
+    </div>
+  );
+}
 
 export default function CopierPage() {
   const [accounts, setAccounts] = useState<any[]>(DEMO_ACCOUNTS);
   const [intel, setIntel] = useState<any>(DEMO_INTEL);
-  const [showConnect, setShowConnect] = useState(false);
-  const [form, setForm] = useState({ firmProfile: "tegas_24x", brokerServer: "", mtLogin: "", mtPassword: "", platform: "mt5" });
-  const [connecting, setConnecting] = useState(false);
-  const [msg, setMsg] = useState("");
+  const [isDemo, setIsDemo] = useState(true);
 
   useEffect(() => {
     fetch("/api/copier/status")
       .then(r => r.json())
-      .then(d => {
-        if (d.accounts?.length) setAccounts(d.accounts);
-        if (d.intel) setIntel(d.intel);
-      })
+      .then(d => { if (d.accounts?.length) { setAccounts(d.accounts); setIsDemo(false); } if (d.intel) setIntel(d.intel); })
       .catch(() => {});
   }, []);
-
-  async function handleConnect(e: React.FormEvent) {
-    e.preventDefault(); setConnecting(true); setMsg("");
-    try {
-      const res = await fetch("/api/copier/connect", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
-      const data = await res.json();
-      setConnecting(false);
-      if (data.success) { setMsg("Verbunden!"); setShowConnect(false); }
-      else setMsg(data.error ?? "Fehler");
-    } catch { setConnecting(false); setMsg("Verbindung fehlgeschlagen"); }
-  }
 
   async function togglePause(accountId: string, active: boolean) {
     fetch("/api/copier/pause", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ accountId, action: active ? "pause" : "resume" }) }).catch(() => {});
     setAccounts(prev => prev.map(a => a.id === accountId ? { ...a, copierActive: !active } : a));
   }
 
+  const riskColor = RISK_COLORS[intel?.risk_level] || "var(--gf-green)";
+
   return (
     <FeatureGate minTier="copier" featureName="Smart Copier" landingPage="/smart-copier">
-    <div>
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-bold" style={{ color: "var(--gf-text-bright)" }}>Smart Copier</h1>
-          <p className="text-sm mt-1" style={{ color: "var(--gf-text-dim)" }}>Smart Autopilot · 7-Faktor Risk Engine · Manipulation Shield</p>
+          <h1 className="gf-heading text-2xl">Smart Copier</h1>
+          <p className="text-sm text-zinc-500 mt-1">Autopilot Trading mit 7-Faktor Risk Shield</p>
         </div>
         <div className="flex items-center gap-3">
-          <span className="px-2 py-1 rounded text-[10px] font-bold tracking-wider" style={{ background: "rgba(212,165,55,0.15)", color: "var(--gf-gold)" }}>DEMO DATA</span>
-          <button onClick={() => setShowConnect(!showConnect)} className="gf-btn text-sm">+ MT-Konto verbinden</button>
+          {isDemo && <span className="text-[9px] px-2.5 py-1 rounded-full font-mono tracking-wider" style={{ background: "rgba(250,239,112,0.08)", color: "var(--gf-gold)", border: "1px solid rgba(250,239,112,0.12)" }}>DEMO</span>}
+          <Link href="/dashboard/accounts/add" className="gf-btn gf-btn-sm">+ Konto verbinden</Link>
         </div>
       </div>
 
       {/* INTEL Bar */}
       {intel && (
-        <div className="gf-panel p-4 mb-6 flex flex-wrap items-center gap-4">
-          <span className="text-xs tracking-widest font-bold" style={{ color: "var(--gf-text-dim)" }}>INTEL</span>
-          <span className="px-2 py-1 rounded text-xs font-bold" style={{ background: "rgba(39,174,96,0.12)", color: "var(--gf-green)" }}>
-            Risk Level: {intel.risk_level}
-          </span>
-          <span className="px-2 py-1 rounded text-xs font-bold mono" style={{ background: "rgba(212,165,55,0.1)", color: "var(--gf-gold)" }}>
-            Score: {intel.risk_score}/100
-          </span>
-          <span className="text-xs" style={{ color: "var(--gf-text)" }}>
-            Regime: <span style={{ color: "var(--gf-text-bright)" }}>{intel.regime}</span>
-          </span>
-          <span className="text-xs" style={{ color: "var(--gf-text)" }}>
-            Geo: <span style={{ color: "var(--gf-text-bright)" }}>{intel.geopolitical_risk}</span>
-          </span>
-          {intel.forecast_text && (
-            <p className="w-full text-xs mt-2 leading-relaxed" style={{ color: "var(--gf-text)" }}>{intel.forecast_text}</p>
-          )}
-        </div>
-      )}
-
-      {/* Connect Form (toggleable) */}
-      {showConnect && (
-        <div className="gf-panel p-6 mb-6 animate-in">
-          <h3 className="font-semibold mb-4" style={{ color: "var(--gf-text-bright)" }}>MetaTrader verbinden</h3>
-          <form onSubmit={handleConnect} className="grid md:grid-cols-2 gap-4">
-            <select className="gf-input" value={form.firmProfile} onChange={e => setForm({ ...form, firmProfile: e.target.value })}>
-              <option value="tegas_24x">Tegas FX 24x (5% Trailing DD)</option>
-              <option value="tag_12x">Tag Markets 12x (10% Fixed DD)</option>
-            </select>
-            <select className="gf-input" value={form.platform} onChange={e => setForm({ ...form, platform: e.target.value })}>
-              <option value="mt5">MetaTrader 5</option>
-              <option value="mt4">MetaTrader 4</option>
-            </select>
-            <input className="gf-input" placeholder="Broker Server (z.B. TegasFX-Live)" value={form.brokerServer} onChange={e => setForm({ ...form, brokerServer: e.target.value })} required />
-            <input className="gf-input" placeholder="MT Login" value={form.mtLogin} onChange={e => setForm({ ...form, mtLogin: e.target.value })} required />
-            <input className="gf-input" type="password" placeholder="MT Trading Password" value={form.mtPassword} onChange={e => setForm({ ...form, mtPassword: e.target.value })} required />
-            <button type="submit" className="gf-btn" disabled={connecting}>{connecting ? "Verbinde..." : "Verbinden"}</button>
-          </form>
-          {msg && <p className="mt-3 text-sm" style={{ color: msg === "Verbunden!" ? "var(--gf-green)" : "var(--gf-red)" }}>{msg}</p>}
-        </div>
-      )}
-
-      {/* Accounts */}
-      {accounts.length === 0 && (
-        <div className="gf-panel p-8 text-center mb-8">
-          <div className="text-3xl mb-3">{"\u26a1"}</div>
-          <h3 className="text-lg font-bold text-white mb-2">Kein Konto verbunden</h3>
-          <p className="text-sm text-zinc-500 mb-5 max-w-md mx-auto">Verbinde dein MetaTrader-Konto um den Smart Copier zu nutzen. Der Copier kopiert Trades automatisch auf dein Konto.</p>
-          <a href="/dashboard/accounts/add" className="gf-btn gf-btn-sm">Konto verbinden &rarr;</a>
-        </div>
-      )}
-      <div className="space-y-4 mb-8">
-        {accounts.map((acc: any) => (
-          <div key={acc.id} className="gf-panel p-6">
-            <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-3 h-3 rounded-full" style={{ background: acc.copierActive ? "var(--gf-green)" : "var(--gf-red)" }} />
-                <span className="font-semibold" style={{ color: "var(--gf-text-bright)" }}>{acc.firmProfile}</span>
-                <span className="mono text-sm" style={{ color: "var(--gf-text-dim)" }}>{acc.platform} Login {acc.mtLogin}</span>
-                <span className="px-2 py-0.5 rounded text-[10px] font-bold tracking-wider" style={{
-                  background: acc.copierActive ? "rgba(39,174,96,0.12)" : "rgba(192,57,43,0.12)",
-                  color: acc.copierActive ? "var(--gf-green)" : "var(--gf-red)"
-                }}>
-                  {acc.copierActive ? "ACTIVE" : "PAUSED"}
-                </span>
-              </div>
-              <button onClick={() => togglePause(acc.id, acc.copierActive)} className={acc.copierActive ? "gf-btn-outline text-xs !px-4 !py-1.5" : "gf-btn text-xs !px-4 !py-1.5"}>
-                {acc.copierActive ? "Pausieren" : "Fortsetzen"}
-              </button>
+        <div className="gf-panel p-5">
+          <div className="flex items-center gap-3 mb-3">
+            <span className="text-[9px] font-mono tracking-[2px] text-zinc-500 uppercase">Forge Intel</span>
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full" style={{ background: riskColor, boxShadow: `0 0 8px ${riskColor}` }} />
+              <span className="text-xs font-semibold" style={{ color: riskColor }}>{intel.risk_level}</span>
             </div>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
+              <span className="text-[9px] text-zinc-500 font-mono">RISK</span>
+              <span className="text-sm font-bold font-mono" style={{ color: riskColor }}>{intel.risk_score}/100</span>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
+              <span className="text-[9px] text-zinc-500 font-mono">REGIME</span>
+              <span className="text-sm font-semibold text-white">{intel.regime}</span>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
+              <span className="text-[9px] text-zinc-500 font-mono">GEO</span>
+              <span className="text-sm font-semibold text-white">{intel.geopolitical_risk}</span>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
+              <span className="text-[9px] text-zinc-500 font-mono">STATUS</span>
+              <span className="text-sm font-semibold" style={{ color: "var(--gf-green)" }}>OPTIMAL</span>
+            </div>
+          </div>
+          {intel.forecast_text && <p className="text-xs text-zinc-500 leading-relaxed">{intel.forecast_text}</p>}
+        </div>
+      )}
 
-            {/* Stats Row */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
-              <div className="text-center">
-                <div className="text-xl font-bold" style={{ color: "var(--gf-text-bright)" }}>{"€"}{acc.equity?.toLocaleString()}</div>
-                <div className="text-[10px]" style={{ color: "var(--gf-text-dim)" }}>Equity</div>
+      {/* Empty State */}
+      {accounts.length === 0 && (
+        <div className="gf-panel p-10 text-center">
+          <div className="w-16 h-16 rounded-2xl mx-auto mb-5 flex items-center justify-center text-3xl" style={{ background: "rgba(250,239,112,0.06)", border: "1px solid rgba(250,239,112,0.12)" }}>{"\u26a1"}</div>
+          <h3 className="text-lg font-bold text-white mb-2">Kein Konto verbunden</h3>
+          <p className="text-sm text-zinc-500 mb-6 max-w-md mx-auto">Verbinde dein MetaTrader-Konto und der Smart Copier startet automatisch mit dem Risk Shield.</p>
+          <Link href="/dashboard/accounts/add" className="gf-btn">Konto verbinden &rarr;</Link>
+        </div>
+      )}
+
+      {/* Account Cards */}
+      {accounts.map((acc: any) => (
+        <div key={acc.id} className="gf-panel overflow-hidden">
+          {/* Account Header */}
+          <div className="flex items-center justify-between p-5 border-b" style={{ borderColor: "var(--gf-border)" }}>
+            <div className="flex items-center gap-3">
+              <div className="w-3 h-3 rounded-full" style={{ background: acc.copierActive ? "var(--gf-green)" : "var(--gf-red)", boxShadow: acc.copierActive ? "0 0 8px rgba(34,197,94,0.4)" : "none" }} />
+              <div>
+                <span className="font-semibold text-white">{acc.firmProfile}</span>
+                <span className="text-xs text-zinc-600 font-mono ml-2">{acc.mtLogin}</span>
               </div>
-              <div className="text-center">
-                <div className="text-xl font-bold" style={{ color: acc.ddBuffer > 40 ? "var(--gf-green)" : "var(--gf-red)" }}>{acc.ddBuffer}%</div>
-                <div className="text-[10px]" style={{ color: "var(--gf-text-dim)" }}>DD Buffer</div>
-              </div>
-              <div className="text-center">
-                <div className="text-xl font-bold gf-gold-text">{acc.lastMultiplier}x</div>
-                <div className="text-[10px]" style={{ color: "var(--gf-text-dim)" }}>Risk Multiplier</div>
-              </div>
-              <div className="text-center">
-                <div className="text-xl font-bold" style={{ color: acc.todayPnl >= 0 ? "var(--gf-green)" : "var(--gf-red)" }}>
-                  {acc.todayPnl >= 0 ? "+" : "-"}{"€"}{Math.abs(acc.todayPnl ?? 0).toFixed(2)}
-                </div>
-                <div className="text-[10px]" style={{ color: "var(--gf-text-dim)" }}>Heute P&L</div>
-              </div>
-              <div className="text-center">
-                <div className="text-xl font-bold" style={{ color: "var(--gf-text-bright)" }}>
-                  {acc.todayCopied} <span className="text-xs font-normal" style={{ color: "var(--gf-green)" }}>kopiert</span>{" "}
-                  / {acc.todaySkipped} <span className="text-xs font-normal" style={{ color: "var(--gf-text-dim)" }}>geskippt</span>
-                </div>
-                <div className="text-[10px]" style={{ color: "var(--gf-text-dim)" }}>Heute</div>
-              </div>
+              <span className="text-[9px] font-mono tracking-wider px-2 py-0.5 rounded" style={{
+                background: acc.copierActive ? "rgba(34,197,94,0.08)" : "rgba(239,68,68,0.08)",
+                color: acc.copierActive ? "var(--gf-green)" : "var(--gf-red)",
+                border: `1px solid ${acc.copierActive ? "rgba(34,197,94,0.15)" : "rgba(239,68,68,0.15)"}`,
+              }}>{acc.copierActive ? "ACTIVE" : "PAUSED"}</span>
+            </div>
+            <button onClick={() => togglePause(acc.id, acc.copierActive)} className={acc.copierActive ? "gf-btn-outline gf-btn-sm" : "gf-btn gf-btn-sm"}>
+              {acc.copierActive ? "Pausieren" : "Fortsetzen"}
+            </button>
+          </div>
+
+          {/* Stats */}
+          <div className="p-5">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-5">
+              <StatCard label="Equity" value={`\u20ac${acc.equity?.toLocaleString("de-DE")}`} />
+              <StatCard label="DD Buffer" value={`${acc.ddBuffer}%`} color={acc.ddBuffer > 40 ? "var(--gf-green)" : acc.ddBuffer > 15 ? "var(--gf-gold)" : "var(--gf-red)"} />
+              <StatCard label="Multiplier" value={`${acc.lastMultiplier}x`} color="var(--gf-gold)" />
+              <StatCard label="Heute P&L" value={`${acc.todayPnl >= 0 ? "+" : ""}\u20ac${acc.todayPnl?.toFixed(0)}`} color={acc.todayPnl >= 0 ? "var(--gf-green)" : "var(--gf-red)"} />
+              <StatCard label="Trades" value={`${acc.todayCopied}/${acc.todayCopied + acc.todaySkipped}`} sub={`${acc.todaySkipped} geskippt`} />
             </div>
 
             {/* Risk Factors */}
             {acc.lastFactors && (
               <div>
-                <div className="text-[10px] tracking-widest mb-2" style={{ color: "var(--gf-text-dim)" }}>RISK FACTORS</div>
+                <div className="text-[9px] font-mono tracking-[2px] text-zinc-600 mb-3">RISK FACTORS</div>
                 <div className="grid grid-cols-7 gap-2">
-                  {Object.entries(acc.lastFactors).map(([k, v]: [string, any]) => (
-                    <div key={k} className="text-center p-2 rounded" style={{ background: "var(--gf-obsidian)" }}>
-                      <div className="text-xs font-bold mono" style={{ color: v >= 0.8 ? "var(--gf-green)" : v >= 0.3 ? "var(--gf-gold)" : "var(--gf-red)" }}>{v.toFixed(2)}</div>
-                      {/* Color bar */}
-                      <div className="w-full h-1 rounded-full mt-1 mb-1" style={{ background: "rgba(255,255,255,0.05)" }}>
-                        <div className="h-full rounded-full" style={{
-                          width: `${v * 100}%`,
-                          background: v >= 0.8 ? "var(--gf-green)" : v >= 0.3 ? "var(--gf-gold)" : "var(--gf-red)"
-                        }} />
+                  {Object.entries(acc.lastFactors).map(([k, v]: [string, any]) => {
+                    const color = v >= 0.8 ? "var(--gf-green)" : v >= 0.5 ? "var(--gf-gold)" : "var(--gf-red)";
+                    return (
+                      <div key={k} className="text-center p-2 rounded-lg" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
+                        <div className="text-xs font-bold font-mono" style={{ color }}>{(v * 100).toFixed(0)}%</div>
+                        <div className="w-full h-1 rounded-full mt-1.5 mb-1" style={{ background: "rgba(255,255,255,0.04)" }}>
+                          <div className="h-full rounded-full transition-all" style={{ width: `${v * 100}%`, background: color }} />
+                        </div>
+                        <div className="text-[8px] uppercase font-mono text-zinc-600">{k}</div>
                       </div>
-                      <div className="text-[9px] uppercase" style={{ color: "var(--gf-text-dim)" }}>{k}</div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
 
             {acc.pausedReason && (
-              <div className="mt-3 text-xs px-3 py-2 rounded" style={{ background: "rgba(192,57,43,0.08)", color: "var(--gf-red)" }}>{acc.pausedReason}</div>
+              <div className="mt-4 p-3 rounded-lg flex items-start gap-2 text-xs" style={{ background: "rgba(239,68,68,0.05)", border: "1px solid rgba(239,68,68,0.12)", color: "var(--gf-red)" }}>
+                <span>{"\u26a0\ufe0f"}</span> {acc.pausedReason}
+              </div>
             )}
           </div>
-        ))}
+        </div>
+      ))}
+
+      {/* Telegram Copier Link */}
+      <div className="gf-panel p-5 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl" style={{ background: "rgba(250,239,112,0.06)", border: "1px solid rgba(250,239,112,0.12)" }}>{"\ud83d\udce1"}</div>
+          <div>
+            <div className="text-sm font-semibold text-white">Telegram Copier</div>
+            <div className="text-xs text-zinc-500">Signale aus Telegram-Channels automatisch kopieren</div>
+          </div>
+        </div>
+        <Link href="/dashboard/telegram" className="gf-btn-outline gf-btn-sm">&Ouml;ffnen &rarr;</Link>
       </div>
 
-      {/* Telegram Copier Teaser */}
+      {/* How Risk Shield Works */}
       <div className="gf-panel p-5">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-sm font-semibold" style={{ color: "var(--gf-text-bright)" }}>Telegram Copier</div>
-            <div className="text-xs mt-1" style={{ color: "var(--gf-text-dim)" }}>Signale aus Telegram-Gruppen automatisch kopieren</div>
-          </div>
-          <a href="/dashboard/telegram" className="gf-btn text-xs px-4 py-2">Öffnen →</a>
+        <div className="text-[9px] font-mono tracking-[2px] text-zinc-600 mb-3">SO FUNKTIONIERT DER RISK SHIELD</div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {[
+            { icon: "\u23f0", title: "Session Filter", desc: "Tradet nur in optimalen Sessions" },
+            { icon: "\ud83d\udcf0", title: "News Guard", desc: "Pausiert bei High-Impact News" },
+            { icon: "\ud83d\udcc9", title: "DD Schutz", desc: "Reduziert Lots bei hohem Drawdown" },
+            { icon: "\ud83c\udf0d", title: "Geo Intel", desc: "Analysiert geopolitische Risiken" },
+          ].map(f => (
+            <div key={f.title} className="p-3 rounded-lg text-center" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
+              <div className="text-lg mb-1">{f.icon}</div>
+              <div className="text-xs font-semibold text-white mb-0.5">{f.title}</div>
+              <div className="text-[10px] text-zinc-600">{f.desc}</div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
