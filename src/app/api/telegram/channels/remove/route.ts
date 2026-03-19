@@ -1,17 +1,20 @@
 import { NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase-admin";
+import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server";
 
 export async function DELETE(request: Request) {
   try {
-    const { userId, channelId } = await request.json();
-    if (!userId || !channelId) {
-      return NextResponse.json({ error: "userId und channelId erforderlich" }, { status: 400 });
-    }
+    const supabase = createSupabaseServer();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: "Nicht eingeloggt" }, { status: 401 });
 
-    const { error } = await supabaseAdmin
+    const { channelId } = await request.json();
+    if (!channelId) return NextResponse.json({ error: "channelId erforderlich" }, { status: 400 });
+
+    const admin = createSupabaseAdmin();
+    const { error } = await admin
       .from("telegram_active_channels")
       .delete()
-      .eq("user_id", userId)
+      .eq("user_id", user.id)
       .eq("channel_id", channelId);
 
     if (error) throw error;

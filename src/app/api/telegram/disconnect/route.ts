@@ -1,18 +1,15 @@
 import { NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase-admin";
+import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server";
 
-export async function POST(request: Request) {
+export async function POST() {
   try {
-    const { userId } = await request.json();
-    if (!userId) {
-      return NextResponse.json({ error: "userId erforderlich" }, { status: 400 });
-    }
+    const supabase = createSupabaseServer();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: "Nicht eingeloggt" }, { status: 401 });
 
-    // Delete session
-    await supabaseAdmin.from("telegram_sessions").delete().eq("user_id", userId);
-
-    // Delete all channels
-    await supabaseAdmin.from("telegram_active_channels").delete().eq("user_id", userId);
+    const admin = createSupabaseAdmin();
+    await admin.from("telegram_sessions").delete().eq("user_id", user.id);
+    await admin.from("telegram_active_channels").delete().eq("user_id", user.id);
 
     return NextResponse.json({ success: true });
   } catch (err: any) {

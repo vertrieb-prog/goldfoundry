@@ -1,37 +1,37 @@
 import { NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase-admin";
+import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server";
 
 export async function POST(request: Request) {
   try {
-    const { userId, channelId, channelName, settings } = await request.json();
-    if (!userId || !channelId) {
-      return NextResponse.json({ error: "userId und channelId erforderlich" }, { status: 400 });
-    }
+    const supabase = createSupabaseServer();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: "Nicht eingeloggt" }, { status: 401 });
 
-    const { data: existing } = await supabaseAdmin
+    const { channelId, channelName, settings } = await request.json();
+    if (!channelId) return NextResponse.json({ error: "channelId erforderlich" }, { status: 400 });
+
+    const admin = createSupabaseAdmin();
+
+    const { data: existing } = await admin
       .from("telegram_active_channels")
       .select("id")
-      .eq("user_id", userId)
+      .eq("user_id", user.id)
       .eq("channel_id", channelId)
       .single();
 
-    if (existing) {
-      return NextResponse.json({ error: "Kanal bereits verbunden" }, { status: 409 });
-    }
+    if (existing) return NextResponse.json({ error: "Kanal bereits verbunden" }, { status: 409 });
 
-    const { count } = await supabaseAdmin
+    const { count } = await admin
       .from("telegram_active_channels")
       .select("*", { count: "exact", head: true })
-      .eq("user_id", userId);
+      .eq("user_id", user.id);
 
-    if ((count ?? 0) >= 10) {
-      return NextResponse.json({ error: "Maximal 10 Kanaele erlaubt" }, { status: 400 });
-    }
+    if ((count ?? 0) >= 10) return NextResponse.json({ error: "Maximal 10 Kanaele erlaubt" }, { status: 400 });
 
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await admin
       .from("telegram_active_channels")
       .insert({
-        user_id: userId,
+        user_id: user.id,
         channel_id: channelId,
         channel_name: channelName || channelId,
         status: "active",
