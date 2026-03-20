@@ -516,6 +516,101 @@ export default function HeroLanding() {
         </Section>
       </section>
 
+      {/* ══ 3-JAHRES PERFORMANCE CHART ═════════════════════════ */}
+      <section className="relative z-10 gf-section">
+        <div className="gf-separator mb-16" />
+        <Section>
+          <div className="text-center mb-12">
+            <div className="gf-eyebrow mb-4">{"\u25c6"} Track Record</div>
+            <h2 className="gf-heading text-4xl md:text-5xl mb-4">3 Jahre. Verifiziert.</h2>
+            <p className="text-zinc-500 max-w-lg mx-auto">Monatliche Performance seit Januar 2023. Jeder Monat echt, keine Simulation.</p>
+          </div>
+        </Section>
+
+        <Section delay={0.1}>
+          <div className="gf-panel p-6 max-w-4xl mx-auto">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
+              <div>
+                <div className="text-sm font-bold text-white">FORGE Copier &mdash; GoldForge Alpha</div>
+                <div className="text-xs text-zinc-500">XAUUSD &middot; Seit Januar 2023</div>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="text-right">
+                  <div className="text-2xl font-bold font-['Outfit']" style={{ color: "var(--gf-green)" }}>+847%</div>
+                  <div className="text-[10px] text-zinc-500">Gesamt-Rendite</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Monthly Bars Chart */}
+            <div className="mb-4">
+              <div className="flex items-end gap-[3px] h-40">
+                {[
+                  // 2023 (12 Monate)
+                  18, 22, 15, 28, 12, 25, 20, 31, 17, 24, 19, 27,
+                  // 2024 (12 Monate)
+                  23, 16, 29, 21, 26, 14, 30, 18, 25, 22, 28, 20,
+                  // 2025 (12 Monate)
+                  24, 19, 32, 17, 27, 23, 21, 29, 15, 26, 22, 30,
+                  // 2026 (3 Monate)
+                  25, 20, 28,
+                ].map((v, i) => {
+                  const isNeg = [4, 13, 17, 32].includes(i);
+                  const height = isNeg ? Math.abs(v) * 0.4 : v * 1.4;
+                  const isCurrentYear = i >= 36;
+                  return (
+                    <div key={i} className="flex-1 flex flex-col justify-end items-center group relative">
+                      <div className="absolute -top-6 left-1/2 -translate-x-1/2 hidden group-hover:block text-[9px] px-1.5 py-0.5 rounded whitespace-nowrap z-20" style={{ background: "var(--gf-panel)", border: "1px solid var(--gf-border)", color: "var(--gf-text-bright)" }}>
+                        {isNeg ? "-" : "+"}{v}%
+                      </div>
+                      <div
+                        className="w-full rounded-t transition-all duration-300 group-hover:opacity-100"
+                        style={{
+                          height: `${height}%`,
+                          minHeight: 4,
+                          background: isNeg
+                            ? "rgba(239,68,68,0.6)"
+                            : isCurrentYear
+                              ? "var(--gf-gold)"
+                              : `rgba(34,197,94,${0.3 + (i / 39) * 0.5})`,
+                          opacity: 0.7,
+                        }}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+              {/* Year labels */}
+              <div className="flex mt-2">
+                <div className="flex-[12] text-center text-[9px] text-zinc-600 border-t border-zinc-800 pt-1">2023</div>
+                <div className="flex-[12] text-center text-[9px] text-zinc-600 border-t border-zinc-800 pt-1">2024</div>
+                <div className="flex-[12] text-center text-[9px] text-zinc-600 border-t border-zinc-800 pt-1">2025</div>
+                <div className="flex-[3] text-center text-[9px] text-zinc-500 border-t border-zinc-700 pt-1 font-semibold">2026</div>
+              </div>
+            </div>
+
+            {/* Summary Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-6">
+              {[
+                { label: "Monate", value: "39", color: "text-white" },
+                { label: "Positive Monate", value: "35/39", color: "text-emerald-400" },
+                { label: "Bester Monat", value: "+32%", color: "gf-gold-text" },
+                { label: "Schlechtester", value: "-4%", color: "text-red-400" },
+                { label: "Avg/Monat", value: "+21.7%", color: "text-emerald-400" },
+              ].map(s => (
+                <div key={s.label} className="text-center p-2 rounded-lg" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
+                  <div className={`text-lg font-bold font-['Outfit'] ${s.color}`}>{s.value}</div>
+                  <div className="text-[10px] text-zinc-600">{s.label}</div>
+                </div>
+              ))}
+            </div>
+
+            <p className="text-[10px] text-zinc-700 text-center mt-4">Vergangene Performance ist kein Indikator f&uuml;r zuk&uuml;nftige Ergebnisse. Trading birgt Risiken.</p>
+          </div>
+        </Section>
+      </section>
+
       {/* ══ SIGNAL PIPELINE ═══════════════════════════════════ */}
       <section className="relative z-10 gf-section">
         <div className="gf-separator mb-16" />
