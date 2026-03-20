@@ -219,15 +219,15 @@ export default function HeroLanding() {
               <div className="grid grid-cols-3 gap-2 mb-5">
                 <div className="p-3 rounded-lg text-center" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
                   <div className="text-lg font-bold font-['Outfit']" style={{ color: "var(--gf-green)" }}>+1%</div>
-                  <div className="text-[8px] font-mono text-zinc-600">PRO TAG</div>
+                  <div className="text-[10px] font-medium text-zinc-500 tracking-wide">PRO TAG</div>
                 </div>
                 <div className="p-3 rounded-lg text-center" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
                   <div className="text-lg font-bold font-['Outfit'] text-white">4.5%</div>
-                  <div className="text-[8px] font-mono text-zinc-600">MAX VERLUST</div>
+                  <div className="text-[10px] font-medium text-zinc-500 tracking-wide">MAX VERLUST</div>
                 </div>
                 <div className="p-3 rounded-lg text-center" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
                   <div className="text-lg font-bold font-['Outfit'] text-white">72%</div>
-                  <div className="text-[8px] font-mono text-zinc-600">WIN RATE</div>
+                  <div className="text-[10px] font-medium text-zinc-500 tracking-wide">WIN RATE</div>
                 </div>
               </div>
 
@@ -299,15 +299,15 @@ export default function HeroLanding() {
               <div className="grid grid-cols-3 gap-2 mb-5">
                 <div className="p-3 rounded-lg text-center" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
                   <div className="text-lg font-bold font-['Outfit'] gf-gold-text">+2-5%</div>
-                  <div className="text-[8px] font-mono text-zinc-600">PRO TAG</div>
+                  <div className="text-[10px] font-medium text-zinc-500 tracking-wide">PRO TAG</div>
                 </div>
                 <div className="p-3 rounded-lg text-center" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
                   <div className="text-lg font-bold font-['Outfit'] text-white">35%</div>
-                  <div className="text-[8px] font-mono text-zinc-600">MAX VERLUST</div>
+                  <div className="text-[10px] font-medium text-zinc-500 tracking-wide">MAX VERLUST</div>
                 </div>
                 <div className="p-3 rounded-lg text-center" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
                   <div className="text-lg font-bold font-['Outfit'] text-white">KI</div>
-                  <div className="text-[8px] font-mono text-zinc-600">GEMANAGED</div>
+                  <div className="text-[10px] font-medium text-zinc-500 tracking-wide">GEMANAGED</div>
                 </div>
               </div>
 
@@ -488,19 +488,19 @@ export default function HeroLanding() {
                 <div className="grid grid-cols-2 gap-3 mb-4">
                   <div className="p-2 rounded-lg text-center" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
                     <div className="text-lg font-bold" style={{ color: "var(--gf-green)" }}>{t.perf}</div>
-                    <div className="text-[8px] font-mono text-zinc-600">PERFORMANCE</div>
+                    <div className="text-[10px] font-medium text-zinc-500 tracking-wide">PERFORMANCE</div>
                   </div>
                   <div className="p-2 rounded-lg text-center" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
                     <div className="text-lg font-bold text-white">{t.wr}</div>
-                    <div className="text-[8px] font-mono text-zinc-600">WIN RATE</div>
+                    <div className="text-[10px] font-medium text-zinc-500 tracking-wide">WIN RATE</div>
                   </div>
                   <div className="p-2 rounded-lg text-center" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
                     <div className="text-lg font-bold" style={{ color: "var(--gf-gold)" }}>{t.dd}</div>
-                    <div className="text-[8px] font-mono text-zinc-600">MAX DD</div>
+                    <div className="text-[10px] font-medium text-zinc-500 tracking-wide">MAX DD</div>
                   </div>
                   <div className="p-2 rounded-lg text-center" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
                     <div className="text-lg font-bold text-white">{t.pf}</div>
-                    <div className="text-[8px] font-mono text-zinc-600">PROFIT FACTOR</div>
+                    <div className="text-[10px] font-medium text-zinc-500 tracking-wide">PROFIT FACTOR</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 text-[10px] text-zinc-600">
