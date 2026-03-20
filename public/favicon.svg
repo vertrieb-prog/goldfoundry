@@ -1,0 +1,21 @@
+<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M24 2L43.5 13.25V35.75L24 47L4.5 35.75V13.25L24 2Z" stroke="url(#b)" stroke-width="1.5" fill="url(#bg)"/>
+  <path d="M16 30L16 22L20 18L28 18L32 22L32 30L28 34L20 34L16 30Z" stroke="url(#ic)" stroke-width="1.5" stroke-linejoin="round" fill="none"/>
+  <path d="M24 14L26 18L24 16.5L22 18L24 14Z" fill="#FAEF70" opacity="0.9"/>
+  <text x="18" y="30" fill="#FAEF70" font-size="11" font-weight="800" font-family="Inter,Arial,sans-serif" letter-spacing="1">GF</text>
+  <defs>
+    <linearGradient id="b" x1="4" y1="2" x2="44" y2="47">
+      <stop offset="0%" stop-color="#FAEF70" stop-opacity="0.6"/>
+      <stop offset="50%" stop-color="#d4a537" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#FAEF70" stop-opacity="0.6"/>
+    </linearGradient>
+    <linearGradient id="bg" x1="4" y1="2" x2="44" y2="47">
+      <stop offset="0%" stop-color="#1a1800" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#09090b" stop-opacity="1"/>
+    </linearGradient>
+    <linearGradient id="ic" x1="16" y1="18" x2="32" y2="34">
+      <stop offset="0%" stop-color="#FAEF70" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#d4a537" stop-opacity="0.2"/>
+    </linearGradient>
+  </defs>
+</svg>
