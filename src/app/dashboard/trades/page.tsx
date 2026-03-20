@@ -21,8 +21,8 @@ type FilterKey = "all" | "XAUUSD" | "US500" | "EURUSD" | "winners" | "losers";
 function StatCard({ label, value, color }: { label: string; value: string; color?: string }) {
   return (
     <div className="gf-panel p-4 text-center">
-      <div className="text-xl font-bold font-['Outfit']" style={{ color: color || "var(--gf-text-bright)" }}>{value}</div>
-      <div className="text-[9px] font-mono uppercase tracking-[1.5px] mt-1 text-zinc-600">{label}</div>
+      <div className="text-xl font-bold" style={{ color: color || "var(--gf-text-bright)" }}>{value}</div>
+      <div className="text-[10px] font-medium uppercase tracking-wide mt-1 text-zinc-600">{label}</div>
     </div>
   );
 }
@@ -87,7 +87,7 @@ export default function TradesPage() {
           <thead>
             <tr style={{ borderBottom: "1px solid var(--gf-border)" }}>
               {["Datum", "Symbol", "Typ", "Lots", "Entry", "Exit", "P&L", "Session", "Dauer", "Status"].map(h => (
-                <th key={h} className="text-left p-3 text-[9px] font-mono uppercase tracking-[1.5px] text-zinc-600">{h}</th>
+                <th key={h} className="text-left p-3 text-[10px] font-medium uppercase tracking-wide text-zinc-600">{h}</th>
               ))}
             </tr>
           </thead>
@@ -119,7 +119,7 @@ export default function TradesPage() {
                 <td className="p-3 text-xs text-zinc-500">{t.session}</td>
                 <td className="p-3 text-xs font-mono text-zinc-600">{t.duration}</td>
                 <td className="p-3">
-                  <span className="text-[9px] font-mono tracking-wider px-2 py-0.5 rounded" style={{
+                  <span className="text-[10px] font-medium tracking-wide px-2 py-0.5 rounded" style={{
                     background: t.action === "KOPIERT" ? "rgba(34,197,94,0.06)" : "rgba(250,239,112,0.06)",
                     color: t.action === "KOPIERT" ? "var(--gf-green)" : "var(--gf-gold)",
                     border: `1px solid ${t.action === "KOPIERT" ? "rgba(34,197,94,0.12)" : "rgba(250,239,112,0.12)"}`,

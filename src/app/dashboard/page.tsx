@@ -8,8 +8,8 @@ import { useUser } from "@/contexts/UserContext";
 function KPI({ label, value, sub, color }: { label: string; value: string; sub?: string; color?: string }) {
   return (
     <div className="gf-panel p-5 flex flex-col">
-      <span className="text-[9px] tracking-[2px] uppercase font-mono" style={{ color: "var(--gf-text-dim)" }}>{label}</span>
-      <span className="text-2xl md:text-3xl font-bold mt-1.5 font-['Outfit']" style={{ color: color ?? "var(--gf-text-bright)" }}>{value}</span>
+      <span className="text-[10px] font-medium uppercase tracking-wide" style={{ color: "var(--gf-text-dim)" }}>{label}</span>
+      <span className="text-2xl md:text-3xl font-bold mt-1.5" style={{ color: color ?? "var(--gf-text-bright)" }}>{value}</span>
       {sub && <span className="text-xs mt-1" style={{ color: sub.startsWith("+") ? "var(--gf-green)" : sub.startsWith("-") ? "var(--gf-red)" : "var(--gf-text-dim)" }}>{sub}</span>}
     </div>
   );
@@ -169,10 +169,10 @@ export default function DashboardPage() {
       <div className="gf-panel p-5 mb-6">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <span className="text-[9px] tracking-[2px] uppercase font-mono" style={{ color: "var(--gf-text-dim)" }}>Equity Curve</span>
+            <span className="text-[10px] font-medium uppercase tracking-wide" style={{ color: "var(--gf-text-dim)" }}>Equity Curve</span>
             {isDemo && <span className="text-[9px] px-2 py-0.5 rounded-full font-mono" style={{ background: "rgba(250,239,112,0.08)", color: "var(--gf-gold)", border: "1px solid rgba(250,239,112,0.15)" }}>DEMO</span>}
           </div>
-          <span className="text-lg font-bold gf-gold-text font-['Outfit']">
+          <span className="text-lg font-bold gf-gold-text">
             {isDemo ? "\u20ac25.847" : `\u20ac${totalEquity.toLocaleString("de-DE", { maximumFractionDigits: 0 })}`}
           </span>
         </div>
@@ -184,7 +184,7 @@ export default function DashboardPage() {
         {/* Recent Trades */}
         <div className="gf-panel p-5">
           <div className="flex items-center justify-between mb-4">
-            <span className="text-[9px] tracking-[2px] uppercase font-mono" style={{ color: "var(--gf-text-dim)" }}>Letzte Trades</span>
+            <span className="text-[10px] font-medium uppercase tracking-wide" style={{ color: "var(--gf-text-dim)" }}>Letzte Trades</span>
             {isDemo && <span className="text-[9px] px-2 py-0.5 rounded-full font-mono" style={{ background: "rgba(250,239,112,0.08)", color: "var(--gf-gold)" }}>DEMO</span>}
           </div>
           <div className="space-y-2.5">
@@ -232,15 +232,15 @@ export default function DashboardPage() {
                 <div className="grid grid-cols-3 gap-3 text-center">
                   <div>
                     <div className="text-lg font-bold text-white">&euro;{acc.equity?.toLocaleString("de-DE", { maximumFractionDigits: 0 })}</div>
-                    <div className="text-[9px] font-mono text-zinc-600">EQUITY</div>
+                    <div className="text-[10px] text-zinc-500">EQUITY</div>
                   </div>
                   <div>
                     <div className="text-lg font-bold" style={{ color: acc.ddBuffer > 40 ? "var(--gf-green)" : acc.ddBuffer > 15 ? "var(--gf-gold)" : "var(--gf-red)" }}>{acc.ddBuffer}%</div>
-                    <div className="text-[9px] font-mono text-zinc-600">DD BUFFER</div>
+                    <div className="text-[10px] text-zinc-500">DD BUFFER</div>
                   </div>
                   <div>
                     <div className="text-lg font-bold" style={{ color: "var(--gf-gold)" }}>{acc.lastMultiplier ?? "\u2014"}x</div>
-                    <div className="text-[9px] font-mono text-zinc-600">MULTI</div>
+                    <div className="text-[10px] text-zinc-500">MULTI</div>
                   </div>
                 </div>
               </div>

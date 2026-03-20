@@ -43,17 +43,17 @@ export default function PartnerDashboard() {
       {/* KPIs */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="gf-panel p-6">
-          <div className="text-[9px] font-mono uppercase tracking-[1.5px] text-zinc-600 mb-2">FP Guthaben</div>
-          <div className="text-3xl font-bold gf-gold-text font-['Outfit']">{fpBalance.toLocaleString("de-DE")} FP</div>
+          <div className="text-[10px] font-medium uppercase tracking-wide text-zinc-600 mb-2">FP Guthaben</div>
+          <div className="text-3xl font-bold gf-gold-text">{fpBalance.toLocaleString("de-DE")} FP</div>
           <div className="text-xs text-emerald-400 mt-1">+{earnedThisMonth.toLocaleString("de-DE")} FP diesen Monat</div>
           <div className="text-[10px] text-zinc-600 mt-1">1 FP = \u20ac0,10</div>
         </div>
 
         <div className="gf-panel p-6">
-          <div className="text-[9px] font-mono uppercase tracking-[1.5px] text-zinc-600 mb-2">Aktueller Rang</div>
+          <div className="text-[10px] font-medium uppercase tracking-wide text-zinc-600 mb-2">Aktueller Rang</div>
           <div className="text-xl font-bold text-white">Gold Partner</div>
           <div className="mt-3">
-            <div className="flex justify-between text-[9px] font-mono text-zinc-600 mb-1">
+            <div className="flex justify-between text-[10px] text-zinc-500 mb-1">
               <span>GOLD</span><span>PLATIN</span>
             </div>
             <div className="w-full h-1.5 rounded-full" style={{ background: "var(--gf-border)" }}>
@@ -64,8 +64,8 @@ export default function PartnerDashboard() {
         </div>
 
         <div className="gf-panel p-6">
-          <div className="text-[9px] font-mono uppercase tracking-[1.5px] text-zinc-600 mb-2">Gesamt verdient</div>
-          <div className="text-3xl font-bold font-['Outfit']" style={{ color: "var(--gf-green)" }}>\u20ac{(fpBalance * 0.1).toFixed(0)}</div>
+          <div className="text-[10px] font-medium uppercase tracking-wide text-zinc-600 mb-2">Gesamt verdient</div>
+          <div className="text-3xl font-bold" style={{ color: "var(--gf-green)" }}>\u20ac{(fpBalance * 0.1).toFixed(0)}</div>
           <div className="text-[10px] text-zinc-600 mt-1">{fpBalance.toLocaleString("de-DE")} FORGE Points</div>
         </div>
       </div>
@@ -84,7 +84,7 @@ export default function PartnerDashboard() {
       {/* Revenue + Live Feed */}
       <div className="grid md:grid-cols-2 gap-4">
         <div className="gf-panel p-5">
-          <div className="text-[9px] font-mono uppercase tracking-[1.5px] text-zinc-600 mb-4">Einnahmen</div>
+          <div className="text-[10px] font-medium uppercase tracking-wide text-zinc-600 mb-4">Einnahmen</div>
           <div className="space-y-3">
             {revenueBreakdown.map(item => (
               <div key={item.label} className="flex items-center justify-between p-3 rounded-lg" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
@@ -99,7 +99,7 @@ export default function PartnerDashboard() {
         </div>
 
         <div className="gf-panel p-5">
-          <div className="text-[9px] font-mono uppercase tracking-[1.5px] text-zinc-600 mb-4">Live Feed</div>
+          <div className="text-[10px] font-medium uppercase tracking-wide text-zinc-600 mb-4">Live Feed</div>
           <div className="space-y-3">
             {liveFeed.map((e, i) => (
               <div key={i} className="flex items-center gap-3">

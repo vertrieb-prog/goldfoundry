@@ -116,12 +116,12 @@ export default function ChatPage() {
               }}
             >
               {m.role === "assistant" && i > 0 && (
-                <div className="text-[9px] font-mono tracking-[2px] mb-2" style={{ color: "var(--gf-gold)" }}>FORGE MENTOR</div>
+                <div className="text-[10px] font-medium tracking-wide mb-2" style={{ color: "var(--gf-gold)" }}>FORGE MENTOR</div>
               )}
               {m.role === "assistant" && i === 0 && (
                 <div className="flex items-center gap-2 mb-3">
                   <div className="w-7 h-7 rounded-lg flex items-center justify-center text-sm" style={{ background: "rgba(250,239,112,0.08)", border: "1px solid rgba(250,239,112,0.12)" }}>{"\ud83e\udde0"}</div>
-                  <div className="text-[9px] font-mono tracking-[2px]" style={{ color: "var(--gf-gold)" }}>FORGE MENTOR</div>
+                  <div className="text-[10px] font-medium tracking-wide" style={{ color: "var(--gf-gold)" }}>FORGE MENTOR</div>
                 </div>
               )}
               <div className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: m.role === "user" ? "var(--gf-text-bright)" : "var(--gf-text)" }}>

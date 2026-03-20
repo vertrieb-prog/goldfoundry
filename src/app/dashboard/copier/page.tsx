@@ -32,8 +32,8 @@ const RISK_COLORS: Record<string, string> = {
 function StatCard({ label, value, color, sub }: { label: string; value: string; color?: string; sub?: string }) {
   return (
     <div className="text-center p-3 rounded-xl" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
-      <div className="text-xl font-bold font-['Outfit']" style={{ color: color || "var(--gf-text-bright)" }}>{value}</div>
-      <div className="text-[9px] font-mono uppercase tracking-[1.5px] mt-1" style={{ color: "var(--gf-text-dim)" }}>{label}</div>
+      <div className="text-xl font-bold" style={{ color: color || "var(--gf-text-bright)" }}>{value}</div>
+      <div className="text-[10px] font-medium uppercase tracking-wide mt-1" style={{ color: "var(--gf-text-dim)" }}>{label}</div>
       {sub && <div className="text-[10px] mt-0.5" style={{ color: "var(--gf-text-dim)" }}>{sub}</div>}
     </div>
   );
@@ -77,7 +77,7 @@ export default function CopierPage() {
       {intel && (
         <div className="gf-panel p-5">
           <div className="flex items-center gap-3 mb-3">
-            <span className="text-[9px] font-mono tracking-[2px] text-zinc-500 uppercase">Forge Intel</span>
+            <span className="text-[10px] font-medium tracking-wide text-zinc-500 uppercase">Forge Intel</span>
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full" style={{ background: riskColor, boxShadow: `0 0 8px ${riskColor}` }} />
               <span className="text-xs font-semibold" style={{ color: riskColor }}>{intel.risk_level}</span>
@@ -85,19 +85,19 @@ export default function CopierPage() {
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
             <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
-              <span className="text-[9px] text-zinc-500 font-mono">RISK</span>
+              <span className="text-[10px] text-zinc-500 font-medium">RISK</span>
               <span className="text-sm font-bold font-mono" style={{ color: riskColor }}>{intel.risk_score}/100</span>
             </div>
             <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
-              <span className="text-[9px] text-zinc-500 font-mono">REGIME</span>
+              <span className="text-[10px] text-zinc-500 font-medium">REGIME</span>
               <span className="text-sm font-semibold text-white">{intel.regime}</span>
             </div>
             <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
-              <span className="text-[9px] text-zinc-500 font-mono">GEO</span>
+              <span className="text-[10px] text-zinc-500 font-medium">GEO</span>
               <span className="text-sm font-semibold text-white">{intel.geopolitical_risk}</span>
             </div>
             <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
-              <span className="text-[9px] text-zinc-500 font-mono">STATUS</span>
+              <span className="text-[10px] text-zinc-500 font-medium">STATUS</span>
               <span className="text-sm font-semibold" style={{ color: "var(--gf-green)" }}>OPTIMAL</span>
             </div>
           </div>
@@ -126,7 +126,7 @@ export default function CopierPage() {
                 <span className="font-semibold text-white">{acc.firmProfile}</span>
                 <span className="text-xs text-zinc-600 font-mono ml-2">{acc.mtLogin}</span>
               </div>
-              <span className="text-[9px] font-mono tracking-wider px-2 py-0.5 rounded" style={{
+              <span className="text-[10px] font-medium tracking-wide px-2 py-0.5 rounded" style={{
                 background: acc.copierActive ? "rgba(34,197,94,0.08)" : "rgba(239,68,68,0.08)",
                 color: acc.copierActive ? "var(--gf-green)" : "var(--gf-red)",
                 border: `1px solid ${acc.copierActive ? "rgba(34,197,94,0.15)" : "rgba(239,68,68,0.15)"}`,
@@ -150,7 +150,7 @@ export default function CopierPage() {
             {/* Risk Factors */}
             {acc.lastFactors && (
               <div>
-                <div className="text-[9px] font-mono tracking-[2px] text-zinc-600 mb-3">RISK FACTORS</div>
+                <div className="text-[10px] font-medium tracking-wide text-zinc-600 mb-3">RISK FACTORS</div>
                 <div className="grid grid-cols-7 gap-2">
                   {Object.entries(acc.lastFactors).map(([k, v]: [string, any]) => {
                     const color = v >= 0.8 ? "var(--gf-green)" : v >= 0.5 ? "var(--gf-gold)" : "var(--gf-red)";
@@ -160,7 +160,7 @@ export default function CopierPage() {
                         <div className="w-full h-1 rounded-full mt-1.5 mb-1" style={{ background: "rgba(255,255,255,0.04)" }}>
                           <div className="h-full rounded-full transition-all" style={{ width: `${v * 100}%`, background: color }} />
                         </div>
-                        <div className="text-[8px] uppercase font-mono text-zinc-600">{k}</div>
+                        <div className="text-[9px] uppercase text-zinc-500">{k}</div>
                       </div>
                     );
                   })}
@@ -191,7 +191,7 @@ export default function CopierPage() {
 
       {/* How Risk Shield Works */}
       <div className="gf-panel p-5">
-        <div className="text-[9px] font-mono tracking-[2px] text-zinc-600 mb-3">SO FUNKTIONIERT DER RISK SHIELD</div>
+        <div className="text-[10px] font-medium tracking-wide text-zinc-600 mb-3">SO FUNKTIONIERT DER RISK SHIELD</div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
             { icon: "\u23f0", title: "Session Filter", desc: "Tradet nur in optimalen Sessions" },

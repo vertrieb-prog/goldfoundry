@@ -258,7 +258,7 @@ export default function TelegramPage() {
         {/* Active Channels */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <span className="text-[9px] tracking-[2px] uppercase font-mono text-zinc-500">Aktive Channels</span>
+            <span className="text-[10px] font-medium uppercase tracking-wide text-zinc-500">Aktive Channels</span>
             <button onClick={() => setStep(4)} className="text-xs text-[var(--gf-gold)] hover:underline">+ Channel hinzuf&uuml;gen</button>
           </div>
           {active.length === 0 ? (
@@ -287,7 +287,7 @@ export default function TelegramPage() {
 
         {/* Smart Orders */}
         <div className="gf-panel p-5">
-          <div className="text-[9px] tracking-[2px] uppercase font-mono text-zinc-500 mb-3">Smart Orders</div>
+          <div className="text-[10px] font-medium uppercase tracking-wide text-zinc-500 mb-3">Smart Orders</div>
           <div className="flex flex-wrap gap-2">
             {[
               { label: "4-Split TP", icon: "\ud83c\udfaf" },
@@ -304,7 +304,7 @@ export default function TelegramPage() {
 
         {/* How it works */}
         <div className="gf-panel p-5">
-          <div className="text-[9px] tracking-[2px] uppercase font-mono text-zinc-500 mb-3">So funktioniert es</div>
+          <div className="text-[10px] font-medium uppercase tracking-wide text-zinc-500 mb-3">So funktioniert es</div>
           <div className="space-y-3 text-sm text-zinc-400">
             <div className="flex items-start gap-3">
               <span className="text-[var(--gf-gold)]">1.</span>
