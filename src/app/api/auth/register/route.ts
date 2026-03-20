@@ -115,9 +115,39 @@ export async function POST(request: Request) {
         } catch { /* Affiliate tracking is optional */ }
       }
 
-      // Send welcome email
+      // Send Double Opt-In confirmation email via Resend
       try {
-        await sendWelcomeEmail(email, fullName ?? email.split("@")[0]);
+        const confirmUrl = `${new URL(request.url).origin}/auth/callback`;
+        const { sendEmail } = await import("@/lib/email/email-engine");
+        await sendEmail(email, "Best\u00e4tige deine Email \u2014 Gold Foundry", `<!DOCTYPE html>
+<html><body style="margin:0;padding:0;background:#09090b;font-family:Inter,Arial,sans-serif;">
+<div style="max-width:560px;margin:0 auto;padding:48px 24px;">
+  <div style="text-align:center;margin-bottom:32px;">
+    <div style="font-size:10px;letter-spacing:4px;color:#FAEF70;margin-bottom:8px;">GOLD FOUNDRY</div>
+    <h1 style="color:#fafafa;font-size:24px;font-weight:800;margin:0 0 8px;">Willkommen${fullName ? `, ${fullName}` : ""}!</h1>
+    <p style="color:#71717a;font-size:14px;margin:0;">Nur noch ein Klick \u2014 dann geht's los.</p>
+  </div>
+  <div style="text-align:center;margin:40px 0;">
+    <a href="${confirmUrl}" style="display:inline-block;padding:16px 48px;background:#FAEF70;color:#09090b;font-weight:700;font-size:16px;text-decoration:none;border-radius:12px;">
+      Email best\u00e4tigen \u2192
+    </a>
+  </div>
+  <div style="text-align:center;margin:24px 0;">
+    <p style="color:#52525b;font-size:12px;">Markiere diese Email als wichtig, damit du keine Updates verpasst!</p>
+  </div>
+  <div style="text-align:center;">
+    <p style="color:#3f3f46;font-size:10px;word-break:break-all;">
+      Link funktioniert nicht? Kopiere diese URL:<br/>
+      <a href="${confirmUrl}" style="color:#FAEF70;">${confirmUrl}</a>
+    </p>
+  </div>
+  <hr style="border:none;border-top:1px solid rgba(255,255,255,0.06);margin:32px 0;"/>
+  <p style="color:#27272a;font-size:9px;text-align:center;line-height:1.6;">
+    Gold Foundry \u00b7 goldfoundry.de<br/>
+    Risikohinweis: Trading birgt erhebliche Verlustrisiken.
+  </p>
+</div>
+</body></html>`);
       } catch { /* Email is optional */ }
     }
 
