@@ -418,6 +418,145 @@ export default function HeroLanding() {
         </div>
       </section>
 
+      {/* ══ AI TRADE MANAGEMENT ════════════════════════════════ */}
+      <section className="relative z-10 gf-section">
+        <div className="gf-separator mb-16" />
+        <Section>
+          <div className="text-center mb-12">
+            <div className="gf-eyebrow mb-4">{"\u25c6"} KI-Management</div>
+            <h2 className="gf-heading text-4xl md:text-5xl mb-4">Die KI denkt mit. Alle 30 Sekunden.</h2>
+            <p className="text-zinc-500 max-w-lg mx-auto">Andere Copier kopieren und vergessen. Unsere KI analysiert jeden Trade und reagiert autonom.</p>
+          </div>
+        </Section>
+        <div className="max-w-2xl mx-auto space-y-3">
+          {[
+            { icon: "\ud83d\udcc9", title: "Momentum sinkt", desc: "Kurs verliert an Kraft \u2014 Stop-Loss wird automatisch nachgezogen.", color: "var(--gf-gold)" },
+            { icon: "\ud83d\udcf0", title: "News in 10 Minuten", desc: "50% der Position wird vor wichtigen Nachrichten geschlossen. Rest mit engem Schutz.", color: "#4d9fff" },
+            { icon: "\ud83d\udd34", title: "Verluste steigen", desc: "Lots werden halbiert. Unter 5% Buffer: Pause. Unter 2%: Alles wird geschlossen.", color: "var(--gf-red)" },
+            { icon: "\u2705", title: "Gewinn-Ziel erreicht", desc: "Schutz-Grenze wird auf Einstieg gesetzt \u2014 ab jetzt 0% Risiko.", color: "var(--gf-green)" },
+            { icon: "\ud83d\udd50", title: "Freitag 16:00 Uhr", desc: "Alle offenen Trades werden vor dem Wochenende geschlossen.", color: "var(--gf-text-dim)" },
+          ].map((s, i) => (
+            <Section key={s.title} delay={i * 0.08}>
+              <div className="flex items-start gap-4 p-5 rounded-xl" style={{ background: "var(--gf-panel)", border: "1px solid var(--gf-border)", borderLeft: `3px solid ${s.color}` }}>
+                <span className="text-xl flex-shrink-0">{s.icon}</span>
+                <div>
+                  <div className="text-sm font-bold text-white">{s.title}</div>
+                  <div className="text-xs text-zinc-500 mt-0.5">{s.desc}</div>
+                </div>
+              </div>
+            </Section>
+          ))}
+        </div>
+      </section>
+
+      {/* ══ 7 SCHUTZ-STUFEN ═══════════════════════════════════ */}
+      <section className="relative z-10 gf-section">
+        <div className="gf-separator mb-16" />
+        <Section>
+          <div className="text-center mb-12">
+            <div className="gf-eyebrow mb-4">{"\u25c6"} 7 Schutz-Stufen</div>
+            <h2 className="gf-heading text-4xl md:text-5xl mb-4">Dein Geld ist gesch&uuml;tzt.</h2>
+            <p className="text-zinc-500 max-w-lg mx-auto">Bevor ein Trade auf dein Konto kopiert wird, pr&uuml;ft das System 7 Sicherheits-Checks.</p>
+          </div>
+        </Section>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-4xl mx-auto">
+          {[
+            { icon: "\u23f0", name: "Handelszeit", desc: "Nur wenn B\u00f6rsen aktiv sind" },
+            { icon: "\ud83d\udcf0", name: "News-Schutz", desc: "Stoppt vor wichtigen Nachrichten" },
+            { icon: "\ud83d\udcc9", name: "Verlust-Limit", desc: "Reduziert wenn es schlecht l\u00e4uft" },
+            { icon: "\ud83d\udcca", name: "Leistungs-Check", desc: "Pr\u00fcft ob der Trader gut performt" },
+            { icon: "\u26a1", name: "Markt-Stress", desc: "Stoppt bei verr\u00fcckten M\u00e4rkten" },
+            { icon: "\ud83d\udcc5", name: "Tages-Limit", desc: "Max. Verlust pro Tag, dann Stopp" },
+            { icon: "\ud83e\udde0", name: "Markt-Analyse", desc: "Erkennt ob der Markt sicher ist" },
+          ].map((f, i) => (
+            <Section key={f.name} delay={i * 0.06}>
+              <div className="gf-panel p-4 text-center h-full">
+                <div className="text-2xl mb-2">{f.icon}</div>
+                <div className="text-xs font-bold text-white mb-1">{f.name}</div>
+                <div className="text-[10px] text-zinc-500 leading-relaxed">{f.desc}</div>
+              </div>
+            </Section>
+          ))}
+        </div>
+        <Section delay={0.5}>
+          <p className="text-center text-sm text-zinc-500 mt-8 max-w-md mx-auto">Wenn auch nur <strong className="text-white">EIN Check</strong> nicht besteht &rarr; der Trade wird <strong className="text-white">NICHT</strong> kopiert.</p>
+        </Section>
+      </section>
+
+      {/* ══ BROKER ════════════════════════════════════════════ */}
+      <section className="relative z-10 gf-section">
+        <div className="gf-separator mb-16" />
+        <Section>
+          <div className="text-center mb-12">
+            <div className="gf-eyebrow mb-4">{"\u25c6"} Broker</div>
+            <h2 className="gf-heading text-4xl md:text-5xl mb-4">Mehr Power auf dein Kapital.</h2>
+            <p className="text-zinc-500 max-w-lg mx-auto">Unsere Partner-Broker multiplizieren dein Geld. Du zahlst ein, der Broker gibt dir mehr Kaufkraft.</p>
+          </div>
+        </Section>
+        <div className="grid md:grid-cols-2 gap-4 max-w-3xl mx-auto">
+          {[
+            { name: "Tegas FX", multi: "24\u00d7", input: "500", output: "12.000", payout: "~2 Wochen", min: "$100", recommended: true },
+            { name: "TAG Markets", multi: "12\u00d7", input: "500", output: "6.000", payout: "~1 Woche", min: "$100" },
+          ].map((b, i) => (
+            <Section key={b.name} delay={i * 0.1}>
+              <div className={`gf-panel p-6 relative ${b.recommended ? "gf-gradient-border" : ""}`} style={b.recommended ? { border: "2px solid rgba(250,239,112,0.2)" } : {}}>
+                {b.recommended && <div className="absolute -top-3 right-4 text-[9px] font-bold px-3 py-1 rounded-full" style={{ background: "var(--gf-gold)", color: "var(--gf-obsidian)" }}>EMPFOHLEN</div>}
+                <h3 className="text-lg font-bold text-white mb-1">{b.name}</h3>
+                <div className="text-3xl font-bold gf-gold-text font-['Outfit'] mb-4">{b.multi}</div>
+                <div className="flex items-center gap-3 mb-4 p-3 rounded-lg" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
+                  <div className="text-center flex-1">
+                    <div className="text-xs text-zinc-600">Du zahlst</div>
+                    <div className="text-lg font-bold text-white">&euro;{b.input}</div>
+                  </div>
+                  <span className="text-[var(--gf-gold)] text-lg">&rarr;</span>
+                  <div className="text-center flex-1">
+                    <div className="text-xs text-zinc-600">Du tradest mit</div>
+                    <div className="text-lg font-bold" style={{ color: "var(--gf-green)" }}>&euro;{b.output}</div>
+                  </div>
+                </div>
+                <div className="space-y-1 text-xs text-zinc-500">
+                  <div>{"\u2713"} 100% der Gewinne geh&ouml;ren dir</div>
+                  <div>{"\u2713"} Erste Auszahlung nach {b.payout}</div>
+                  <div>{"\u2713"} Ab {b.min} Einzahlung</div>
+                </div>
+              </div>
+            </Section>
+          ))}
+        </div>
+        <p className="text-center text-[10px] text-zinc-700 mt-4">Beispielrechnung. Keine Garantie. Trading birgt Risiken.</p>
+      </section>
+
+      {/* ══ FAQ ═══════════════════════════════════════════════ */}
+      <section className="relative z-10 gf-section">
+        <div className="gf-separator mb-16" />
+        <Section>
+          <div className="text-center mb-12">
+            <div className="gf-eyebrow mb-4">{"\u25c6"} FAQ</div>
+            <h2 className="gf-heading text-3xl md:text-4xl mb-4">H&auml;ufige Fragen</h2>
+          </div>
+        </Section>
+        <div className="max-w-2xl mx-auto space-y-3">
+          {[
+            { q: "Brauche ich Trading-Erfahrung?", a: "Nein. Der Smart Copier macht alles automatisch. Du musst nur dein Broker-Konto verbinden." },
+            { q: "Wie viel Geld brauche ich zum Starten?", a: "Ab \u20ac100 bei Tegas FX oder TAG Markets. Je mehr Kapital, desto h\u00f6her die m\u00f6glichen Gewinne." },
+            { q: "Ist mein Geld sicher?", a: "Dein Geld liegt bei deinem Broker, nicht bei uns. Wir haben nur Lese-Zugriff auf dein Konto. Der Risk Shield sch\u00fctzt vor gro\u00dfen Verlusten." },
+            { q: "Kann ich jederzeit k\u00fcndigen?", a: "Ja, jederzeit. Keine Mindestlaufzeit, keine K\u00fcndigungsfrist." },
+            { q: "Was ist der Unterschied zwischen Smart Copier und Telegram Copier?", a: "Smart Copier kopiert unsere 3 Profi-Trader (konservativ, ~1%/Tag). Telegram Copier kopiert Signale aus Premium-Gruppen (aggressiv, 2-5%/Tag, h\u00f6heres Risiko)." },
+            { q: "Wie funktioniert das Partner-Programm?", a: "Teile deinen Link. F\u00fcr jeden der \u00fcber dich bucht bekommst du 50% Provision \u2014 jeden Monat, wiederkehrend." },
+          ].map((faq, i) => (
+            <Section key={i} delay={i * 0.05}>
+              <details className="gf-panel group">
+                <summary className="flex items-center justify-between p-5 cursor-pointer list-none">
+                  <span className="text-sm font-semibold text-white pr-4">{faq.q}</span>
+                  <span className="text-zinc-600 group-open:rotate-45 transition-transform text-lg flex-shrink-0">+</span>
+                </summary>
+                <div className="px-5 pb-5 text-sm text-zinc-500 leading-relaxed">{faq.a}</div>
+              </details>
+            </Section>
+          ))}
+        </div>
+      </section>
+
       {/* ══ PRICING ═══════════════════════════════════════════ */}
       <section id="pricing" className="relative z-10 gf-section">
         <div className="gf-separator mb-16" />
