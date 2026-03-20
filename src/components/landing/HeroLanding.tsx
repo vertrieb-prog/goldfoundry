@@ -189,6 +189,177 @@ export default function HeroLanding() {
         </div>
       </section>
 
+      {/* ══ 2 KERNPRODUKTE ═══════════════════════════════════ */}
+      <section className="relative z-10 gf-section">
+        <Section>
+          <div className="text-center mb-12">
+            <div className="gf-eyebrow mb-4">{"\u25c6"} Zwei Wege zum Profit</div>
+            <h2 className="gf-heading text-4xl md:text-5xl mb-4">W&auml;hle deinen Copier.</h2>
+            <p className="text-zinc-500 max-w-lg mx-auto">Beide automatisch. Beide gesch&uuml;tzt. Du entscheidest wie aggressiv.</p>
+          </div>
+        </Section>
+
+        <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+          {/* FORGE COPIER — KONSERVATIV */}
+          <Section delay={0}>
+            <div className="gf-panel p-6 relative h-full" style={{ overflow: "visible", borderTop: "3px solid var(--gf-green)" }}>
+              <div className="absolute -top-3 left-6 text-[9px] font-bold px-3 py-1 rounded-full z-10" style={{ background: "var(--gf-green)", color: "var(--gf-obsidian)" }}>SICHER</div>
+
+              <div className="flex items-center gap-3 mb-4 mt-2">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl" style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.15)" }}>{"\u26a1"}</div>
+                <div>
+                  <h3 className="text-xl font-bold text-white">FORGE Copier</h3>
+                  <span className="text-xs text-zinc-500">Smart Copy Trading</span>
+                </div>
+              </div>
+
+              <p className="text-sm text-zinc-400 mb-5 leading-relaxed">Ein Profi-Trader tradet &mdash; du kopierst automatisch. Konservativ, stabil, Prop-Firm geeignet.</p>
+
+              {/* Stats */}
+              <div className="grid grid-cols-3 gap-2 mb-5">
+                <div className="p-3 rounded-lg text-center" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
+                  <div className="text-lg font-bold font-['Outfit']" style={{ color: "var(--gf-green)" }}>+1%</div>
+                  <div className="text-[8px] font-mono text-zinc-600">PRO TAG</div>
+                </div>
+                <div className="p-3 rounded-lg text-center" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
+                  <div className="text-lg font-bold font-['Outfit'] text-white">4.5%</div>
+                  <div className="text-[8px] font-mono text-zinc-600">MAX VERLUST</div>
+                </div>
+                <div className="p-3 rounded-lg text-center" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
+                  <div className="text-lg font-bold font-['Outfit'] text-white">72%</div>
+                  <div className="text-[8px] font-mono text-zinc-600">WIN RATE</div>
+                </div>
+              </div>
+
+              {/* Rechenbeispiel */}
+              <div className="p-3 rounded-lg mb-5 flex items-center justify-between" style={{ background: "rgba(34,197,94,0.04)", border: "1px solid rgba(34,197,94,0.1)" }}>
+                <div className="text-center">
+                  <div className="text-[10px] text-zinc-600">Kapital</div>
+                  <div className="text-sm font-bold text-white">&euro;10.000</div>
+                </div>
+                <span className="text-zinc-600">&rarr;</span>
+                <div className="text-center">
+                  <div className="text-[10px] text-zinc-600">Pro Tag</div>
+                  <div className="text-sm font-bold" style={{ color: "var(--gf-green)" }}>+&euro;70-100</div>
+                </div>
+                <span className="text-zinc-600">&rarr;</span>
+                <div className="text-center">
+                  <div className="text-[10px] text-zinc-600">Pro Monat</div>
+                  <div className="text-sm font-bold" style={{ color: "var(--gf-green)" }}>+&euro;1.500-2.000</div>
+                </div>
+              </div>
+
+              {/* 3 Trader */}
+              <div className="text-[9px] font-mono text-zinc-600 uppercase tracking-[1.5px] mb-3">3 Verifizierte Trader</div>
+              <div className="space-y-2 mb-5">
+                {[
+                  { name: "GoldForge Alpha", asset: "XAUUSD", perf: "+1%/Tag", color: "#FAEF70" },
+                  { name: "TechForge", asset: "NAS100", perf: "+0.8%/Tag", color: "#3b82f6" },
+                  { name: "IndexForge", asset: "US500", perf: "+0.7%/Tag", color: "#22c55e" },
+                ].map(t => (
+                  <div key={t.name} className="flex items-center justify-between p-2.5 rounded-lg" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-bold" style={{ background: `${t.color}12`, border: `1px solid ${t.color}25`, color: t.color }}>
+                        {t.name.split(" ").map(w => w[0]).join("")}
+                      </div>
+                      <div>
+                        <div className="text-xs font-semibold text-white">{t.name}</div>
+                        <div className="text-[9px] font-mono text-zinc-600">{t.asset}</div>
+                      </div>
+                    </div>
+                    <span className="text-xs font-bold font-mono" style={{ color: "var(--gf-green)" }}>{t.perf}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="text-[10px] text-zinc-600 mb-4">
+                {"\u2713"} 3 Jahre Track Record &middot; {"\u2713"} Prop-Firm geeignet &middot; {"\u2713"} 7 Schutz-Stufen
+              </div>
+
+              <Link href="/auth/register" className="gf-btn w-full text-center text-sm">FORGE Copier starten &rarr;</Link>
+            </div>
+          </Section>
+
+          {/* TELEGRAM COPIER — AGGRESSIV */}
+          <Section delay={0.1}>
+            <div className="gf-panel p-6 relative h-full" style={{ overflow: "visible", borderTop: "3px solid var(--gf-gold)" }}>
+              <div className="absolute -top-3 left-6 text-[9px] font-bold px-3 py-1 rounded-full z-10" style={{ background: "var(--gf-gold)", color: "var(--gf-obsidian)" }}>AGGRESSIV</div>
+
+              <div className="flex items-center gap-3 mb-4 mt-2">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl" style={{ background: "rgba(250,239,112,0.08)", border: "1px solid rgba(250,239,112,0.15)" }}>{"\ud83d\udce1"}</div>
+                <div>
+                  <h3 className="text-xl font-bold text-white">Telegram Copier</h3>
+                  <span className="text-xs text-zinc-500">KI-Signal-Trading</span>
+                </div>
+              </div>
+
+              <p className="text-sm text-zinc-400 mb-5 leading-relaxed">Premium-Signalgruppen &times; unsere KI = maximale Performance. H&ouml;heres Risiko, h&ouml;here Rendite.</p>
+
+              {/* Stats */}
+              <div className="grid grid-cols-3 gap-2 mb-5">
+                <div className="p-3 rounded-lg text-center" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
+                  <div className="text-lg font-bold font-['Outfit'] gf-gold-text">+2-5%</div>
+                  <div className="text-[8px] font-mono text-zinc-600">PRO TAG</div>
+                </div>
+                <div className="p-3 rounded-lg text-center" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
+                  <div className="text-lg font-bold font-['Outfit'] text-white">35%</div>
+                  <div className="text-[8px] font-mono text-zinc-600">MAX VERLUST</div>
+                </div>
+                <div className="p-3 rounded-lg text-center" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
+                  <div className="text-lg font-bold font-['Outfit'] text-white">KI</div>
+                  <div className="text-[8px] font-mono text-zinc-600">GEMANAGED</div>
+                </div>
+              </div>
+
+              {/* Rechenbeispiel */}
+              <div className="p-3 rounded-lg mb-5 flex items-center justify-between" style={{ background: "rgba(250,239,112,0.04)", border: "1px solid rgba(250,239,112,0.1)" }}>
+                <div className="text-center">
+                  <div className="text-[10px] text-zinc-600">Kapital</div>
+                  <div className="text-sm font-bold text-white">&euro;10.000</div>
+                </div>
+                <span className="text-zinc-600">&rarr;</span>
+                <div className="text-center">
+                  <div className="text-[10px] text-zinc-600">Pro Tag</div>
+                  <div className="text-sm font-bold gf-gold-text">+&euro;200-500</div>
+                </div>
+                <span className="text-zinc-600">&rarr;</span>
+                <div className="text-center">
+                  <div className="text-[10px] text-zinc-600">Pro Monat</div>
+                  <div className="text-sm font-bold gf-gold-text">+&euro;4.000-10.000</div>
+                </div>
+              </div>
+
+              {/* Features */}
+              <div className="text-[9px] font-mono text-zinc-600 uppercase tracking-[1.5px] mb-3">So funktioniert es</div>
+              <div className="space-y-2 mb-5">
+                {[
+                  { icon: "\ud83d\udce8", text: "Signal kommt in Premium-Channel" },
+                  { icon: "\ud83e\udd16", text: "KI parsed Entry, Stop-Loss, Gewinn-Ziele" },
+                  { icon: "\ud83d\udee1\ufe0f", text: "7 Schutz-Checks laufen automatisch" },
+                  { icon: "\u26a1", text: "4 Smart Orders auf deinem Konto" },
+                  { icon: "\ud83e\udde0", text: "KI managt jeden Trade alle 30 Sek" },
+                ].map(f => (
+                  <div key={f.text} className="flex items-center gap-2.5 p-2.5 rounded-lg" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
+                    <span className="text-base">{f.icon}</span>
+                    <span className="text-xs text-zinc-400">{f.text}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Risk Warning */}
+              <div className="p-3 rounded-lg mb-4 flex items-start gap-2" style={{ background: "rgba(239,68,68,0.04)", border: "1px solid rgba(239,68,68,0.12)" }}>
+                <span className="text-sm flex-shrink-0">{"\u26a0\ufe0f"}</span>
+                <div className="text-[10px] text-zinc-500 leading-relaxed">
+                  <strong className="text-red-400">HIGH RISK.</strong> Max 35% Drawdown m&ouml;glich. Nur f&uuml;r erfahrene Trader mit entsprechendem Kapital.
+                </div>
+              </div>
+
+              <Link href="/auth/register" className="gf-btn w-full text-center text-sm">Telegram Copier starten &rarr;</Link>
+            </div>
+          </Section>
+        </div>
+      </section>
+
       {/* ══ FEATURES ══════════════════════════════════════════ */}
       <section id="features" className="relative z-10 gf-section">
         <Section>
