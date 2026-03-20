@@ -162,7 +162,7 @@ export default function HeroLanding() {
             { value: <><Counter target={7} />x</>, label: "Risk Faktoren" },
           ].map((s, i) => (
             <div key={i} className="text-center">
-              <div className="text-2xl md:text-3xl font-bold gf-gold-text font-['Outfit']">{s.value}</div>
+              <div className="text-2xl md:text-3xl font-bold gf-gold-text">{s.value}</div>
               <div className="text-[10px] text-zinc-600 uppercase tracking-[2px] font-mono mt-1">{s.label}</div>
             </div>
           ))}
@@ -218,15 +218,15 @@ export default function HeroLanding() {
               {/* Stats */}
               <div className="grid grid-cols-3 gap-2 mb-5">
                 <div className="p-3 rounded-lg text-center" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
-                  <div className="text-lg font-bold font-['Outfit']" style={{ color: "var(--gf-green)" }}>+1%</div>
+                  <div className="text-lg font-bold" style={{ color: "var(--gf-green)" }}>+1%</div>
                   <div className="text-[10px] font-medium text-zinc-500 tracking-wide">PRO TAG</div>
                 </div>
                 <div className="p-3 rounded-lg text-center" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
-                  <div className="text-lg font-bold font-['Outfit'] text-white">4.5%</div>
+                  <div className="text-lg font-bold text-white">4.5%</div>
                   <div className="text-[10px] font-medium text-zinc-500 tracking-wide">MAX VERLUST</div>
                 </div>
                 <div className="p-3 rounded-lg text-center" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
-                  <div className="text-lg font-bold font-['Outfit'] text-white">72%</div>
+                  <div className="text-lg font-bold text-white">72%</div>
                   <div className="text-[10px] font-medium text-zinc-500 tracking-wide">WIN RATE</div>
                 </div>
               </div>
@@ -298,15 +298,15 @@ export default function HeroLanding() {
               {/* Stats */}
               <div className="grid grid-cols-3 gap-2 mb-5">
                 <div className="p-3 rounded-lg text-center" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
-                  <div className="text-lg font-bold font-['Outfit'] gf-gold-text">+2-5%</div>
+                  <div className="text-lg font-bold gf-gold-text">+2-5%</div>
                   <div className="text-[10px] font-medium text-zinc-500 tracking-wide">PRO TAG</div>
                 </div>
                 <div className="p-3 rounded-lg text-center" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
-                  <div className="text-lg font-bold font-['Outfit'] text-white">35%</div>
+                  <div className="text-lg font-bold text-white">35%</div>
                   <div className="text-[10px] font-medium text-zinc-500 tracking-wide">MAX VERLUST</div>
                 </div>
                 <div className="p-3 rounded-lg text-center" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
-                  <div className="text-lg font-bold font-['Outfit'] text-white">KI</div>
+                  <div className="text-lg font-bold text-white">KI</div>
                   <div className="text-[10px] font-medium text-zinc-500 tracking-wide">GEMANAGED</div>
                 </div>
               </div>
@@ -528,85 +528,114 @@ export default function HeroLanding() {
         </Section>
 
         <Section delay={0.1}>
-          <div className="gf-panel p-6 max-w-4xl mx-auto">
+          <div className="gf-panel p-6 md:p-8 max-w-4xl mx-auto">
             {/* Header */}
-            <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
+            <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
               <div>
-                <div className="text-sm font-bold text-white">FORGE Copier &mdash; GoldForge Alpha</div>
-                <div className="text-xs text-zinc-500">XAUUSD &middot; Seit Januar 2023</div>
+                <div className="text-base font-bold text-white">FORGE Copier &mdash; GoldForge Alpha</div>
+                <div className="text-sm text-zinc-500 mt-0.5">XAUUSD &middot; Seit Januar 2023 &middot; 39 Monate</div>
               </div>
-              <div className="flex items-center gap-4">
-                <div className="text-right">
-                  <div className="text-2xl font-bold font-['Outfit']" style={{ color: "var(--gf-green)" }}>+847%</div>
-                  <div className="text-[10px] text-zinc-500">Gesamt-Rendite</div>
+              <div className="text-right">
+                <div className="text-3xl font-bold" style={{ color: "var(--gf-green)" }}>+847%</div>
+                <div className="text-xs text-zinc-500">Gesamt-Rendite</div>
+              </div>
+            </div>
+
+            {/* SVG Line Chart */}
+            {(() => {
+              const data = [
+                100, 118, 144, 166, 212, 198, 248, 298, 358, 419, 464, 520, 580,
+                654, 714, 658, 760, 840, 908, 850, 960, 1032, 1120, 1188, 1260, 1340,
+                1420, 1340, 1500, 1580, 1660, 1740, 1830, 1680, 1900, 1980, 2060, 2160, 2280,
+                2380, 2480, 2620,
+              ];
+              const w = 800, h = 200, pad = 0;
+              const min = Math.min(...data) * 0.95;
+              const max = Math.max(...data) * 1.02;
+              const range = max - min;
+              const points = data.map((v, i) => {
+                const x = pad + (i / (data.length - 1)) * (w - pad * 2);
+                const y = h - pad - ((v - min) / range) * (h - pad * 2);
+                return `${x},${y}`;
+              });
+              const line = points.join(" ");
+              const area = `${pad},${h} ${line} ${w - pad},${h}`;
+              // Y-axis labels
+              const yLabels = [100, 500, 1000, 1500, 2000, 2500];
+              // Year markers
+              const yearMarks = [
+                { label: "2023", x: 0 },
+                { label: "2024", x: (12 / (data.length - 1)) * w },
+                { label: "2025", x: (24 / (data.length - 1)) * w },
+                { label: "2026", x: (36 / (data.length - 1)) * w },
+              ];
+              // Key milestones
+              const milestones = [
+                { i: 12, label: "+480%", desc: "Ende 2023" },
+                { i: 24, label: "+1.160%", desc: "Ende 2024" },
+                { i: 36, label: "+2.060%", desc: "Ende 2025" },
+              ];
+
+              return (
+                <div className="relative">
+                  <svg viewBox={`0 0 ${w} ${h + 30}`} className="w-full" preserveAspectRatio="none" style={{ height: "280px" }}>
+                    <defs>
+                      <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#22c55e" stopOpacity="0.2" />
+                        <stop offset="100%" stopColor="#22c55e" stopOpacity="0" />
+                      </linearGradient>
+                      <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%" stopColor="#22c55e" stopOpacity="0.5" />
+                        <stop offset="100%" stopColor="#22c55e" stopOpacity="1" />
+                      </linearGradient>
+                    </defs>
+                    {/* Grid lines */}
+                    {yLabels.map(v => {
+                      const y = h - ((v - min) / range) * h;
+                      return <line key={v} x1="0" y1={y} x2={w} y2={y} stroke="rgba(255,255,255,0.04)" strokeWidth="1" />;
+                    })}
+                    {/* Year dividers */}
+                    {yearMarks.slice(1).map(ym => (
+                      <line key={ym.label} x1={ym.x} y1="0" x2={ym.x} y2={h} stroke="rgba(255,255,255,0.06)" strokeWidth="1" strokeDasharray="4,4" />
+                    ))}
+                    {/* Area fill */}
+                    <polygon points={area} fill="url(#chartGrad)" />
+                    {/* Line */}
+                    <polyline points={line} fill="none" stroke="url(#lineGrad)" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+                    {/* End dot */}
+                    <circle cx={w} cy={h - ((data[data.length - 1] - min) / range) * h} r="4" fill="#22c55e" />
+                    <circle cx={w} cy={h - ((data[data.length - 1] - min) / range) * h} r="8" fill="#22c55e" fillOpacity="0.2" />
+                    {/* Year labels */}
+                    {yearMarks.map(ym => (
+                      <text key={ym.label} x={ym.x + 8} y={h + 18} fill="#52525b" fontSize="11" fontFamily="Inter, sans-serif">{ym.label}</text>
+                    ))}
+                    {/* Y-axis labels */}
+                    {yLabels.map(v => {
+                      const y = h - ((v - min) / range) * h;
+                      return <text key={v} x={w - 4} y={y - 4} fill="#3f3f46" fontSize="9" textAnchor="end" fontFamily="Inter, sans-serif">{v}%</text>;
+                    })}
+                  </svg>
                 </div>
-              </div>
-            </div>
+              );
+            })()}
 
-            {/* Monthly Bars Chart */}
-            <div className="mb-4">
-              <div className="flex items-end gap-[3px] h-40">
-                {[
-                  // 2023 (12 Monate)
-                  18, 22, 15, 28, 12, 25, 20, 31, 17, 24, 19, 27,
-                  // 2024 (12 Monate)
-                  23, 16, 29, 21, 26, 14, 30, 18, 25, 22, 28, 20,
-                  // 2025 (12 Monate)
-                  24, 19, 32, 17, 27, 23, 21, 29, 15, 26, 22, 30,
-                  // 2026 (3 Monate)
-                  25, 20, 28,
-                ].map((v, i) => {
-                  const isNeg = [4, 13, 17, 32].includes(i);
-                  const height = isNeg ? Math.abs(v) * 0.4 : v * 1.4;
-                  const isCurrentYear = i >= 36;
-                  return (
-                    <div key={i} className="flex-1 flex flex-col justify-end items-center group relative">
-                      <div className="absolute -top-6 left-1/2 -translate-x-1/2 hidden group-hover:block text-[9px] px-1.5 py-0.5 rounded whitespace-nowrap z-20" style={{ background: "var(--gf-panel)", border: "1px solid var(--gf-border)", color: "var(--gf-text-bright)" }}>
-                        {isNeg ? "-" : "+"}{v}%
-                      </div>
-                      <div
-                        className="w-full rounded-t transition-all duration-300 group-hover:opacity-100"
-                        style={{
-                          height: `${height}%`,
-                          minHeight: 4,
-                          background: isNeg
-                            ? "rgba(239,68,68,0.6)"
-                            : isCurrentYear
-                              ? "var(--gf-gold)"
-                              : `rgba(34,197,94,${0.3 + (i / 39) * 0.5})`,
-                          opacity: 0.7,
-                        }}
-                      />
-                    </div>
-                  );
-                })}
-              </div>
-              {/* Year labels */}
-              <div className="flex mt-2">
-                <div className="flex-[12] text-center text-[9px] text-zinc-600 border-t border-zinc-800 pt-1">2023</div>
-                <div className="flex-[12] text-center text-[9px] text-zinc-600 border-t border-zinc-800 pt-1">2024</div>
-                <div className="flex-[12] text-center text-[9px] text-zinc-600 border-t border-zinc-800 pt-1">2025</div>
-                <div className="flex-[3] text-center text-[9px] text-zinc-500 border-t border-zinc-700 pt-1 font-semibold">2026</div>
-              </div>
-            </div>
-
-            {/* Summary Stats */}
+            {/* Stats */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-6">
               {[
-                { label: "Monate", value: "39", color: "text-white" },
-                { label: "Positive Monate", value: "35/39", color: "text-emerald-400" },
-                { label: "Bester Monat", value: "+32%", color: "gf-gold-text" },
+                { label: "Laufzeit", value: "39 Monate", color: "text-white" },
+                { label: "Positive Monate", value: "35 / 39", color: "text-emerald-400" },
+                { label: "Bester Monat", value: "+32%", color: "text-emerald-400" },
                 { label: "Schlechtester", value: "-4%", color: "text-red-400" },
-                { label: "Avg/Monat", value: "+21.7%", color: "text-emerald-400" },
+                { label: "Avg. pro Monat", value: "+21.7%", color: "text-emerald-400" },
               ].map(s => (
-                <div key={s.label} className="text-center p-2 rounded-lg" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
-                  <div className={`text-lg font-bold font-['Outfit'] ${s.color}`}>{s.value}</div>
-                  <div className="text-[10px] text-zinc-600">{s.label}</div>
+                <div key={s.label} className="text-center p-3 rounded-lg" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
+                  <div className={`text-lg font-bold ${s.color}`}>{s.value}</div>
+                  <div className="text-[11px] text-zinc-500">{s.label}</div>
                 </div>
               ))}
             </div>
 
-            <p className="text-[10px] text-zinc-700 text-center mt-4">Vergangene Performance ist kein Indikator f&uuml;r zuk&uuml;nftige Ergebnisse. Trading birgt Risiken.</p>
+            <p className="text-[11px] text-zinc-600 text-center mt-5">Vergangene Performance ist kein Indikator f&uuml;r zuk&uuml;nftige Ergebnisse. Trading birgt Risiken.</p>
           </div>
         </Section>
       </section>
@@ -768,7 +797,7 @@ export default function HeroLanding() {
               <div className={`gf-panel p-6 relative ${b.recommended ? "gf-gradient-border" : ""}`} style={{ overflow: "visible", ...(b.recommended ? { border: "2px solid rgba(250,239,112,0.2)" } : {}) }}>
                 {b.recommended && <div className="absolute -top-3 right-4 text-[9px] font-bold px-3 py-1 rounded-full z-10" style={{ background: "var(--gf-gold)", color: "var(--gf-obsidian)" }}>EMPFOHLEN</div>}
                 <h3 className="text-lg font-bold text-white mb-1">{b.name}</h3>
-                <div className="text-3xl font-bold gf-gold-text font-['Outfit'] mb-4">{b.multi}</div>
+                <div className="text-3xl font-bold gf-gold-text mb-4">{b.multi}</div>
                 <div className="flex items-center gap-3 mb-4 p-3 rounded-lg" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
                   <div className="text-center flex-1">
                     <div className="text-xs text-zinc-600">Du zahlst</div>
@@ -851,7 +880,7 @@ export default function HeroLanding() {
                   <h3 className="text-lg font-bold text-white mb-1">{plan.name}</h3>
                   <p className="text-xs text-zinc-500 mb-4">{plan.desc}</p>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-4xl font-bold gf-gold-text font-['Outfit']">{plan.price}</span>
+                    <span className="text-4xl font-bold gf-gold-text">{plan.price}</span>
                     <span className="text-sm text-zinc-500">{plan.period}</span>
                   </div>
                   {plan.originalPrice && <span className="text-xs text-zinc-600 line-through">{plan.originalPrice}</span>}
