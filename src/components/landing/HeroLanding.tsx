@@ -499,8 +499,8 @@ export default function HeroLanding() {
             { name: "TAG Markets", multi: "12\u00d7", input: "500", output: "6.000", payout: "~1 Woche", min: "$100" },
           ].map((b, i) => (
             <Section key={b.name} delay={i * 0.1}>
-              <div className={`gf-panel p-6 relative ${b.recommended ? "gf-gradient-border" : ""}`} style={b.recommended ? { border: "2px solid rgba(250,239,112,0.2)" } : {}}>
-                {b.recommended && <div className="absolute -top-3 right-4 text-[9px] font-bold px-3 py-1 rounded-full" style={{ background: "var(--gf-gold)", color: "var(--gf-obsidian)" }}>EMPFOHLEN</div>}
+              <div className={`gf-panel p-6 relative ${b.recommended ? "gf-gradient-border" : ""}`} style={{ overflow: "visible", ...(b.recommended ? { border: "2px solid rgba(250,239,112,0.2)" } : {}) }}>
+                {b.recommended && <div className="absolute -top-3 right-4 text-[9px] font-bold px-3 py-1 rounded-full z-10" style={{ background: "var(--gf-gold)", color: "var(--gf-obsidian)" }}>EMPFOHLEN</div>}
                 <h3 className="text-lg font-bold text-white mb-1">{b.name}</h3>
                 <div className="text-3xl font-bold gf-gold-text font-['Outfit'] mb-4">{b.multi}</div>
                 <div className="flex items-center gap-3 mb-4 p-3 rounded-lg" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
@@ -575,9 +575,9 @@ export default function HeroLanding() {
             { name: "Pro", price: "\u20ac16", period: "1. Monat", desc: "Unbegrenzt + Prop-Firm + Partner", features: ["Alles aus Copier", "Unbegrenzte Konten", "Prop-Firm Modus", "Strategy Lab", "1:1 Support", "Partner Dashboard"], cta: "Pro starten", originalPrice: "\u20ac79/mo" },
           ].map((plan, i) => (
             <Section key={plan.name} delay={i * 0.1}>
-              <div className={`gf-panel p-8 relative ${plan.popular ? "gf-gradient-border" : ""}`} style={plan.popular ? { border: "2px solid rgba(250,239,112,0.3)" } : {}}>
+              <div className={`gf-panel p-8 relative ${plan.popular ? "gf-gradient-border" : ""}`} style={{ overflow: "visible", ...(plan.popular ? { border: "2px solid rgba(250,239,112,0.3)" } : {}) }}>
                 {plan.popular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-[10px] font-bold tracking-wider" style={{ background: "var(--gf-gold)", color: "var(--gf-obsidian)" }}>
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-[10px] font-bold tracking-wider z-10" style={{ background: "var(--gf-gold)", color: "var(--gf-obsidian)" }}>
                     BELIEBT
                   </div>
                 )}
