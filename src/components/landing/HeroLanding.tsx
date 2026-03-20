@@ -209,13 +209,13 @@ export default function HeroLanding() {
             </a>
           ))}
         </div>
-        <Link
-          href="/auth/register"
+        <button
+          onClick={() => window.dispatchEvent(new Event("openFunnel"))}
           className="ml-2 px-4 py-1.5 rounded-full text-xs font-semibold transition-all hover:scale-105"
           style={{ background: "var(--gf-gold)", color: "var(--gf-obsidian)" }}
         >
           Starten
-        </Link>
+        </button>
       </nav>
 
       {/* ══ HERO ══════════════════════════════════════════════ */}
@@ -250,9 +250,9 @@ export default function HeroLanding() {
           className="flex flex-wrap gap-4 mt-10 justify-center"
           style={{ animation: "fadeIn 1s ease 0.8s both" }}
         >
-          <Link href="/auth/register" className="gf-btn gf-btn-shimmer gf-btn-breathe text-base px-8 py-4">
+          <button onClick={() => window.dispatchEvent(new Event("openFunnel"))} className="gf-btn gf-btn-shimmer gf-btn-breathe text-base px-8 py-4">
             Kostenlos starten &rarr;
-          </Link>
+          </button>
           <Link href="#features" className="gf-btn-outline text-base px-8 py-4">
             Wie es funktioniert
           </Link>
@@ -384,7 +384,7 @@ export default function HeroLanding() {
                 {"\u2713"} 3 Jahre Track Record &middot; {"\u2713"} Prop-Firm geeignet &middot; {"\u2713"} 7 Schutz-Stufen
               </div>
 
-              <Link href="/auth/register" className="gf-btn w-full text-center text-sm">FORGE Copier starten &rarr;</Link>
+              <button onClick={() => window.dispatchEvent(new Event("openFunnel"))} className="gf-btn w-full text-center text-sm">FORGE Copier starten &rarr;</button>
             </div>
           </Section>
 
@@ -462,7 +462,7 @@ export default function HeroLanding() {
                 </div>
               </div>
 
-              <Link href="/auth/register" className="gf-btn w-full text-center text-sm">Telegram Copier starten &rarr;</Link>
+              <button onClick={() => window.dispatchEvent(new Event("openFunnel"))} className="gf-btn w-full text-center text-sm">Telegram Copier starten &rarr;</button>
             </div>
           </Section>
         </div>
@@ -890,12 +890,12 @@ export default function HeroLanding() {
                     </div>
                   ))}
                 </div>
-                <Link
-                  href="/auth/register"
-                  className={`block text-center py-3 rounded-xl font-semibold text-sm transition-all ${plan.popular ? "gf-btn w-full" : "gf-btn-outline w-full"}`}
+                <button
+                  onClick={() => window.dispatchEvent(new Event("openFunnel"))}
+                  className={`block text-center py-3 rounded-xl font-semibold text-sm transition-all w-full ${plan.popular ? "gf-btn" : "gf-btn-outline"}`}
                 >
                   {plan.cta} &rarr;
-                </Link>
+                </button>
               </div>
             </Section>
           ))}
@@ -912,7 +912,7 @@ export default function HeroLanding() {
               <div className="gf-eyebrow mb-4">{"\u25c6"} Partner Programm</div>
               <h2 className="gf-heading text-3xl md:text-4xl mb-4">Verdiene bis zu 50% Provision.</h2>
               <p className="text-zinc-500 max-w-lg mx-auto mb-8">Empfehle Gold Foundry weiter und verdiene monatlich wiederkehrende Provisionen. Kein Limit.</p>
-              <Link href="/auth/register" className="gf-btn text-base px-8 py-4">Partner werden &rarr;</Link>
+              <button onClick={() => window.dispatchEvent(new Event("openFunnel"))} className="gf-btn text-base px-8 py-4">Partner werden &rarr;</button>
             </div>
           </div>
         </Section>
@@ -923,9 +923,9 @@ export default function HeroLanding() {
         <Section>
           <h2 className="gf-heading text-4xl md:text-5xl mb-4">Bereit f&uuml;r Autopilot?</h2>
           <p className="text-zinc-500 max-w-md mx-auto mb-8">Erstelle deinen Account in 30 Sekunden. Kostenlos. Keine Kreditkarte.</p>
-          <Link href="/auth/register" className="gf-btn gf-btn-shimmer gf-btn-breathe text-lg px-10 py-5">
+          <button onClick={() => window.dispatchEvent(new Event("openFunnel"))} className="gf-btn gf-btn-shimmer gf-btn-breathe text-lg px-10 py-5">
             Jetzt starten &rarr;
-          </Link>
+          </button>
         </Section>
       </section>
 
