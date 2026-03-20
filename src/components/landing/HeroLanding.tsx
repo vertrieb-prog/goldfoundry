@@ -619,18 +619,19 @@ export default function HeroLanding() {
               );
             })()}
 
-            {/* Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-6">
+            {/* Key Stats */}
+            <div className="grid grid-cols-3 md:grid-cols-6 gap-3 mt-6">
               {[
-                { label: "Laufzeit", value: "39 Monate", color: "text-white" },
-                { label: "Positive Monate", value: "35 / 39", color: "text-emerald-400" },
-                { label: "Bester Monat", value: "+32%", color: "text-emerald-400" },
-                { label: "Schlechtester", value: "-4%", color: "text-red-400" },
+                { label: "T\u00e4gl. Gewinn", value: "+1%", color: "text-emerald-400" },
+                { label: "Win Rate", value: "72%", color: "text-emerald-400" },
+                { label: "Max Drawdown", value: "4.5%", color: "gf-gold-text" },
+                { label: "Profit Factor", value: "2.1", color: "text-white" },
                 { label: "Avg. pro Monat", value: "+21.7%", color: "text-emerald-400" },
+                { label: "Positive Monate", value: "35/39", color: "text-emerald-400" },
               ].map(s => (
-                <div key={s.label} className="text-center p-3 rounded-lg" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
-                  <div className={`text-lg font-bold ${s.color}`}>{s.value}</div>
-                  <div className="text-[11px] text-zinc-500">{s.label}</div>
+                <div key={s.label} className="text-center p-3 rounded-xl" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
+                  <div className={`text-xl font-bold ${s.color}`}>{s.value}</div>
+                  <div className="text-[10px] text-zinc-500 mt-1">{s.label}</div>
                 </div>
               ))}
             </div>
