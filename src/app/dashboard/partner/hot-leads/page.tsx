@@ -30,32 +30,32 @@ export default function HotLeadsPage() {
   const hotCount = leads.filter((l) => l.status === 'heiss').length;
 
   return (
-    <div className="min-h-screen bg-[#060503] text-white p-6 space-y-6">
-      <h1 className="text-2xl font-bold text-[#d4a537]">Hot Leads</h1>
+    <div className="min-h-screen bg-[var(--gf-obsidian)] text-white p-6 space-y-6">
+      <h1 className="text-2xl font-bold text-[var(--gf-gold)]">Hot Leads</h1>
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-[#0a0a08] border border-[#1a1a15] rounded-xl p-4 text-center">
-          <p className="text-sm text-gray-400">Gesamt Leads</p>
+        <div className="gf-panel border border-[var(--gf-border)] rounded-xl p-4 text-center">
+          <p className="text-sm text-zinc-500">Gesamt Leads</p>
           <p className="text-3xl font-bold text-white mt-1">{leads.length}</p>
         </div>
-        <div className="bg-[#0a0a08] border border-[#1a1a15] rounded-xl p-4 text-center">
-          <p className="text-sm text-gray-400">Aktive Leads</p>
-          <p className="text-3xl font-bold text-[#d4a537] mt-1">{activeLeads}</p>
+        <div className="gf-panel border border-[var(--gf-border)] rounded-xl p-4 text-center">
+          <p className="text-sm text-zinc-500">Aktive Leads</p>
+          <p className="text-3xl font-bold text-[var(--gf-gold)] mt-1">{activeLeads}</p>
         </div>
-        <div className="bg-[#0a0a08] border border-[#1a1a15] rounded-xl p-4 text-center">
-          <p className="text-sm text-gray-400">Heisse Leads</p>
+        <div className="gf-panel border border-[var(--gf-border)] rounded-xl p-4 text-center">
+          <p className="text-sm text-zinc-500">Heisse Leads</p>
           <p className="text-3xl font-bold text-red-400 mt-1">{hotCount}</p>
         </div>
       </div>
 
       {/* Leads Table */}
-      <div className="bg-[#0a0a08] border border-[#1a1a15] rounded-xl p-6">
-        <h2 className="text-lg font-semibold text-[#d4a537] mb-4">Kontakte</h2>
+      <div className="gf-panel border border-[var(--gf-border)] rounded-xl p-6">
+        <h2 className="text-lg font-semibold text-[var(--gf-gold)] mb-4">Kontakte</h2>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-gray-500 border-b border-[#1a1a15]">
+              <tr className="text-zinc-600 border-b border-[var(--gf-border)]">
                 <th className="text-left py-2 px-3">Besucher</th>
                 <th className="text-center py-2 px-3">Besuche</th>
                 <th className="text-left py-2 px-3">Seiten</th>
@@ -66,24 +66,24 @@ export default function HotLeadsPage() {
             </thead>
             <tbody>
               {leads.map((lead) => (
-                <tr key={lead.id} className="border-b border-[#1a1a15]/50">
-                  <td className="py-3 px-3 font-mono text-gray-300">{lead.hash}</td>
-                  <td className="py-3 px-3 text-center text-[#d4a537] font-semibold">{lead.visits}</td>
+                <tr key={lead.id} className="border-b border-[var(--gf-border)]/50">
+                  <td className="py-3 px-3 font-mono text-zinc-400">{lead.hash}</td>
+                  <td className="py-3 px-3 text-center text-[var(--gf-gold)] font-semibold">{lead.visits}</td>
                   <td className="py-3 px-3">
                     <div className="flex flex-wrap gap-1">
                       {lead.pages.map((p) => (
-                        <span key={p} className="text-xs px-1.5 py-0.5 bg-[#1a1a15] rounded text-gray-400">{p}</span>
+                        <span key={p} className="text-xs px-1.5 py-0.5 bg-[var(--gf-border)] rounded text-zinc-500">{p}</span>
                       ))}
                     </div>
                   </td>
-                  <td className="py-3 px-3 text-gray-400">{lead.lastVisit}</td>
+                  <td className="py-3 px-3 text-zinc-500">{lead.lastVisit}</td>
                   <td className="py-3 px-3 text-center">
                     <span className={`text-xs px-2 py-0.5 rounded ${statusStyle[lead.status]}`}>{lead.status}</span>
                   </td>
                   <td className="py-3 px-3 text-right">
                     {lead.status !== 'konvertiert' && (
                       <div className="flex gap-1 justify-end">
-                        <button className="px-2 py-1 text-xs border border-[#d4a537] text-[#d4a537] rounded hover:bg-[#d4a537] hover:text-black transition-colors">
+                        <button className="px-2 py-1 text-xs border border-[var(--gf-gold)] text-[var(--gf-gold)] rounded hover:bg-[var(--gf-gold)] hover:text-black transition-colors">
                           Kontakt
                         </button>
                         <button onClick={() => markConverted(lead.id)} className="px-2 py-1 text-xs bg-green-800 text-green-300 rounded hover:bg-green-700 transition-colors">

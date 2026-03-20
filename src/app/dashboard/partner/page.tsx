@@ -1,88 +1,114 @@
-'use client';
-import { useState } from 'react';
+"use client";
+import { useState } from "react";
+import Link from "next/link";
 
-const rankProgress = 65;
 const fpBalance = 12480;
 const earnedThisMonth = 3200;
-const missedFP = 1500;
+const rankProgress = 65;
 
 const revenueBreakdown = [
-  { label: 'Provisionen', amount: 5200 },
-  { label: 'Matching Bonus', amount: 3800 },
-  { label: 'Pool-Ausschuettung', amount: 3480 },
+  { label: "Provisionen", amount: 5200, icon: "\ud83d\udcb5" },
+  { label: "Matching Bonus", amount: 3800, icon: "\ud83c\udfaf" },
+  { label: "Pool-Aussch\u00fcttung", amount: 3480, icon: "\ud83c\udfc6" },
 ];
 
 const liveFeed = [
-  { time: '14:32', text: 'Neuer Referral: Max M. (L1)' },
-  { time: '13:15', text: 'Provision erhalten: +120 FP' },
-  { time: '12:01', text: 'Matching Bonus: +80 FP' },
-  { time: '10:45', text: 'Neuer Referral: Lisa K. (L2)' },
-  { time: '09:30', text: 'Pool-Ausschuettung: +200 FP' },
+  { time: "14:32", text: "Neuer Referral: Max M. (L1)", type: "referral" },
+  { time: "13:15", text: "Provision erhalten: +120 FP", type: "earning" },
+  { time: "12:01", text: "Matching Bonus: +80 FP", type: "earning" },
+  { time: "10:45", text: "Neuer Referral: Lisa K. (L2)", type: "referral" },
+  { time: "09:30", text: "Pool-Aussch\u00fcttung: +200 FP", type: "earning" },
+];
+
+const quickLinks = [
+  { href: "/dashboard/partner/earnings", label: "Earnings", icon: "\ud83d\udcb0", desc: "Provisionen & Auszahlungen" },
+  { href: "/dashboard/partner/invite", label: "Einladen", icon: "\ud83d\udce8", desc: "Link teilen & einladen" },
+  { href: "/dashboard/partner/team", label: "Team", icon: "\ud83d\udc65", desc: "Dein Netzwerk" },
+  { href: "/dashboard/partner/coach", label: "Coach", icon: "\ud83c\udfc6", desc: "KI Partner-Coach" },
+  { href: "/dashboard/partner/hot-leads", label: "Hot Leads", icon: "\ud83d\udd25", desc: "Warme Kontakte" },
+  { href: "/dashboard/partner/material", label: "Material", icon: "\ud83d\udcc2", desc: "Marketing-Material" },
 ];
 
 export default function PartnerDashboard() {
-  const [feed] = useState(liveFeed);
-
   return (
-    <div className="min-h-screen bg-[#060503] text-white p-6 space-y-6">
-      <h1 className="text-2xl font-bold text-[#d4a537]">Partner Dashboard</h1>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <div>
+          <h1 className="gf-heading text-2xl">Partner Dashboard</h1>
+          <p className="text-sm text-zinc-500 mt-1">Verdiene bis zu 50% Provision auf jede Empfehlung</p>
+        </div>
+        <Link href="/dashboard/partner/invite" className="gf-btn gf-btn-sm">Link teilen &rarr;</Link>
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* FP Balance */}
-        <div className="bg-[#0a0a08] border border-[#1a1a15] rounded-xl p-6 col-span-1 md:col-span-2 lg:col-span-1">
-          <p className="text-sm text-gray-400">FP Guthaben</p>
-          <p className="text-4xl font-bold text-[#d4a537] mt-2">{fpBalance.toLocaleString('de-DE')} FP</p>
-          <p className="text-sm text-green-400 mt-1">+ {earnedThisMonth.toLocaleString('de-DE')} FP diesen Monat</p>
+      {/* KPIs */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="gf-panel p-6">
+          <div className="text-[9px] font-mono uppercase tracking-[1.5px] text-zinc-600 mb-2">FP Guthaben</div>
+          <div className="text-3xl font-bold gf-gold-text font-['Outfit']">{fpBalance.toLocaleString("de-DE")} FP</div>
+          <div className="text-xs text-emerald-400 mt-1">+{earnedThisMonth.toLocaleString("de-DE")} FP diesen Monat</div>
+          <div className="text-[10px] text-zinc-600 mt-1">1 FP = \u20ac0,10</div>
         </div>
 
-        {/* Rank Badge */}
-        <div className="bg-[#0a0a08] border border-[#1a1a15] rounded-xl p-6">
-          <p className="text-sm text-gray-400">Aktueller Rang</p>
-          <p className="text-xl font-bold text-[#d4a537] mt-2">Gold Partner</p>
+        <div className="gf-panel p-6">
+          <div className="text-[9px] font-mono uppercase tracking-[1.5px] text-zinc-600 mb-2">Aktueller Rang</div>
+          <div className="text-xl font-bold text-white">Gold Partner</div>
           <div className="mt-3">
-            <div className="flex justify-between text-xs text-gray-400 mb-1">
-              <span>Gold</span><span>Platin</span>
+            <div className="flex justify-between text-[9px] font-mono text-zinc-600 mb-1">
+              <span>GOLD</span><span>PLATIN</span>
             </div>
-            <div className="w-full bg-[#1a1a15] rounded-full h-2">
-              <div className="bg-[#d4a537] h-2 rounded-full" style={{ width: `${rankProgress}%` }} />
+            <div className="w-full h-1.5 rounded-full" style={{ background: "var(--gf-border)" }}>
+              <div className="h-full rounded-full transition-all" style={{ width: `${rankProgress}%`, background: "var(--gf-gold)" }} />
             </div>
-            <p className="text-xs text-gray-500 mt-1">{rankProgress}% zum naechsten Rang</p>
+            <div className="text-[10px] text-zinc-600 mt-1">{rankProgress}% zum n\u00e4chsten Rang</div>
           </div>
         </div>
 
-        {/* Missed Bonuses */}
-        <div className="bg-[#0a0a08] border border-[#1a1a15] rounded-xl p-6">
-          <p className="text-sm text-gray-400">Verpasste Boni</p>
-          <p className="text-2xl font-bold text-red-400 mt-2">{missedFP.toLocaleString('de-DE')} FP</p>
-          <p className="text-sm text-gray-500 mt-1">Du hast {missedFP.toLocaleString('de-DE')} FP verpasst</p>
-          <button className="mt-3 text-sm text-[#d4a537] hover:underline">Details anzeigen</button>
+        <div className="gf-panel p-6">
+          <div className="text-[9px] font-mono uppercase tracking-[1.5px] text-zinc-600 mb-2">Gesamt verdient</div>
+          <div className="text-3xl font-bold font-['Outfit']" style={{ color: "var(--gf-green)" }}>\u20ac{(fpBalance * 0.1).toFixed(0)}</div>
+          <div className="text-[10px] text-zinc-600 mt-1">{fpBalance.toLocaleString("de-DE")} FORGE Points</div>
         </div>
       </div>
 
-      {/* Revenue Breakdown */}
-      <div className="bg-[#0a0a08] border border-[#1a1a15] rounded-xl p-6">
-        <h2 className="text-lg font-semibold text-[#d4a537] mb-4">Einnahmen-Aufschluesselung</h2>
-        <div className="space-y-3">
-          {revenueBreakdown.map((item) => (
-            <div key={item.label} className="flex justify-between items-center">
-              <span className="text-gray-300">{item.label}</span>
-              <span className="text-[#d4a537] font-semibold">{item.amount.toLocaleString('de-DE')} FP</span>
-            </div>
-          ))}
-        </div>
+      {/* Quick Links */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        {quickLinks.map(l => (
+          <Link key={l.href} href={l.href} className="gf-panel p-4 text-center group">
+            <div className="text-2xl mb-2">{l.icon}</div>
+            <div className="text-xs font-semibold text-white group-hover:text-[var(--gf-gold)] transition-colors">{l.label}</div>
+            <div className="text-[9px] text-zinc-600 mt-0.5">{l.desc}</div>
+          </Link>
+        ))}
       </div>
 
-      {/* Live Feed */}
-      <div className="bg-[#0a0a08] border border-[#1a1a15] rounded-xl p-6">
-        <h2 className="text-lg font-semibold text-[#d4a537] mb-4">Live Feed</h2>
-        <div className="space-y-3">
-          {feed.map((event, i) => (
-            <div key={i} className="flex items-center gap-3 text-sm">
-              <span className="text-gray-500 w-12 shrink-0">{event.time}</span>
-              <div className="w-2 h-2 rounded-full bg-[#d4a537] shrink-0" />
-              <span className="text-gray-300">{event.text}</span>
-            </div>
-          ))}
+      {/* Revenue + Live Feed */}
+      <div className="grid md:grid-cols-2 gap-4">
+        <div className="gf-panel p-5">
+          <div className="text-[9px] font-mono uppercase tracking-[1.5px] text-zinc-600 mb-4">Einnahmen</div>
+          <div className="space-y-3">
+            {revenueBreakdown.map(item => (
+              <div key={item.label} className="flex items-center justify-between p-3 rounded-lg" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
+                <div className="flex items-center gap-3">
+                  <span className="text-lg">{item.icon}</span>
+                  <span className="text-sm text-zinc-300">{item.label}</span>
+                </div>
+                <span className="text-sm font-bold font-mono gf-gold-text">{item.amount.toLocaleString("de-DE")} FP</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="gf-panel p-5">
+          <div className="text-[9px] font-mono uppercase tracking-[1.5px] text-zinc-600 mb-4">Live Feed</div>
+          <div className="space-y-3">
+            {liveFeed.map((e, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <span className="text-[10px] font-mono text-zinc-600 w-10 flex-shrink-0">{e.time}</span>
+                <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: e.type === "referral" ? "var(--gf-blue)" : "var(--gf-gold)" }} />
+                <span className="text-sm text-zinc-400">{e.text}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

@@ -28,12 +28,12 @@ function TreeNode({ member, search }: { member: Member; search: string }) {
   if (!match && !childMatch) return null;
 
   return (
-    <div className="ml-4 border-l border-[#1a1a15] pl-4 py-1">
+    <div className="ml-4 border-l border-[var(--gf-border)] pl-4 py-1">
       <div className="flex items-center gap-2">
         <div className={`w-2 h-2 rounded-full ${member.active ? 'bg-green-500' : 'bg-gray-600'}`} />
-        <span className={match ? 'text-white' : 'text-gray-600'}>{member.name}</span>
-        <span className="text-xs text-gray-500">L{member.level}</span>
-        <span className={`text-xs px-2 py-0.5 rounded ${member.active ? 'bg-green-900/40 text-green-400' : 'bg-gray-800 text-gray-500'}`}>
+        <span className={match ? 'text-white' : 'text-zinc-700'}>{member.name}</span>
+        <span className="text-xs text-zinc-600">L{member.level}</span>
+        <span className={`text-xs px-2 py-0.5 rounded ${member.active ? 'bg-green-900/40 text-green-400' : 'bg-gray-800 text-zinc-600'}`}>
           {member.active ? 'Aktiv' : 'Inaktiv'}
         </span>
       </div>
@@ -48,8 +48,8 @@ export default function NetworkPage() {
   const [search, setSearch] = useState('');
 
   return (
-    <div className="min-h-screen bg-[#060503] text-white p-6 space-y-6">
-      <h1 className="text-2xl font-bold text-[#d4a537]">Netzwerk</h1>
+    <div className="min-h-screen bg-[var(--gf-obsidian)] text-white p-6 space-y-6">
+      <h1 className="text-2xl font-bold text-[var(--gf-gold)]">Netzwerk</h1>
 
       {/* Search */}
       <input
@@ -57,28 +57,28 @@ export default function NetworkPage() {
         placeholder="Name oder Status suchen..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        className="w-full max-w-md bg-[#0a0a08] border border-[#1a1a15] rounded-lg px-4 py-2 text-white placeholder-gray-600 focus:outline-none focus:border-[#d4a537]"
+        className="w-full max-w-md gf-panel border border-[var(--gf-border)] rounded-lg px-4 py-2 text-white placeholder-gray-600 focus:outline-none focus:border-[var(--gf-gold)]"
       />
 
       {/* Level Bars */}
-      <div className="bg-[#0a0a08] border border-[#1a1a15] rounded-xl p-6">
-        <h2 className="text-lg font-semibold text-[#d4a537] mb-4">Mitglieder pro Level</h2>
+      <div className="gf-panel border border-[var(--gf-border)] rounded-xl p-6">
+        <h2 className="text-lg font-semibold text-[var(--gf-gold)] mb-4">Mitglieder pro Level</h2>
         <div className="space-y-3">
           {levelCounts.map((l) => (
             <div key={l.level} className="flex items-center gap-3">
-              <span className="w-8 text-sm text-gray-400">{l.level}</span>
-              <div className="flex-1 bg-[#1a1a15] rounded-full h-4">
-                <div className="bg-[#d4a537] h-4 rounded-full" style={{ width: `${(l.count / maxCount) * 100}%` }} />
+              <span className="w-8 text-sm text-zinc-500">{l.level}</span>
+              <div className="flex-1 bg-[var(--gf-border)] rounded-full h-4">
+                <div className="bg-[var(--gf-gold)] h-4 rounded-full" style={{ width: `${(l.count / maxCount) * 100}%` }} />
               </div>
-              <span className="text-sm text-gray-300 w-8 text-right">{l.count}</span>
+              <span className="text-sm text-zinc-400 w-8 text-right">{l.count}</span>
             </div>
           ))}
         </div>
       </div>
 
       {/* Tree View */}
-      <div className="bg-[#0a0a08] border border-[#1a1a15] rounded-xl p-6">
-        <h2 className="text-lg font-semibold text-[#d4a537] mb-4">Downline Baumansicht</h2>
+      <div className="gf-panel border border-[var(--gf-border)] rounded-xl p-6">
+        <h2 className="text-lg font-semibold text-[var(--gf-gold)] mb-4">Downline Baumansicht</h2>
         {tree.map((member) => (
           <TreeNode key={member.id} member={member} search={search} />
         ))}

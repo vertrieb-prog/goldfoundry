@@ -27,15 +27,15 @@ export default function CoachPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#060503] text-white p-6 space-y-6">
-      <h1 className="text-2xl font-bold text-[#d4a537]">KI Partner-Coach</h1>
+    <div className="min-h-screen bg-[var(--gf-obsidian)] text-white p-6 space-y-6">
+      <h1 className="text-2xl font-bold text-[var(--gf-gold)]">KI Partner-Coach</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Chat */}
-        <div className="lg:col-span-3 bg-[#0a0a08] border border-[#1a1a15] rounded-xl flex flex-col h-[600px]">
+        <div className="lg:col-span-3 gf-panel border border-[var(--gf-border)] rounded-xl flex flex-col h-[600px]">
           {/* Coach Header */}
-          <div className="p-4 border-b border-[#1a1a15] flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[#d4a537] flex items-center justify-center text-black font-bold text-sm">GF</div>
+          <div className="p-4 border-b border-[var(--gf-border)] flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-[var(--gf-gold)] flex items-center justify-center text-black font-bold text-sm">GF</div>
             <div>
               <p className="font-semibold text-sm">GoldFoundry Coach</p>
               <p className="text-xs text-green-400">Online</p>
@@ -46,7 +46,7 @@ export default function CoachPage() {
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
             {messages.map((msg, i) => (
               <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[75%] px-4 py-2 rounded-xl text-sm ${msg.role === 'user' ? 'bg-[#d4a537] text-black' : 'bg-[#1a1a15] text-gray-300'}`}>
+                <div className={`max-w-[75%] px-4 py-2 rounded-xl text-sm ${msg.role === 'user' ? 'bg-[var(--gf-gold)] text-black' : 'bg-[var(--gf-border)] text-zinc-400'}`}>
                   {msg.text}
                 </div>
               </div>
@@ -54,10 +54,10 @@ export default function CoachPage() {
           </div>
 
           {/* Input */}
-          <div className="p-4 border-t border-[#1a1a15]">
+          <div className="p-4 border-t border-[var(--gf-border)]">
             <div className="flex gap-2">
-              <input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && sendMessage(input)} placeholder="Nachricht schreiben..." className="flex-1 bg-[#060503] border border-[#1a1a15] rounded-lg px-4 py-2 text-white placeholder-gray-600 focus:outline-none focus:border-[#d4a537] text-sm" />
-              <button onClick={() => sendMessage(input)} className="px-4 py-2 bg-[#d4a537] text-black rounded-lg font-semibold hover:bg-[#c4952f] text-sm">
+              <input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && sendMessage(input)} placeholder="Nachricht schreiben..." className="flex-1 bg-[var(--gf-obsidian)] border border-[var(--gf-border)] rounded-lg px-4 py-2 text-white placeholder-gray-600 focus:outline-none focus:border-[var(--gf-gold)] text-sm" />
+              <button onClick={() => sendMessage(input)} className="px-4 py-2 bg-[var(--gf-gold)] text-black rounded-lg font-semibold hover:bg-[#c4952f] text-sm">
                 Senden
               </button>
             </div>
@@ -65,11 +65,11 @@ export default function CoachPage() {
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-[#0a0a08] border border-[#1a1a15] rounded-xl p-4 h-fit">
-          <h2 className="text-sm font-semibold text-[#d4a537] mb-3">Schnellaktionen</h2>
+        <div className="gf-panel border border-[var(--gf-border)] rounded-xl p-4 h-fit">
+          <h2 className="text-sm font-semibold text-[var(--gf-gold)] mb-3">Schnellaktionen</h2>
           <div className="space-y-2">
             {quickActions.map((action) => (
-              <button key={action} onClick={() => sendMessage(action)} className="w-full text-left px-3 py-2 bg-[#060503] border border-[#1a1a15] rounded-lg text-sm text-gray-300 hover:border-[#d4a537] hover:text-[#d4a537] transition-colors">
+              <button key={action} onClick={() => sendMessage(action)} className="w-full text-left px-3 py-2 bg-[var(--gf-obsidian)] border border-[var(--gf-border)] rounded-lg text-sm text-zinc-400 hover:border-[var(--gf-gold)] hover:text-[var(--gf-gold)] transition-colors">
                 {action}
               </button>
             ))}
