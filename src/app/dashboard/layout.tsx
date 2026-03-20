@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import GoldFoundryLogo from "@/components/GoldFoundryLogo";
 import { UserProvider, useUser } from "@/contexts/UserContext";
 import RiskDisclaimer from "@/components/RiskDisclaimer";
 
@@ -125,14 +126,7 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
         {/* Brand */}
         <div className="px-5 py-5 border-b flex items-center justify-between" style={{ borderColor: "var(--gf-border)" }}>
           <Link href="/" className="flex items-center gap-2 min-w-0">
-            {!sidebarCollapsed ? (
-              <div>
-                <span className="text-base font-extrabold gf-gold-text tracking-wide">GOLD FOUNDRY</span>
-                <div className="text-[8px] tracking-[3px] text-zinc-600 font-mono">FORGE TERMINAL</div>
-              </div>
-            ) : (
-              <span className="text-lg font-extrabold gf-gold-text">GF</span>
-            )}
+            <GoldFoundryLogo size={sidebarCollapsed ? 28 : 32} showText={!sidebarCollapsed} />
           </Link>
           <button
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}

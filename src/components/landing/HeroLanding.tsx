@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
+import GoldFoundryLogo from "@/components/GoldFoundryLogo";
 
 const GoldScene = dynamic(() => import("./GoldScene"), { ssr: false });
 
@@ -200,7 +201,7 @@ export default function HeroLanding() {
           boxShadow: scrollY > 50 ? "0 8px 40px rgba(0,0,0,0.5)" : "none",
         }}
       >
-        <Link href="/" className="px-3 py-1.5 text-sm font-bold gf-gold-text tracking-wider">GF</Link>
+        <Link href="/" className="px-2 py-1"><GoldFoundryLogo size={28} showText={false} /></Link>
         <div className="hidden md:flex items-center gap-1">
           {["Features", "Pricing", "Partner"].map(item => (
             <a key={item} href={`#${item.toLowerCase()}`} className="px-3 py-1.5 text-xs text-zinc-400 hover:text-white transition-colors rounded-full hover:bg-white/5">
@@ -933,8 +934,8 @@ export default function HeroLanding() {
         <div className="max-w-6xl mx-auto px-6 py-12">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
             <div>
-              <span className="text-lg font-bold gf-gold-text tracking-wider">GOLD FOUNDRY</span>
-              <p className="text-xs text-zinc-600 mt-2 leading-relaxed">Automatisiertes Trading mit professionellem Risikomanagement.</p>
+              <GoldFoundryLogo size={36} />
+              <p className="text-xs text-zinc-600 mt-3 leading-relaxed">Automatisiertes Trading mit professionellem Risikomanagement.</p>
             </div>
             <div>
               <h4 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-3">Produkt</h4>
