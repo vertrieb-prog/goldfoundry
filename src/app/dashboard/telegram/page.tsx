@@ -5,34 +5,34 @@ import Link from "next/link";
 type Step = 1 | 2 | 3 | 4 | 5;
 type ActiveChannel = { id: string; channelId: string; channelName: string; status: string; settings: any };
 
-// Jeder m\u00f6gliche Fehler bekommt eine L\u00f6sung — NIEMALS rohe API-Codes zeigen
+// Jeder m\ögliche Fehler bekommt eine L\ösung — NIEMALS rohe API-Codes zeigen
 const ERROR_SOLUTIONS: { match: string; message: string; action?: string; actionLabel?: string }[] = [
   // Telefonnummer
-  { match: "PHONE_NUMBER_INVALID", message: "Die Telefonnummer ist ung\u00fcltig.", action: "step1", actionLabel: "Nummer \u00e4ndern" },
+  { match: "PHONE_NUMBER_INVALID", message: "Die Telefonnummer ist ung\ültig.", action: "step1", actionLabel: "Nummer \ändern" },
   { match: "PHONE_NUMBER_BANNED", message: "Diese Nummer ist bei Telegram gesperrt. Nutze eine andere Nummer.", action: "step1", actionLabel: "Andere Nummer eingeben" },
   { match: "PHONE_NUMBER_FLOOD", message: "Zu viele Versuche. Warte 10 Minuten und versuche es dann nochmal." },
   { match: "PHONE_NUMBER_UNOCCUPIED", message: "Diese Nummer hat kein Telegram-Konto. Erstelle zuerst einen Telegram-Account." },
   // Code
   { match: "PHONE_CODE_EXPIRED", message: "Der Code ist abgelaufen. Fordere einen neuen an.", action: "resend", actionLabel: "Neuen Code senden" },
-  { match: "PHONE_CODE_INVALID", message: "Der eingegebene Code ist falsch. Pr\u00fcfe die Telegram-App auf deinem Handy und gib den 5-stelligen Code ein.", action: "retry", actionLabel: "Nochmal eingeben" },
+  { match: "PHONE_CODE_INVALID", message: "Der eingegebene Code ist falsch. Pr\üfe die Telegram-App auf deinem Handy und gib den 5-stelligen Code ein.", action: "retry", actionLabel: "Nochmal eingeben" },
   { match: "PHONE_CODE_EMPTY", message: "Bitte gib den Code ein, den du in der Telegram-App bekommen hast." },
   // 2FA / Passwort
   { match: "SESSION_PASSWORD_NEEDED", message: "Dein Account hat 2FA aktiviert. Gib dein Cloud-Passwort ein.", action: "step3" },
-  { match: "PASSWORD_HASH_INVALID", message: "Falsches Passwort. Das ist dein Telegram Cloud-Passwort (Einstellungen \u2192 Datenschutz \u2192 Zwei-Schritte-Verifizierung).", action: "retry", actionLabel: "Nochmal versuchen" },
+  { match: "PASSWORD_HASH_INVALID", message: "Falsches Passwort. Das ist dein Telegram Cloud-Passwort (Einstellungen \→ Datenschutz \→ Zwei-Schritte-Verifizierung).", action: "retry", actionLabel: "Nochmal versuchen" },
   { match: "SRP_ID_INVALID", message: "Die Sitzung ist abgelaufen. Bitte starte den Prozess von vorne.", action: "step1", actionLabel: "Neu starten" },
   // Session / Verbindung
-  { match: "AUTH_KEY_UNREGISTERED", message: "Die Sitzung ist ung\u00fcltig. Bitte verbinde dich erneut.", action: "step1", actionLabel: "Neu verbinden" },
+  { match: "AUTH_KEY_UNREGISTERED", message: "Die Sitzung ist ung\ültig. Bitte verbinde dich erneut.", action: "step1", actionLabel: "Neu verbinden" },
   { match: "SESSION_REVOKED", message: "Die Telegram-Sitzung wurde widerrufen. Bitte starte neu.", action: "step1", actionLabel: "Neu starten" },
   { match: "CONNECTION_NOT_INITED", message: "Verbindungsproblem. Bitte versuche es in 30 Sekunden nochmal." },
   { match: "Timeout", message: "Die Verbindung zu Telegram hat zu lange gedauert. Bitte versuche es nochmal." },
   { match: "ECONNREFUSED", message: "Telegram-Server nicht erreichbar. Bitte versuche es in 1 Minute nochmal." },
-  { match: "NETWORK", message: "Netzwerkfehler. Pr\u00fcfe deine Internetverbindung und versuche es nochmal." },
+  { match: "NETWORK", message: "Netzwerkfehler. Pr\üfe deine Internetverbindung und versuche es nochmal." },
   // Flood / Rate Limit
-  { match: "FLOOD_WAIT", message: "Telegram hat dich tempor\u00e4r gesperrt. Warte ein paar Minuten und versuche es dann nochmal." },
+  { match: "FLOOD_WAIT", message: "Telegram hat dich tempor\är gesperrt. Warte ein paar Minuten und versuche es dann nochmal." },
   { match: "TOO_MANY", message: "Zu viele Versuche. Warte 5 Minuten und versuche es dann nochmal." },
   // Channels
   { match: "CHANNEL_PRIVATE", message: "Dieser Channel ist privat. Tritt ihm zuerst in Telegram bei." },
-  { match: "CHANNEL_INVALID", message: "Channel nicht gefunden. Pr\u00fcfe die ID oder den @username." },
+  { match: "CHANNEL_INVALID", message: "Channel nicht gefunden. Pr\üfe die ID oder den @username." },
   { match: "INVITE_HASH_EXPIRED", message: "Der Einladungslink ist abgelaufen. Bitte den Channel-Admin um einen neuen." },
   { match: "Maximal 10", message: "Du kannst maximal 10 Channels verbinden. Entferne zuerst einen bestehenden." },
   { match: "bereits verbunden", message: "Dieser Channel ist bereits verbunden." },
@@ -41,11 +41,11 @@ const ERROR_SOLUTIONS: { match: string; message: string; action?: string; action
   { match: "Keine ausstehende", message: "Kein Code-Versand gefunden. Bitte sende zuerst einen neuen Code.", action: "step1", actionLabel: "Code senden" },
   // Server
   { match: "Telegram Modul", message: "Das Telegram-System wird gerade gestartet. Versuche es in 1-2 Minuten nochmal." },
-  { match: "Telegram API nicht", message: "Telegram ist noch nicht eingerichtet. Kontaktiere den Support \u00fcber WhatsApp." },
+  { match: "Telegram API nicht", message: "Telegram ist noch nicht eingerichtet. Kontaktiere den Support \über WhatsApp." },
   { match: "Server error", message: "Ein Serverfehler ist aufgetreten. Bitte versuche es in 1 Minute nochmal." },
   { match: "500", message: "Ein technischer Fehler ist aufgetreten. Versuche es in 1 Minute nochmal oder kontaktiere den Support." },
   { match: "502", message: "Der Server ist kurzzeitig nicht erreichbar. Bitte versuche es gleich nochmal." },
-  { match: "503", message: "Der Service ist vor\u00fcbergehend nicht verf\u00fcgbar. Bitte versuche es in ein paar Minuten nochmal." },
+  { match: "503", message: "Der Service ist vor\übergehend nicht verf\ügbar. Bitte versuche es in ein paar Minuten nochmal." },
 ];
 
 function friendlyError(raw: string): { message: string; action?: string; actionLabel?: string } {
@@ -54,7 +54,7 @@ function friendlyError(raw: string): { message: string; action?: string; actionL
   }
   // Fallback: NIEMALS den rohen Error zeigen
   return {
-    message: "Etwas ist schiefgelaufen. Bitte versuche es nochmal oder kontaktiere unseren Support \u00fcber WhatsApp.",
+    message: "Etwas ist schiefgelaufen. Bitte versuche es nochmal oder kontaktiere unseren Support \über WhatsApp.",
     action: "step1",
     actionLabel: "Nochmal versuchen",
   };
@@ -134,7 +134,7 @@ export default function TelegramPage() {
   const sendCode = async () => {
     const cleaned = phone.replace(/\s/g, "");
     if (!cleaned.startsWith("+") || cleaned.length < 10) {
-      setError({ message: "Bitte gib deine Nummer mit L\u00e4ndervorwahl ein, z.B. +49 170 1234567", action: "retry", actionLabel: "Nummer korrigieren" });
+      setError({ message: "Bitte gib deine Nummer mit L\ändervorwahl ein, z.B. +49 170 1234567", action: "retry", actionLabel: "Nummer korrigieren" });
       return;
     }
     const data = await api("/api/telegram/auth/send-code", { phoneNumber: cleaned });
@@ -147,7 +147,7 @@ export default function TelegramPage() {
 
   // Step 2: Verify
   const verifyCode = async () => {
-    if (code.length < 4) { setError({ message: "Bitte gib den vollst\u00e4ndigen Code ein (5 Ziffern). Du findest ihn in der Telegram-App auf deinem Handy." }); return; }
+    if (code.length < 4) { setError({ message: "Bitte gib den vollst\ändigen Code ein (5 Ziffern). Du findest ihn in der Telegram-App auf deinem Handy." }); return; }
     const data = await api("/api/telegram/auth/verify", { code: code.trim(), phoneNumber: phone.replace(/\s/g, "") });
     if (!data) return;
     if (data.requires2FA) { setStep(3); return; }
@@ -346,7 +346,7 @@ export default function TelegramPage() {
                     if (res.ok && data.success) {
                       setMtResult({ ok: true, msg: `${mtPlatform.toUpperCase()} Login ${mtLogin} verbunden` });
                     } else {
-                      setMtResult({ ok: false, msg: data.error || "Verbindung fehlgeschlagen. Pr\u00fcfe deine Daten." });
+                      setMtResult({ ok: false, msg: data.error || "Verbindung fehlgeschlagen. Pr\üfe deine Daten." });
                     }
                   } catch {
                     setMtResult({ ok: false, msg: "Netzwerkfehler. Bitte versuche es nochmal." });
@@ -423,7 +423,7 @@ export default function TelegramPage() {
           <div className="flex items-center justify-between mb-3">
             <div className="text-sm font-semibold text-white">Deine Telegram Channels</div>
             <button onClick={loadChannels} disabled={loadingChannels} className="text-xs text-[var(--gf-gold)] hover:underline">
-              {loadingChannels ? "L\u00e4dt..." : "Aktualisieren"}
+              {loadingChannels ? "L\ädt..." : "Aktualisieren"}
             </button>
           </div>
           {loadingChannels ? (
@@ -453,7 +453,7 @@ export default function TelegramPage() {
                     className="text-xs px-3 py-1.5 rounded-lg font-medium transition-all"
                     style={{ background: "rgba(250,239,112,0.08)", color: "var(--gf-gold)", border: "1px solid rgba(250,239,112,0.12)" }}
                   >
-                    Hinzuf\u00fcgen
+                    Hinzuf\ügen
                   </button>
                 </div>
               ))}
@@ -465,12 +465,12 @@ export default function TelegramPage() {
 
         {/* Manual add (fallback) */}
         <details className="gf-panel">
-          <summary className="p-4 cursor-pointer text-xs text-zinc-500 hover:text-zinc-400">Channel manuell hinzuf\u00fcgen (mit ID)</summary>
+          <summary className="p-4 cursor-pointer text-xs text-zinc-500 hover:text-zinc-400">Channel manuell hinzuf\ügen (mit ID)</summary>
           <div className="px-4 pb-4 space-y-3">
             <input type="text" placeholder="Channel-ID (z.B. -1001234567890)" value={manualChannelId} onChange={e => setManualChannelId(e.target.value)} className="gf-input" />
             <input type="text" placeholder="Anzeigename (optional)" value={manualChannelName} onChange={e => setManualChannelName(e.target.value)} className="gf-input" />
             <button onClick={addChannel} disabled={loading || !manualChannelId} className="gf-btn w-full" style={{ opacity: !manualChannelId ? 0.4 : 1 }}>
-              {loading ? "Wird hinzugef\u00fcgt..." : "Hinzuf\u00fcgen"}
+              {loading ? "Wird hinzugef\ügt..." : "Hinzuf\ügen"}
             </button>
           </div>
         </details>
@@ -556,7 +556,7 @@ export default function TelegramPage() {
           />
 
           <button onClick={sendCode} disabled={loading || phone.length < 10} className="gf-btn w-full" style={{ opacity: phone.length < 10 ? 0.4 : 1 }}>
-            {loading ? "Code wird gesendet..." : "Code senden \u2192"}
+            {loading ? "Code wird gesendet..." : "Code senden \→"}
           </button>
 
           <div className="mt-4 p-3 rounded-lg" style={{ background: "rgba(250,239,112,0.04)", border: "1px solid rgba(250,239,112,0.08)" }}>
@@ -590,7 +590,7 @@ export default function TelegramPage() {
           )}
 
           <button onClick={verifyCode} disabled={loading || code.length < 4} className="gf-btn w-full" style={{ opacity: code.length < 4 ? 0.4 : 1 }}>
-            {loading ? "Wird verifiziert..." : "Verifizieren \u2192"}
+            {loading ? "Wird verifiziert..." : "Verifizieren \→"}
           </button>
 
           <div className="flex items-center justify-between mt-4">
@@ -614,7 +614,7 @@ export default function TelegramPage() {
           />
 
           <button onClick={verify2FA} disabled={loading || !password} className="gf-btn w-full" style={{ opacity: !password ? 0.4 : 1 }}>
-            {loading ? "Wird gepr\u00fcft..." : "Best\u00e4tigen \u2192"}
+            {loading ? "Wird gepr\üft..." : "Best\ätigen \→"}
           </button>
 
           <button onClick={() => { setStep(1); setError(null); }} className="text-xs text-zinc-500 hover:text-white mt-4 block">&larr; Von vorne starten</button>
