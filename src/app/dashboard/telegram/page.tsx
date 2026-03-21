@@ -73,6 +73,8 @@ export default function TelegramPage() {
   const [codeSentAt, setCodeSentAt] = useState(0);
 
   const [active, setActive] = useState<ActiveChannel[]>([]);
+  const [available, setAvailable] = useState<{ id: string; title: string; type: string }[]>([]);
+  const [loadingChannels, setLoadingChannels] = useState(false);
   const [manualChannelId, setManualChannelId] = useState("");
   const [manualChannelName, setManualChannelName] = useState("");
 
@@ -162,10 +164,15 @@ export default function TelegramPage() {
     }
   };
 
-  // Load channels
+  // Load channels + available dialogs
   const loadChannels = async () => {
+    setLoadingChannels(true);
     const data = await api("/api/telegram/channels");
-    if (data) setActive(data.activeChannels || []);
+    if (data) {
+      setActive(data.activeChannels || []);
+      setAvailable(data.availableChannels || []);
+    }
+    setLoadingChannels(false);
   };
 
   // Add channel manually
@@ -337,27 +344,63 @@ export default function TelegramPage() {
           <button onClick={() => setStep(1)} className="text-xs text-zinc-500 hover:text-white">&larr; Zur&uuml;ck</button>
         </div>
 
-        {/* Add channel */}
+        {/* Available channels from Telegram */}
         <div className="gf-panel p-5">
-          <div className="text-sm font-semibold text-white mb-3">Channel hinzuf&uuml;gen</div>
-          <p className="text-xs text-zinc-500 mb-4">Gib die Channel-ID oder den @username ein. Du musst dem Channel bereits in Telegram beigetreten sein.</p>
-          <div className="space-y-3">
-            <input
-              type="text" placeholder="@channelname oder Channel-ID"
-              value={manualChannelId} onChange={e => setManualChannelId(e.target.value)}
-              className="gf-input"
-            />
-            <input
-              type="text" placeholder="Anzeigename (optional)"
-              value={manualChannelName} onChange={e => setManualChannelName(e.target.value)}
-              className="gf-input"
-            />
-            <button onClick={addChannel} disabled={loading || !manualChannelId} className="gf-btn w-full" style={{ opacity: !manualChannelId ? 0.4 : 1 }}>
-              {loading ? "Wird hinzugef\u00fcgt..." : "Channel hinzuf\u00fcgen"}
+          <div className="flex items-center justify-between mb-3">
+            <div className="text-sm font-semibold text-white">Deine Telegram Channels</div>
+            <button onClick={loadChannels} disabled={loadingChannels} className="text-xs text-[var(--gf-gold)] hover:underline">
+              {loadingChannels ? "L\u00e4dt..." : "Aktualisieren"}
             </button>
           </div>
-          {error && <div className="mt-3 p-3 rounded-lg text-xs" style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.15)", color: "#ef4444" }}>{error.message}</div>}
+          {loadingChannels ? (
+            <div className="text-center py-6">
+              <div className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin mx-auto mb-2" style={{ borderColor: "var(--gf-gold)", borderTopColor: "transparent" }} />
+              <p className="text-xs text-zinc-500">Lade deine Channels...</p>
+            </div>
+          ) : available.length > 0 ? (
+            <div className="space-y-2 max-h-80 overflow-y-auto">
+              {available.filter(ch => !active.some(a => a.channelId === ch.id)).map(ch => (
+                <div key={ch.id} className="flex items-center justify-between p-3 rounded-lg" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold" style={{ background: "rgba(250,239,112,0.06)", color: "var(--gf-gold)" }}>
+                      {ch.type === "Channel" ? "\ud83d\udce2" : "\ud83d\udc65"}
+                    </div>
+                    <div>
+                      <div className="text-sm text-white">{ch.title}</div>
+                      <div className="text-[10px] text-zinc-600">{ch.type} &middot; {ch.id}</div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      await api("/api/telegram/channels/add", { channelId: ch.id, channelName: ch.title });
+                      await loadChannels();
+                    }}
+                    disabled={loading}
+                    className="text-xs px-3 py-1.5 rounded-lg font-medium transition-all"
+                    style={{ background: "rgba(250,239,112,0.08)", color: "var(--gf-gold)", border: "1px solid rgba(250,239,112,0.12)" }}
+                  >
+                    Hinzuf\u00fcgen
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-zinc-500 py-4 text-center">Keine Channels gefunden. Tritt zuerst Telegram-Channels bei.</p>
+          )}
         </div>
+
+        {/* Manual add (fallback) */}
+        <details className="gf-panel">
+          <summary className="p-4 cursor-pointer text-xs text-zinc-500 hover:text-zinc-400">Channel manuell hinzuf\u00fcgen (mit ID)</summary>
+          <div className="px-4 pb-4 space-y-3">
+            <input type="text" placeholder="Channel-ID (z.B. -1001234567890)" value={manualChannelId} onChange={e => setManualChannelId(e.target.value)} className="gf-input" />
+            <input type="text" placeholder="Anzeigename (optional)" value={manualChannelName} onChange={e => setManualChannelName(e.target.value)} className="gf-input" />
+            <button onClick={addChannel} disabled={loading || !manualChannelId} className="gf-btn w-full" style={{ opacity: !manualChannelId ? 0.4 : 1 }}>
+              {loading ? "Wird hinzugef\u00fcgt..." : "Hinzuf\u00fcgen"}
+            </button>
+          </div>
+        </details>
+        {error && <div className="p-3 rounded-lg text-xs" style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.15)", color: "#ef4444" }}>{error.message}</div>}
 
         {/* Existing channels */}
         {active.length > 0 && (
