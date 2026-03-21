@@ -78,6 +78,15 @@ export default function TelegramPage() {
   const [manualChannelId, setManualChannelId] = useState("");
   const [manualChannelName, setManualChannelName] = useState("");
 
+  // Signal Training
+  const [trainChannel, setTrainChannel] = useState<{ id: string; name: string } | null>(null);
+  const [channelMessages, setChannelMessages] = useState<{ id: number; text: string; date: string; isSignal: boolean }[]>([]);
+  const [loadingMessages, setLoadingMessages] = useState(false);
+  const [selectedSignal, setSelectedSignal] = useState<number | null>(null);
+  const [selectedUpdate, setSelectedUpdate] = useState<number | null>(null);
+  const [trainSaving, setTrainSaving] = useState(false);
+  const [trainDone, setTrainDone] = useState(false);
+
   // MT4 Connection
   const [mtLogin, setMtLogin] = useState("");
   const [mtPassword, setMtPassword] = useState("");
@@ -197,6 +206,45 @@ export default function TelegramPage() {
     }
   };
 
+  // Open channel training
+  const openTraining = async (channelId: string, channelName: string) => {
+    setTrainChannel({ id: channelId, name: channelName });
+    setSelectedSignal(null);
+    setSelectedUpdate(null);
+    setTrainDone(false);
+    setLoadingMessages(true);
+    try {
+      const res = await fetch(`/api/telegram/messages?channelId=${encodeURIComponent(channelId)}&limit=30`);
+      const data = await res.json();
+      setChannelMessages(data.messages || []);
+    } catch {
+      setChannelMessages([]);
+    }
+    setLoadingMessages(false);
+  };
+
+  // Save signal training
+  const saveTraining = async () => {
+    if (!trainChannel || selectedSignal === null) return;
+    setTrainSaving(true);
+    const signal = channelMessages.find(m => m.id === selectedSignal);
+    const update = selectedUpdate !== null ? channelMessages.find(m => m.id === selectedUpdate) : null;
+    try {
+      await fetch("/api/telegram/train", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          channelId: trainChannel.id,
+          channelName: trainChannel.name,
+          exampleSignal: signal?.text || "",
+          exampleUpdate: update?.text || "",
+        }),
+      });
+      setTrainDone(true);
+    } catch {}
+    setTrainSaving(false);
+  };
+
   // Remove channel (with error handling)
   const removeChannel = async (channelId: string) => {
     try {
@@ -241,6 +289,104 @@ export default function TelegramPage() {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: "var(--gf-gold)", borderTopColor: "transparent" }} />
+      </div>
+    );
+  }
+
+  // ── Signal Training View ────────────────────────────
+  if (trainChannel) {
+    return (
+      <div className="max-w-2xl mx-auto py-8 space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="gf-heading text-xl">Signal-Format lernen</h1>
+            <p className="text-sm text-zinc-500 mt-1">{trainChannel.name}</p>
+          </div>
+          <button onClick={() => setTrainChannel(null)} className="text-xs text-zinc-500 hover:text-white">&larr; Zurück</button>
+        </div>
+
+        {trainDone ? (
+          <div className="gf-panel p-8 text-center">
+            <div className="text-4xl mb-4">✅</div>
+            <h2 className="text-lg font-bold text-white mb-2">Format gespeichert!</h2>
+            <p className="text-sm text-zinc-500 mb-6">Die KI verwendet dieses Format ab jetzt für Signale aus "{trainChannel.name}".</p>
+            <button onClick={() => setTrainChannel(null)} className="gf-btn">Zurück zum Dashboard</button>
+          </div>
+        ) : (
+          <>
+            {/* Step 1: Signal auswählen */}
+            <div className="gf-panel p-5">
+              <div className="text-sm font-semibold text-white mb-1">Schritt 1: Signal auswählen</div>
+              <p className="text-xs text-zinc-500 mb-4">Klicke auf eine Nachricht die ein <strong className="text-white">Trading-Signal</strong> ist (z.B. "BUY XAUUSD @ 2341")</p>
+
+              {loadingMessages ? (
+                <div className="text-center py-8">
+                  <div className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin mx-auto mb-2" style={{ borderColor: "var(--gf-gold)", borderTopColor: "transparent" }} />
+                  <p className="text-xs text-zinc-500">Nachrichten werden geladen...</p>
+                </div>
+              ) : channelMessages.length === 0 ? (
+                <p className="text-xs text-zinc-500 text-center py-4">Keine Nachrichten gefunden.</p>
+              ) : (
+                <div className="space-y-1.5 max-h-80 overflow-y-auto">
+                  {channelMessages.map(m => (
+                    <button
+                      key={m.id}
+                      onClick={() => setSelectedSignal(selectedSignal === m.id ? null : m.id)}
+                      className="w-full text-left p-3 rounded-lg transition-all text-sm"
+                      style={{
+                        background: selectedSignal === m.id ? "rgba(34,197,94,0.08)" : m.isSignal ? "rgba(250,239,112,0.04)" : "var(--gf-obsidian)",
+                        border: selectedSignal === m.id ? "2px solid rgba(34,197,94,0.3)" : m.isSignal ? "1px solid rgba(250,239,112,0.1)" : "1px solid var(--gf-border)",
+                      }}
+                    >
+                      <div className="flex items-start gap-2">
+                        {selectedSignal === m.id && <span className="text-emerald-400 flex-shrink-0 mt-0.5">✓</span>}
+                        {m.isSignal && selectedSignal !== m.id && <span className="text-[10px] px-1.5 py-0.5 rounded flex-shrink-0 mt-0.5" style={{ background: "rgba(250,239,112,0.1)", color: "var(--gf-gold)" }}>Signal?</span>}
+                        <div className="flex-1 min-w-0">
+                          <div className="text-xs text-zinc-300 whitespace-pre-wrap break-words">{m.text.slice(0, 200)}{m.text.length > 200 ? "..." : ""}</div>
+                          <div className="text-[9px] text-zinc-600 mt-1">{new Date(m.date).toLocaleString("de-DE")}</div>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Step 2: Update-Nachricht auswählen (optional) */}
+            {selectedSignal !== null && (
+              <div className="gf-panel p-5">
+                <div className="text-sm font-semibold text-white mb-1">Schritt 2: Update-Nachricht (optional)</div>
+                <p className="text-xs text-zinc-500 mb-4">Gibt es eine Folge-Nachricht die SL/TP anpasst? Wenn ja, klicke darauf. Wenn nicht, überspringe diesen Schritt.</p>
+
+                <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                  {channelMessages.filter(m => m.id !== selectedSignal).slice(0, 10).map(m => (
+                    <button
+                      key={m.id}
+                      onClick={() => setSelectedUpdate(selectedUpdate === m.id ? null : m.id)}
+                      className="w-full text-left p-3 rounded-lg transition-all text-sm"
+                      style={{
+                        background: selectedUpdate === m.id ? "rgba(59,130,246,0.08)" : "var(--gf-obsidian)",
+                        border: selectedUpdate === m.id ? "2px solid rgba(59,130,246,0.3)" : "1px solid var(--gf-border)",
+                      }}
+                    >
+                      <div className="flex items-start gap-2">
+                        {selectedUpdate === m.id && <span className="text-blue-400 flex-shrink-0 mt-0.5">✓</span>}
+                        <div className="text-xs text-zinc-300 whitespace-pre-wrap break-words">{m.text.slice(0, 150)}</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Save */}
+            {selectedSignal !== null && (
+              <button onClick={saveTraining} disabled={trainSaving} className="gf-btn w-full">
+                {trainSaving ? "Wird gespeichert..." : "Signal-Format speichern →"}
+              </button>
+            )}
+          </>
+        )}
       </div>
     );
   }
@@ -493,7 +639,10 @@ export default function TelegramPage() {
                       <div className="text-[10px] text-zinc-600">{cid}</div>
                     </div>
                   </div>
-                  <button onClick={() => removeChannel(cid)} className="text-xs text-red-400 hover:underline">Entfernen</button>
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => openTraining(cid, name)} className="text-xs px-2 py-1 rounded" style={{ background: "rgba(250,239,112,0.06)", color: "var(--gf-gold)", border: "1px solid rgba(250,239,112,0.1)" }}>Trainieren</button>
+                    <button onClick={() => removeChannel(cid)} className="text-xs text-red-400 hover:underline">Entfernen</button>
+                  </div>
                 </div>
                 );
               })}
