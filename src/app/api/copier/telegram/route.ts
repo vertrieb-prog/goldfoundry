@@ -2,7 +2,6 @@ export const dynamic = "force-dynamic";
 // src/app/api/copier/telegram/route.ts — Telegram Channel Management
 import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
-import { addChannel, removeChannel, isListenerRunning } from "@/lib/telegram-copier/listener";
 
 // ── GET: Status + verbundene Channels ─────────────────────────
 export async function GET() {
@@ -13,28 +12,23 @@ export async function GET() {
 
     const db = createSupabaseAdmin();
 
-    // Channels des Users laden
+    // Active channels des Users laden
     const { data: channels } = await db
-      .from("telegram_channels")
-      .select("channel_id, channel_name, status, win_rate, profit_factor, total_signals, last_signal_at, fake_signals_detected")
-      .eq("added_by", user.id)
+      .from("telegram_active_channels")
+      .select("id, channel_id, channel_name, status, settings, created_at")
+      .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 
-    // Letzte Signale
-    const channelIds = (channels ?? []).map((c) => c.channel_id);
-    const { data: recentSignals } = channelIds.length > 0
-      ? await db
-          .from("telegram_signals")
-          .select("channel_id, raw_message, parsed, status, created_at")
-          .in("channel_id", channelIds)
-          .order("created_at", { ascending: false })
-          .limit(10)
-      : { data: [] };
+    // Connection status
+    const { data: session } = await db
+      .from("telegram_sessions")
+      .select("status")
+      .eq("user_id", user.id)
+      .single();
 
     return NextResponse.json({
-      listenerActive: isListenerRunning(),
+      connected: session?.status === "connected",
       channels: channels ?? [],
-      recentSignals: recentSignals ?? [],
     });
   } catch (err) {
     return NextResponse.json({ error: (err as Error).message }, { status: 500 });
@@ -48,48 +42,41 @@ export async function POST(request: Request) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    // Subscription Check
     const db = createSupabaseAdmin();
-    const { data: profile } = await db
-      .from("profiles")
-      .select("subscription_tier, subscription_active")
-      .eq("id", user.id)
-      .single();
-
-    if (!profile?.subscription_active || !["copier", "pro", "provider", "enterprise"].includes(profile.subscription_tier)) {
-      return NextResponse.json({ error: "Ein aktives Copier-Abo ist erforderlich." }, { status: 403 });
-    }
 
     const { channelId, channelName } = await request.json();
-
     if (!channelId) {
       return NextResponse.json({ error: "Channel-ID ist erforderlich" }, { status: 400 });
     }
 
-    // Channel in DB speichern mit User-Zuordnung
-    const { error: dbError } = await db.from("telegram_channels").upsert(
+    // Check max 10
+    const { count } = await db
+      .from("telegram_active_channels")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", user.id);
+
+    if ((count ?? 0) >= 10) {
+      return NextResponse.json({ error: "Maximal 10 Channels erlaubt" }, { status: 400 });
+    }
+
+    const { error: dbError } = await db.from("telegram_active_channels").upsert(
       {
+        user_id: user.id,
         channel_id: channelId,
         channel_name: channelName || `Channel ${channelId}`,
-        status: "watching",
-        added_by: user.id,
-        updated_at: new Date().toISOString(),
+        status: "active",
+        settings: { autoExecute: true, riskPercent: 1 },
       },
-      { onConflict: "channel_id" }
+      { onConflict: "user_id,channel_id" }
     );
 
     if (dbError) {
       return NextResponse.json({ error: dbError.message }, { status: 500 });
     }
 
-    // Channel zum Listener hinzufügen
-    const success = await addChannel(channelId, channelName || channelId);
-
     return NextResponse.json({
-      success,
-      message: success
-        ? `Channel "${channelName || channelId}" verbunden — Signale werden jetzt überwacht.`
-        : "Channel konnte nicht hinzugefügt werden.",
+      success: true,
+      message: `Channel "${channelName || channelId}" verbunden.`,
     });
   } catch (err) {
     return NextResponse.json({ error: (err as Error).message }, { status: 500 });
@@ -108,24 +95,18 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "Channel-ID ist erforderlich" }, { status: 400 });
     }
 
-    // Prüfe ob der User den Channel besitzt
     const db = createSupabaseAdmin();
-    const { data: channel } = await db
-      .from("telegram_channels")
-      .select("added_by")
-      .eq("channel_id", channelId)
-      .single();
+    const { error } = await db
+      .from("telegram_active_channels")
+      .delete()
+      .eq("user_id", user.id)
+      .eq("channel_id", channelId);
 
-    if (!channel || channel.added_by !== user.id) {
-      return NextResponse.json({ error: "Channel nicht gefunden oder keine Berechtigung" }, { status: 403 });
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    const success = await removeChannel(channelId);
-
-    return NextResponse.json({
-      success,
-      message: success ? "Channel entfernt." : "Fehler beim Entfernen.",
-    });
+    return NextResponse.json({ success: true });
   } catch (err) {
     return NextResponse.json({ error: (err as Error).message }, { status: 500 });
   }
