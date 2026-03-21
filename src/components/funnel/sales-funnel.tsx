@@ -646,6 +646,7 @@ export default function SalesFunnel() {
   const [emailVerified, setEmailVerified] = useState(false);
   const [resendAvailable, setResendAvailable] = useState(false);
   const [resendTimer, setResendTimer] = useState(30);
+  const [showEmailSkip, setShowEmailSkip] = useState(false);
 
   // Step 3
   const [questionnaire, setQuestionnaire] = useState<QuestionnaireData>({
@@ -745,6 +746,14 @@ export default function SalesFunnel() {
       if (pollRef.current) clearInterval(pollRef.current);
     };
   }, [step, emailVerified, contact.email]);
+
+  // Step 2: skip button after 10 seconds
+  useEffect(() => {
+    if (step !== 2) return;
+    setShowEmailSkip(false);
+    const skipTimer = setTimeout(() => setShowEmailSkip(true), 10000);
+    return () => clearTimeout(skipTimer);
+  }, [step]);
 
   // Step 2: resend timer
   useEffect(() => {
@@ -1226,6 +1235,21 @@ export default function SalesFunnel() {
                   </p>
                 )}
               </>
+            )}
+
+            {/* Skip Button nach 10 Sekunden */}
+            {showEmailSkip && !emailVerified && (
+              <div style={{ marginTop: 20, animation: "gf-fade-in 0.5s ease" }}>
+                <GoldButton
+                  variant="outline"
+                  onClick={() => goTo(3)}
+                >
+                  Weiter ohne Bestätigung →
+                </GoldButton>
+                <p style={{ color: TEXT, opacity: 0.3, fontSize: 11, marginTop: 8, textAlign: "center" }}>
+                  Du kannst die Email später bestätigen.
+                </p>
+              </div>
             )}
           </div>
         );
