@@ -110,7 +110,7 @@ function baseTemplate(content: string, preheader?: string): string {
                 &nbsp;&nbsp;·&nbsp;&nbsp;
                 <a href="${BASE_URL}/dashboard/settings" style="color:${C.gold};text-decoration:none;">Settings</a>
                 &nbsp;&nbsp;·&nbsp;&nbsp;
-                <a href="https://chat.whatsapp.com/goldfoundry" style="color:${C.gold};text-decoration:none;">WhatsApp</a>
+                <a href="https://chat.whatsapp.com/FyLN4ZpUA5LAn3kDfExqXD" style="color:${C.gold};text-decoration:none;">WhatsApp</a>
               </p>
               <p style="margin:8px 0 0;font-family:'Inter',sans-serif;font-size:11px;color:${C.textMuted};line-height:1.6;">
                 Gold Foundry · goldfoundry.de<br>
@@ -424,7 +424,7 @@ export async function sendWelcomeEmail(email: string, name: string) {
             <div style="font-family:'Inter',sans-serif;font-size:13px;color:${C.textDim};line-height:1.5;">Tritt unserer Gruppe bei f&uuml;r Support, Updates und Austausch mit anderen Tradern.</div>
           </td>
           <td style="width:100px;text-align:right;vertical-align:middle;">
-            <a href="https://chat.whatsapp.com/goldfoundry" target="_blank" style="display:inline-block;padding:10px 18px;background:#25D366;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:#fff;text-decoration:none;text-transform:uppercase;letter-spacing:0.5px;">Join</a>
+            <a href="https://chat.whatsapp.com/FyLN4ZpUA5LAn3kDfExqXD" target="_blank" style="display:inline-block;padding:10px 18px;background:#25D366;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:#fff;text-decoration:none;text-transform:uppercase;letter-spacing:0.5px;">Join</a>
           </td>
         </tr></table>
       </td></tr>

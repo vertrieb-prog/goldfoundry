@@ -255,6 +255,28 @@ export default function ChatWidget() {
     setMsgs(p => [...p, { role: "user", text: userMsg }]);
     setLoading(true);
 
+    // If not on dashboard (not logged in), use static responses
+    if (!pathname.startsWith("/dashboard")) {
+      const lower = userMsg.toLowerCase();
+      let reply = "Für detaillierte Antworten erstelle einen kostenlosen Account und nutze den FORGE Mentor im Dashboard! 🚀";
+      if (lower.includes("was ist") || lower.includes("gold foundry")) {
+        reply = "Gold Foundry ist dein All-in-One Trading-System. Wir kopieren Trades von Profi-Tradern automatisch auf dein Konto — geschützt durch 7 Sicherheitsstufen. Ab €2/Monat. Willst du starten?";
+      } else if (lower.includes("copier") || lower.includes("kopier") || lower.includes("funktionier")) {
+        reply = "Der Smart Copier kopiert Trades von unseren 3 Profi-Tradern automatisch auf dein MT4/MT5 Konto. Der Risk Shield prüft 7 Faktoren bevor jeder Trade kopiert wird. Vollautomatisch, 24/5.";
+      } else if (lower.includes("preis") || lower.includes("kost") || lower.includes("plan")) {
+        reply = "Starter ab €2/Monat, Smart Copier ab €6/Monat (1. Monat), Pro ab €16/Monat. Mit Code FORGE bekommst du 100% Rabatt auf den ersten Monat!";
+      } else if (lower.includes("risiko") || lower.includes("sicher")) {
+        reply = "Dein Geld liegt bei deinem Broker, nicht bei uns. Der Risk Shield prüft 7 Faktoren und stoppt automatisch wenn es gefährlich wird. Max. 4.5% Drawdown bei unseren Tradern.";
+      } else if (lower.includes("telegram")) {
+        reply = "Der Telegram Copier kopiert Signale aus Premium-Channels automatisch. Unsere KI parsed jedes Signal und managed den Trade alle 30 Sekunden. +2-5% pro Tag möglich, aber höheres Risiko (bis 35% DD).";
+      } else if (lower.includes("partner") || lower.includes("provision") || lower.includes("affiliate")) {
+        reply = "Verdiene 50% Provision auf jede Empfehlung — monatlich wiederkehrend! 10 Freunde × €29/Mo × 50% = €145 passives Einkommen pro Monat. Kein Limit.";
+      }
+      setMsgs(p => [...p, { role: "assistant", text: reply }]);
+      setLoading(false);
+      return;
+    }
+
     try {
       const res = await fetch("/api/chat", {
         method: "POST",

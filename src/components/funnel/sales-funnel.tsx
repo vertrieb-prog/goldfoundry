@@ -62,7 +62,7 @@ const PHONE_PREFIXES = [
   { code: "+41", label: "CH +41" },
 ];
 
-const WHATSAPP_GROUP_LINK = "https://chat.whatsapp.com/goldfoundry";
+const WHATSAPP_GROUP_LINK = "https://chat.whatsapp.com/FyLN4ZpUA5LAn3kDfExqXD";
 
 /* ------------------------------------------------------------------ */
 /*  HELPER: random pick                                                */

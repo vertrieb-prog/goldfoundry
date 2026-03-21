@@ -3,6 +3,8 @@ import "./globals.css";
 import ChatWidget from "@/components/ChatWidget";
 import EmbedWrapper from "@/components/EmbedWrapper";
 import SalesFunnel from "@/components/funnel/sales-funnel";
+import ExitIntent from "@/components/ExitIntent";
+import CookieBanner from "@/components/CookieBanner";
 
 export const metadata: Metadata = {
   title: "Gold Foundry — Dein Trading. Automatisch. Geschützt.",
@@ -26,6 +28,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {children}
         <SalesFunnel />
         <ChatWidget />
+        <ExitIntent />
+        <CookieBanner />
       </body>
     </html>
   );
