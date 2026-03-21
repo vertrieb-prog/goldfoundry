@@ -78,6 +78,14 @@ export default function TelegramPage() {
   const [manualChannelId, setManualChannelId] = useState("");
   const [manualChannelName, setManualChannelName] = useState("");
 
+  // MT4 Connection
+  const [mtLogin, setMtLogin] = useState("");
+  const [mtPassword, setMtPassword] = useState("");
+  const [mtPlatform, setMtPlatform] = useState("mt4");
+  const [mtBroker, setMtBroker] = useState("");
+  const [mtConnecting, setMtConnecting] = useState(false);
+  const [mtResult, setMtResult] = useState<{ ok: boolean; msg: string } | null>(null);
+
   // Check initial connection
   useEffect(() => {
     fetch("/api/telegram/channels")
@@ -288,6 +296,72 @@ export default function TelegramPage() {
                   <button onClick={() => removeChannel(ch.channelId)} className="text-xs text-zinc-600 hover:text-red-400 transition-colors">Entfernen</button>
                 </div>
               ))}
+            </div>
+          )}
+        </div>
+
+        {/* MT4/MT5 Konto verbinden */}
+        <div className="gf-panel p-5">
+          <div className="flex items-center justify-between mb-3">
+            <div className="text-[10px] font-medium uppercase tracking-wide text-zinc-500">Trading-Konto</div>
+          </div>
+          {mtResult?.ok ? (
+            <div className="flex items-center gap-3 p-3 rounded-lg" style={{ background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.15)" }}>
+              <span className="w-3 h-3 rounded-full bg-emerald-400" style={{ boxShadow: "0 0 6px rgba(52,211,153,0.4)" }} />
+              <div>
+                <div className="text-sm font-semibold text-emerald-400">MT-Konto verbunden</div>
+                <div className="text-xs text-zinc-500">{mtResult.msg}</div>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <p className="text-xs text-zinc-500 mb-4">Verbinde dein MetaTrader-Konto, damit die kopierten Signale dort ausgef&uuml;hrt werden.</p>
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                <select className="gf-input text-sm" value={mtPlatform} onChange={e => setMtPlatform(e.target.value)}>
+                  <option value="mt4">MetaTrader 4</option>
+                  <option value="mt5">MetaTrader 5</option>
+                </select>
+                <input className="gf-input text-sm" placeholder="Broker Server" value={mtBroker} onChange={e => setMtBroker(e.target.value)} />
+              </div>
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                <input className="gf-input text-sm" placeholder="Login / Kontonummer" value={mtLogin} onChange={e => setMtLogin(e.target.value)} />
+                <input className="gf-input text-sm" type="password" placeholder="Investor-Passwort" value={mtPassword} onChange={e => setMtPassword(e.target.value)} />
+              </div>
+              <div className="flex items-start gap-2 mb-4 p-2.5 rounded-lg" style={{ background: "rgba(34,197,94,0.04)", border: "1px solid rgba(34,197,94,0.08)" }}>
+                <span className="text-xs flex-shrink-0">{"\ud83d\udd12"}</span>
+                <span className="text-[10px] text-zinc-500">Read-Only Zugang (Investor-Passwort). Wir f&uuml;hren nur Trades des Copiers aus.</span>
+              </div>
+              <button
+                onClick={async () => {
+                  if (!mtLogin || !mtPassword) { setMtResult({ ok: false, msg: "Login und Passwort erforderlich" }); return; }
+                  setMtConnecting(true);
+                  setMtResult(null);
+                  try {
+                    const res = await fetch("/api/accounts/connect", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ login: mtLogin, password: mtPassword, broker: mtBroker, platform: mtPlatform }),
+                    });
+                    const data = await res.json();
+                    if (res.ok && data.success) {
+                      setMtResult({ ok: true, msg: `${mtPlatform.toUpperCase()} Login ${mtLogin} verbunden` });
+                    } else {
+                      setMtResult({ ok: false, msg: data.error || "Verbindung fehlgeschlagen. Pr\u00fcfe deine Daten." });
+                    }
+                  } catch {
+                    setMtResult({ ok: false, msg: "Netzwerkfehler. Bitte versuche es nochmal." });
+                  }
+                  setMtConnecting(false);
+                }}
+                disabled={mtConnecting || !mtLogin || !mtPassword}
+                className="gf-btn w-full"
+                style={{ opacity: !mtLogin || !mtPassword ? 0.4 : 1 }}
+              >
+                {mtConnecting ? "Verbinde..." : "MT-Konto verbinden"}
+              </button>
+              {mtResult && !mtResult.ok && (
+                <div className="mt-3 p-3 rounded-lg text-xs" style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.15)", color: "#ef4444" }}>{mtResult.msg}</div>
+              )}
             </div>
           )}
         </div>
