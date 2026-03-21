@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { sendEmail } from "@/lib/email/email-engine";
+import { pushLeadToGHL } from "@/lib/crm/ghl-sync";
 import crypto from "crypto";
 
 const SITE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://goldfoundry.de";
@@ -64,6 +65,18 @@ export async function POST(request: Request) {
     } catch (emailErr: any) {
       console.error("[FUNNEL] Email send error:", emailErr.message);
     }
+
+    // Push to GoHighLevel CRM
+    try {
+      await pushLeadToGHL({
+        firstName: (firstName || "").trim(),
+        lastName: (lastName || "").trim(),
+        email: cleanEmail,
+        phone: (whatsapp || "").trim(),
+        tags: ["gold-foundry", "funnel-lead", "new"],
+        source: "Gold Foundry Funnel",
+      });
+    } catch { /* CRM sync is optional */ }
 
     return NextResponse.json({ success: true, emailSent: true });
   } catch (err: any) {

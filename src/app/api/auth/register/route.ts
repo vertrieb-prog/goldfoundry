@@ -4,6 +4,7 @@ import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server
 import { trackConversion } from "@/lib/mlm/affiliate-engine";
 import { createContact, trackUserEvent } from "@/lib/crm/crm-engine";
 import { sendWelcomeEmail } from "@/lib/email/email-engine";
+import { pushLeadToGHL } from "@/lib/crm/ghl-sync";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
@@ -114,6 +115,17 @@ export async function POST(request: Request) {
           }
         } catch { /* Affiliate tracking is optional */ }
       }
+
+      // Push to GoHighLevel CRM
+      try {
+        await pushLeadToGHL({
+          firstName: fullName?.split(" ")[0] || "",
+          lastName: fullName?.split(" ").slice(1).join(" ") || "",
+          email,
+          tags: ["gold-foundry", "registered", "dashboard"],
+          source: "Gold Foundry Dashboard",
+        });
+      } catch { /* CRM sync is optional */ }
 
       // Send Double Opt-In confirmation email via Resend
       try {
