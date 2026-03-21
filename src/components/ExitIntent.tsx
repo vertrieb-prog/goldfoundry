@@ -1,12 +1,17 @@
 "use client";
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 
 export default function ExitIntent() {
   const [show, setShow] = useState(false);
   const [dismissed, setDismissed] = useState(false);
+  const pathname = usePathname();
+
+  // Only show on public pages, NEVER in dashboard/admin
+  const isPublicPage = !pathname.startsWith("/dashboard") && !pathname.startsWith("/admin") && !pathname.startsWith("/auth");
 
   useEffect(() => {
-    if (dismissed) return;
+    if (dismissed || !isPublicPage) return;
     const handler = (e: MouseEvent) => {
       if (e.clientY < 10 && !show && !dismissed) {
         setShow(true);
@@ -14,9 +19,9 @@ export default function ExitIntent() {
     };
     document.addEventListener("mouseleave", handler);
     return () => document.removeEventListener("mouseleave", handler);
-  }, [show, dismissed]);
+  }, [show, dismissed, isPublicPage]);
 
-  if (!show || dismissed) return null;
+  if (!show || dismissed || !isPublicPage) return null;
 
   return (
     <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.8)", backdropFilter: "blur(8px)" }}>
