@@ -236,18 +236,28 @@ export default function AccountsPage() {
                   </div>
 
                   {/* Login Details */}
-                  <div className="grid grid-cols-3 gap-3 mb-4 p-2.5 rounded-lg" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid var(--gf-border)" }}>
-                    <div>
-                      <div className="text-[9px] uppercase tracking-wider" style={{ color: "var(--gf-text-dim)" }}>Login</div>
-                      <div className="text-xs font-mono font-semibold" style={{ color: "var(--gf-gold)" }}>{a.mt_login}</div>
+                  <div className="mb-4 p-2.5 rounded-lg" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid var(--gf-border)" }}>
+                    <div className="grid grid-cols-2 gap-3 mb-2">
+                      <div>
+                        <div className="text-[9px] uppercase tracking-wider" style={{ color: "var(--gf-text-dim)" }}>Login</div>
+                        <div className="text-xs font-mono font-semibold" style={{ color: "var(--gf-gold)" }}>{a.mt_login}</div>
+                      </div>
+                      <div>
+                        <div className="text-[9px] uppercase tracking-wider" style={{ color: "var(--gf-text-dim)" }}>Plattform</div>
+                        <div className="text-xs font-mono font-semibold" style={{ color: "var(--gf-text-bright)" }}>
+                          {a.platform?.toUpperCase() || "MT4"}
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <div className="text-[9px] uppercase tracking-wider" style={{ color: "var(--gf-text-dim)" }}>Server</div>
-                      <div className="text-xs font-mono" style={{ color: "var(--gf-text-bright)" }}>{a.broker_server}</div>
-                    </div>
-                    <div>
-                      <div className="text-[9px] uppercase tracking-wider" style={{ color: "var(--gf-text-dim)" }}>Leverage</div>
-                      <div className="text-xs font-mono" style={{ color: "var(--gf-text-bright)" }}>1:{a.leverage}</div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <div className="text-[9px] uppercase tracking-wider" style={{ color: "var(--gf-text-dim)" }}>Server</div>
+                        <div className="text-xs font-mono" style={{ color: "var(--gf-text-bright)" }}>{a.broker_server}</div>
+                      </div>
+                      <div>
+                        <div className="text-[9px] uppercase tracking-wider" style={{ color: "var(--gf-text-dim)" }}>Leverage</div>
+                        <div className="text-xs font-mono" style={{ color: "var(--gf-text-bright)" }}>1:{a.leverage}</div>
+                      </div>
                     </div>
                   </div>
 
