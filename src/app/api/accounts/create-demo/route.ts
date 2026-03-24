@@ -47,7 +47,7 @@ export async function POST(request: Request) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "Nicht eingeloggt" }, { status: 401 });
 
-    const token = process.env.META_API_TOKEN;
+    const token = process.env.META_API_TOKEN || process.env.METAAPI_TOKEN;
     if (!token) {
       return NextResponse.json({ error: "MetaApi nicht konfiguriert. Kontaktiere den Support." }, { status: 500 });
     }

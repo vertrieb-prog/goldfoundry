@@ -117,7 +117,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ servers: [], message: "Mindestens 2 Zeichen eingeben" });
   }
 
-  const token = process.env.META_API_TOKEN;
+  const token = process.env.META_API_TOKEN || process.env.METAAPI_TOKEN;
 
   // Try MetaApi provisioning API first
   if (token) {

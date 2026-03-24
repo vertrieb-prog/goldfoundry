@@ -52,7 +52,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Plattform muss mt4 oder mt5 sein." }, { status: 400 });
     }
 
-    const token = process.env.META_API_TOKEN;
+    const token = process.env.META_API_TOKEN || process.env.METAAPI_TOKEN;
     if (!token) {
       return NextResponse.json({ error: "MetaApi nicht konfiguriert. Kontaktiere den Support." }, { status: 500 });
     }

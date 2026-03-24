@@ -12,3 +12,4 @@ reference-designs/
 MEGA-AUTONOMOUS-PROMPT.md
 
 .vercel
+.env.vercel-all
