@@ -86,6 +86,8 @@ export default function TelegramPage() {
   const [selectedUpdate, setSelectedUpdate] = useState<number | null>(null);
   const [trainSaving, setTrainSaving] = useState(false);
   const [trainDone, setTrainDone] = useState(false);
+  const [parsedPreview, setParsedPreview] = useState<any>(null);
+  const [parsingPreview, setParsingPreview] = useState(false);
 
   // MT4 Connection
   const [mtLogin, setMtLogin] = useState("");
@@ -207,17 +209,28 @@ export default function TelegramPage() {
   };
 
   // Open channel training
+  const [trainError, setTrainError] = useState("");
   const openTraining = async (channelId: string, channelName: string) => {
     setTrainChannel({ id: channelId, name: channelName });
     setSelectedSignal(null);
     setSelectedUpdate(null);
     setTrainDone(false);
+    setTrainError("");
     setLoadingMessages(true);
     try {
-      const res = await fetch(`/api/telegram/messages?channelId=${encodeURIComponent(channelId)}&limit=30`);
+      const res = await fetch(`/api/telegram/messages?channelId=${encodeURIComponent(channelId)}&limit=200`);
       const data = await res.json();
-      setChannelMessages(data.messages || []);
-    } catch {
+      if (!res.ok) {
+        setTrainError(data.error || "Nachrichten konnten nicht geladen werden");
+        setChannelMessages([]);
+      } else {
+        setChannelMessages(data.messages || []);
+        if ((data.messages || []).length === 0) {
+          setTrainError("Keine Nachrichten im Channel gefunden. Stelle sicher, dass du dem Channel in Telegram beigetreten bist.");
+        }
+      }
+    } catch (err: any) {
+      setTrainError("Netzwerkfehler beim Laden der Nachrichten. Bitte versuche es nochmal.");
       setChannelMessages([]);
     }
     setLoadingMessages(false);
@@ -282,6 +295,48 @@ export default function TelegramPage() {
     setPassword("");
   };
 
+  // Auto-parse signal when selected
+  const selectAndParse = async (msgId: number | null) => {
+    setSelectedSignal(msgId);
+    setParsedPreview(null);
+    if (msgId === null) return;
+    const signal = channelMessages.find(m => m.id === msgId);
+    if (!signal) return;
+    setParsingPreview(true);
+    try {
+      const updateMsg = selectedUpdate !== null ? channelMessages.find(m => m.id === selectedUpdate) : null;
+      const res = await fetch("/api/telegram/parse-preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: signal.text, updateMessage: updateMsg?.text || "" }),
+      });
+      const data = await res.json();
+      if (data.parsed) setParsedPreview(data.parsed);
+    } catch {}
+    setParsingPreview(false);
+  };
+
+  // Re-parse when update message is selected
+  const selectUpdateAndParse = async (msgId: number | null) => {
+    setSelectedUpdate(msgId);
+    if (selectedSignal === null) return;
+    const signal = channelMessages.find(m => m.id === selectedSignal);
+    if (!signal) return;
+    setParsingPreview(true);
+    setParsedPreview(null);
+    try {
+      const updateMsg = msgId !== null ? channelMessages.find(m => m.id === msgId) : null;
+      const res = await fetch("/api/telegram/parse-preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: signal.text, updateMessage: updateMsg?.text || "" }),
+      });
+      const data = await res.json();
+      if (data.parsed) setParsedPreview(data.parsed);
+    } catch {}
+    setParsingPreview(false);
+  };
+
   const codeAge = codeSentAt ? Math.floor((Date.now() - codeSentAt) / 1000) : 0;
   const codeExpired = codeAge > 120;
 
@@ -319,36 +374,63 @@ export default function TelegramPage() {
               <div className="text-sm font-semibold text-white mb-1">Schritt 1: Signal auswählen</div>
               <p className="text-xs text-zinc-500 mb-4">Klicke auf eine Nachricht die ein <strong className="text-white">Trading-Signal</strong> ist (z.B. "BUY XAUUSD @ 2341")</p>
 
+              {/* Signal-Format Beispiele */}
+              <div className="mb-4 p-3 rounded-lg" style={{ background: "rgba(250,239,112,0.03)", border: "1px solid rgba(250,239,112,0.08)" }}>
+                <div className="text-[10px] uppercase tracking-wider font-medium mb-2" style={{ color: "var(--gf-gold)" }}>So sieht ein Signal aus:</div>
+                <div className="grid gap-2 text-[11px]">
+                  <div className="p-2 rounded font-mono" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
+                    <div className="text-emerald-400">BUY XAUUSD @ 2341.50</div>
+                    <div className="text-zinc-500">SL: 2335.00</div>
+                    <div className="text-zinc-500">TP1: 2348.00 | TP2: 2355.00</div>
+                  </div>
+                  <div className="p-2 rounded font-mono" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
+                    <div className="text-red-400">SELL GOLD 2380</div>
+                    <div className="text-zinc-500">Stop Loss 2388</div>
+                    <div className="text-zinc-500">Take Profit 2365 / 2350</div>
+                  </div>
+                </div>
+                <p className="text-[10px] text-zinc-600 mt-2">W&auml;hle unten eine echte Nachricht aus dem Channel, die diesem Format entspricht.</p>
+              </div>
+
+              {trainError && (
+                <div className="mb-3 p-3 rounded-lg text-xs" style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.15)", color: "#ef4444" }}>
+                  {trainError}
+                </div>
+              )}
+
               {loadingMessages ? (
                 <div className="text-center py-8">
                   <div className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin mx-auto mb-2" style={{ borderColor: "var(--gf-gold)", borderTopColor: "transparent" }} />
-                  <p className="text-xs text-zinc-500">Nachrichten werden geladen...</p>
+                  <p className="text-xs text-zinc-500">Chat-Verlauf wird geladen...</p>
                 </div>
               ) : channelMessages.length === 0 ? (
                 <p className="text-xs text-zinc-500 text-center py-4">Keine Nachrichten gefunden.</p>
               ) : (
-                <div className="space-y-1.5 max-h-80 overflow-y-auto">
-                  {channelMessages.map(m => (
-                    <button
-                      key={m.id}
-                      onClick={() => setSelectedSignal(selectedSignal === m.id ? null : m.id)}
-                      className="w-full text-left p-3 rounded-lg transition-all text-sm"
-                      style={{
-                        background: selectedSignal === m.id ? "rgba(34,197,94,0.08)" : m.isSignal ? "rgba(250,239,112,0.04)" : "var(--gf-obsidian)",
-                        border: selectedSignal === m.id ? "2px solid rgba(34,197,94,0.3)" : m.isSignal ? "1px solid rgba(250,239,112,0.1)" : "1px solid var(--gf-border)",
-                      }}
-                    >
-                      <div className="flex items-start gap-2">
-                        {selectedSignal === m.id && <span className="text-emerald-400 flex-shrink-0 mt-0.5">✓</span>}
-                        {m.isSignal && selectedSignal !== m.id && <span className="text-[10px] px-1.5 py-0.5 rounded flex-shrink-0 mt-0.5" style={{ background: "rgba(250,239,112,0.1)", color: "var(--gf-gold)" }}>Signal?</span>}
-                        <div className="flex-1 min-w-0">
-                          <div className="text-xs text-zinc-300 whitespace-pre-wrap break-words">{m.text.slice(0, 200)}{m.text.length > 200 ? "..." : ""}</div>
-                          <div className="text-[9px] text-zinc-600 mt-1">{new Date(m.date).toLocaleString("de-DE")}</div>
+                <>
+                  <div className="text-[10px] text-zinc-600 mb-2">{channelMessages.length} Nachrichten geladen — gelb markierte sind vermutlich Signale</div>
+                  <div className="space-y-1.5 max-h-[500px] overflow-y-auto">
+                    {channelMessages.map(m => (
+                      <button
+                        key={m.id}
+                        onClick={() => selectAndParse(selectedSignal === m.id ? null : m.id)}
+                        className="w-full text-left p-3 rounded-lg transition-all text-sm"
+                        style={{
+                          background: selectedSignal === m.id ? "rgba(34,197,94,0.08)" : m.isSignal ? "rgba(250,239,112,0.04)" : "var(--gf-obsidian)",
+                          border: selectedSignal === m.id ? "2px solid rgba(34,197,94,0.3)" : m.isSignal ? "1px solid rgba(250,239,112,0.1)" : "1px solid var(--gf-border)",
+                        }}
+                      >
+                        <div className="flex items-start gap-2">
+                          {selectedSignal === m.id && <span className="text-emerald-400 flex-shrink-0 mt-0.5">&#10003;</span>}
+                          {m.isSignal && selectedSignal !== m.id && <span className="text-[10px] px-1.5 py-0.5 rounded flex-shrink-0 mt-0.5" style={{ background: "rgba(250,239,112,0.1)", color: "var(--gf-gold)" }}>Signal?</span>}
+                          <div className="flex-1 min-w-0">
+                            <div className="text-xs text-zinc-300 whitespace-pre-wrap break-words">{m.text}</div>
+                            <div className="text-[9px] text-zinc-600 mt-1">{new Date(m.date).toLocaleString("de-DE")}</div>
+                          </div>
                         </div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
+                      </button>
+                    ))}
+                  </div>
+                </>
               )}
             </div>
 
@@ -362,7 +444,7 @@ export default function TelegramPage() {
                   {channelMessages.filter(m => m.id !== selectedSignal).slice(0, 10).map(m => (
                     <button
                       key={m.id}
-                      onClick={() => setSelectedUpdate(selectedUpdate === m.id ? null : m.id)}
+                      onClick={() => selectUpdateAndParse(selectedUpdate === m.id ? null : m.id)}
                       className="w-full text-left p-3 rounded-lg transition-all text-sm"
                       style={{
                         background: selectedUpdate === m.id ? "rgba(59,130,246,0.08)" : "var(--gf-obsidian)",
@@ -371,7 +453,7 @@ export default function TelegramPage() {
                     >
                       <div className="flex items-start gap-2">
                         {selectedUpdate === m.id && <span className="text-blue-400 flex-shrink-0 mt-0.5">✓</span>}
-                        <div className="text-xs text-zinc-300 whitespace-pre-wrap break-words">{m.text.slice(0, 150)}</div>
+                        <div className="text-xs text-zinc-300 whitespace-pre-wrap break-words">{m.text}</div>
                       </div>
                     </button>
                   ))}
@@ -379,11 +461,77 @@ export default function TelegramPage() {
               </div>
             )}
 
-            {/* Save */}
+            {/* Live Preview */}
             {selectedSignal !== null && (
+              <div className="gf-panel p-5">
+                <div className="text-sm font-semibold text-white mb-1">Schritt 3: So konvertiert die KI dein Signal</div>
+                <p className="text-xs text-zinc-500 mb-4">Live-Vorschau — so wird das Signal interpretiert und als Trade ausgef&uuml;hrt.</p>
+
+                {parsingPreview ? (
+                  <div className="text-center py-4">
+                    <div className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin mx-auto mb-2" style={{ borderColor: "var(--gf-gold)", borderTopColor: "transparent" }} />
+                    <p className="text-xs text-zinc-500">KI analysiert Signal...</p>
+                  </div>
+                ) : parsedPreview ? (
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="p-3 rounded-lg" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
+                        <div className="text-[9px] uppercase tracking-wider text-zinc-600">Aktion</div>
+                        <div className="text-sm font-bold mt-0.5" style={{ color: parsedPreview.action === "BUY" ? "#22c55e" : parsedPreview.action === "SELL" ? "#ef4444" : "var(--gf-gold)" }}>
+                          {parsedPreview.action || "—"}
+                        </div>
+                      </div>
+                      <div className="p-3 rounded-lg" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
+                        <div className="text-[9px] uppercase tracking-wider text-zinc-600">Symbol</div>
+                        <div className="text-sm font-bold text-white mt-0.5">{parsedPreview.symbol || "—"}</div>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="p-3 rounded-lg" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
+                        <div className="text-[9px] uppercase tracking-wider text-zinc-600">Entry</div>
+                        <div className="text-xs font-mono text-white mt-0.5">{parsedPreview.entryPrice ?? "Market"}</div>
+                      </div>
+                      <div className="p-3 rounded-lg" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
+                        <div className="text-[9px] uppercase tracking-wider text-zinc-600">Stop Loss</div>
+                        <div className="text-xs font-mono mt-0.5" style={{ color: parsedPreview.stopLoss ? "#ef4444" : "var(--gf-text-dim)" }}>
+                          {parsedPreview.stopLoss ?? "—"}
+                        </div>
+                      </div>
+                      <div className="p-3 rounded-lg" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
+                        <div className="text-[9px] uppercase tracking-wider text-zinc-600">Take Profit</div>
+                        <div className="text-xs font-mono mt-0.5" style={{ color: parsedPreview.takeProfits?.length ? "#22c55e" : "var(--gf-text-dim)" }}>
+                          {parsedPreview.takeProfits?.length ? parsedPreview.takeProfits.join(" / ") : "—"}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 pt-1">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-2 h-2 rounded-full" style={{ background: parsedPreview.confidence > 70 ? "#22c55e" : parsedPreview.confidence > 40 ? "#f59e0b" : "#ef4444" }} />
+                        <span className="text-[10px] text-zinc-500">Konfidenz: {parsedPreview.confidence}%</span>
+                      </div>
+                      {parsedPreview.isModification && <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: "rgba(59,130,246,0.1)", color: "#3b82f6" }}>Modification</span>}
+                      {parsedPreview.moveToBreakeven && <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: "rgba(250,239,112,0.1)", color: "var(--gf-gold)" }}>Breakeven</span>}
+                    </div>
+                    {parsedPreview.action === "UNKNOWN" && (
+                      <div className="p-2.5 rounded-lg text-xs" style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.1)", color: "#ef4444" }}>
+                        Die KI konnte kein Signal erkennen. W&auml;hle eine andere Nachricht oder f&uuml;ge die Update-Nachricht (SL/TP) dazu.
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-xs text-zinc-600 text-center py-3">W&auml;hle ein Signal oben aus um die Vorschau zu sehen.</p>
+                )}
+              </div>
+            )}
+
+            {/* Save */}
+            {selectedSignal !== null && parsedPreview && parsedPreview.action !== "UNKNOWN" && (
               <button onClick={saveTraining} disabled={trainSaving} className="gf-btn w-full">
                 {trainSaving ? "Wird gespeichert..." : "Signal-Format speichern →"}
               </button>
+            )}
+            {selectedSignal !== null && parsedPreview && parsedPreview.action === "UNKNOWN" && (
+              <p className="text-xs text-center text-zinc-600">W&auml;hle ein anderes Signal oder f&uuml;ge ein Update hinzu, damit die KI es erkennen kann.</p>
             )}
           </>
         )}
@@ -451,6 +599,40 @@ export default function TelegramPage() {
           <div className="flex items-center justify-between mb-3">
             <div className="text-[10px] font-medium uppercase tracking-wide text-zinc-500">Trading-Konto</div>
           </div>
+          {/* Quick Demo */}
+          <div className="mb-4 p-3 rounded-lg flex items-center justify-between" style={{ background: "rgba(250,239,112,0.04)", border: "1px solid rgba(250,239,112,0.1)" }}>
+            <div>
+              <div className="text-xs font-semibold text-white">Kein Konto? Demo starten</div>
+              <div className="text-[10px] text-zinc-500">MetaApi Demo mit $10.000 — sofort bereit</div>
+            </div>
+            <button
+              onClick={async () => {
+                setMtConnecting(true); setMtResult(null);
+                try {
+                  const res = await fetch("/api/accounts/create-demo", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ platform: mtPlatform }),
+                  });
+                  const data = await res.json();
+                  if (res.ok && data.success) {
+                    setMtResult({ ok: true, msg: `Demo-Konto erstellt: ${data.account.server} (${data.account.currency} ${data.account.balance})` });
+                  } else {
+                    setMtResult({ ok: false, msg: data.error || "Demo-Erstellung fehlgeschlagen" });
+                  }
+                } catch {
+                  setMtResult({ ok: false, msg: "Netzwerkfehler. Bitte nochmal versuchen." });
+                }
+                setMtConnecting(false);
+              }}
+              disabled={mtConnecting}
+              className="text-xs px-4 py-2 rounded-lg font-medium transition-all flex-shrink-0"
+              style={{ background: "var(--gf-gold)", color: "var(--gf-obsidian)" }}
+            >
+              {mtConnecting ? "Erstelle..." : "Demo erstellen"}
+            </button>
+          </div>
+
           {mtResult?.ok ? (
             <div className="flex items-center gap-3 p-3 rounded-lg" style={{ background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.15)" }}>
               <span className="w-3 h-3 rounded-full bg-emerald-400" style={{ boxShadow: "0 0 6px rgba(52,211,153,0.4)" }} />
