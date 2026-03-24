@@ -221,12 +221,14 @@ export default function TelegramPage() {
       const res = await fetch(`/api/telegram/messages?channelId=${encodeURIComponent(channelId)}&limit=200`);
       const data = await res.json();
       if (!res.ok) {
-        setTrainError(data.error || "Nachrichten konnten nicht geladen werden");
+        const debugInfo = data.debug ? `\n\nDebug: ${data.debug.join(" → ")}` : "";
+        setTrainError((data.error || "Nachrichten konnten nicht geladen werden") + debugInfo);
         setChannelMessages([]);
       } else {
         setChannelMessages(data.messages || []);
         if ((data.messages || []).length === 0) {
-          setTrainError("Keine Nachrichten im Channel gefunden. Stelle sicher, dass du dem Channel in Telegram beigetreten bist.");
+          const debugInfo = data.debug ? `\n\nDebug: ${data.debug.join(" → ")}` : "";
+          setTrainError("Keine Nachrichten im Channel gefunden." + debugInfo);
         }
       }
     } catch (err: any) {
