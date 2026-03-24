@@ -8,10 +8,34 @@ export async function POST(request: Request) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "Nicht eingeloggt" }, { status: 401 });
 
-    const { channelId, exampleSignal, exampleUpdate, channelName } = await request.json();
+    const { channelId, exampleSignal, exampleUpdate, channelName, linkedAccountId } = await request.json();
 
-    if (!channelId || !exampleSignal) {
-      return NextResponse.json({ error: "Channel-ID und Beispiel-Signal erforderlich" }, { status: 400 });
+    if (!channelId) {
+      return NextResponse.json({ error: "Channel-ID erforderlich" }, { status: 400 });
+    }
+
+    // If only linking account (no signal training)
+    if (linkedAccountId && !exampleSignal) {
+      const admin2 = createSupabaseAdmin();
+      const { data: existing2 } = await admin2
+        .from("telegram_active_channels")
+        .select("settings")
+        .eq("user_id", user.id)
+        .eq("channel_id", channelId)
+        .single();
+
+      const existingSettings2 = (existing2?.settings as Record<string, unknown>) || {};
+      await admin2
+        .from("telegram_active_channels")
+        .update({ settings: { ...existingSettings2, linkedAccountId } })
+        .eq("user_id", user.id)
+        .eq("channel_id", channelId);
+
+      return NextResponse.json({ success: true, message: "Account verknüpft" });
+    }
+
+    if (!exampleSignal) {
+      return NextResponse.json({ error: "Beispiel-Signal erforderlich" }, { status: 400 });
     }
 
     const admin = createSupabaseAdmin();

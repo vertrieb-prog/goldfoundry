@@ -97,6 +97,24 @@ export default function TelegramPage() {
   const [mtConnecting, setMtConnecting] = useState(false);
   const [mtResult, setMtResult] = useState<{ ok: boolean; msg: string } | null>(null);
 
+  // User's trading accounts (for channel→account linking)
+  const [userAccounts, setUserAccounts] = useState<{ id: string; account_name: string; mt_login: string; broker_server: string }[]>([]);
+  useEffect(() => {
+    fetch("/api/accounts/list").then(r => r.json()).then(d => {
+      if (d.accounts) setUserAccounts(d.accounts);
+    }).catch(() => {});
+  }, []);
+
+  const linkAccountToChannel = async (channelId: string, accountId: string) => {
+    try {
+      await fetch("/api/telegram/train", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ channelId, linkedAccountId: accountId }),
+      });
+    } catch {}
+  };
+
   // Check initial connection
   useEffect(() => {
     fetch("/api/telegram/channels")
@@ -815,18 +833,35 @@ export default function TelegramPage() {
                 const name = ch.channelName || ch.channel_name || "Channel";
                 const cid = ch.channelId || ch.channel_id || ch.id;
                 return (
-                <div key={ch.id} className="flex items-center justify-between p-3 rounded-lg" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center text-xs" style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.12)" }}>📢</div>
-                    <div>
-                      <div className="text-sm font-medium text-white">{name}</div>
-                      <div className="text-[10px] text-zinc-600">{cid}</div>
+                <div key={ch.id} className="p-3 rounded-lg" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center text-xs" style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.12)" }}>📢</div>
+                      <div>
+                        <div className="text-sm font-medium text-white">{name}</div>
+                        <div className="text-[10px] text-zinc-600">{cid}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => openTraining(cid, name)} className="text-xs px-2 py-1 rounded" style={{ background: "rgba(250,239,112,0.06)", color: "var(--gf-gold)", border: "1px solid rgba(250,239,112,0.1)" }}>Trainieren</button>
+                      <button onClick={() => removeChannel(cid)} className="text-xs text-red-400 hover:underline">Entfernen</button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button onClick={() => openTraining(cid, name)} className="text-xs px-2 py-1 rounded" style={{ background: "rgba(250,239,112,0.06)", color: "var(--gf-gold)", border: "1px solid rgba(250,239,112,0.1)" }}>Trainieren</button>
-                    <button onClick={() => removeChannel(cid)} className="text-xs text-red-400 hover:underline">Entfernen</button>
-                  </div>
+                  {userAccounts.length > 0 && (
+                    <div className="flex items-center gap-2 mt-2 pt-2" style={{ borderTop: "1px solid var(--gf-border)" }}>
+                      <span className="text-[9px] uppercase tracking-wider text-zinc-600 flex-shrink-0">Konto:</span>
+                      <select
+                        className="gf-input text-xs !py-1"
+                        defaultValue={(ch.settings as any)?.linkedAccountId || ""}
+                        onChange={e => linkAccountToChannel(cid, e.target.value)}
+                      >
+                        <option value="">Automatisch (erstes aktives)</option>
+                        {userAccounts.map(acc => (
+                          <option key={acc.id} value={acc.id}>{acc.account_name} ({acc.mt_login})</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
                 </div>
                 );
               })}

@@ -159,22 +159,27 @@ async function processChannel(db: any, channel: any) {
 
   log("INFO", `${channelName}: ${newMessages.length} new signal(s) found`);
 
-  // Get user's trading account
-  const { data: account } = await db
+  const settings = (channel.settings as any) || {};
+  const autoExecute = settings.autoExecute ?? true;
+  const riskPercent = settings.riskPercent ?? 1;
+  const linkedAccountId = settings.linkedAccountId || null;
+
+  // Get user's trading account — use linked account if set, otherwise first active
+  let accountQuery = db
     .from("slave_accounts")
     .select("*")
     .eq("user_id", userId)
-    .eq("copier_active", true)
-    .limit(1)
-    .single();
+    .eq("copier_active", true);
+
+  if (linkedAccountId) {
+    accountQuery = accountQuery.eq("id", linkedAccountId);
+  }
+
+  const { data: account } = await accountQuery.limit(1).single();
 
   if (!account) {
     return { channel: channelName, status: "no_active_account", signals: newMessages.length };
   }
-
-  const settings = (channel.settings as any) || {};
-  const autoExecute = settings.autoExecute ?? true;
-  const riskPercent = settings.riskPercent ?? 1;
   const metaApiToken = process.env.METAAPI_TOKEN || process.env.META_API_TOKEN;
 
   const signalResults: any[] = [];
