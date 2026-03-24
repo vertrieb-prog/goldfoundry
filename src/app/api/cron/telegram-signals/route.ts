@@ -35,7 +35,8 @@ export async function GET(request: Request) {
   // Auth: only allow cron calls
   const authHeader = request.headers.get("authorization");
   const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (!cronSecret) return NextResponse.json({ error: "CRON_SECRET not configured" }, { status: 500 });
+  if (authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -135,22 +136,25 @@ async function processChannel(db: any, channel: any) {
   const messages = await client.getMessages(entity, { limit: 10 });
   await client.disconnect();
 
-  // Get last processed message ID
-  const { data: lastSignal } = await db
+  // Get previously processed message IDs for deduplication
+  const { data: processedSignals } = await db
     .from("telegram_signals")
-    .select("raw_message, created_at")
+    .select("telegram_message_id")
     .eq("channel_id", channelId)
     .eq("user_id", userId)
     .order("created_at", { ascending: false })
-    .limit(1)
-    .single();
+    .limit(50);
 
-  const lastProcessedTime = lastSignal ? new Date(lastSignal.created_at).getTime() : 0;
+  const processedMessageIds = new Set(
+    (processedSignals || []).map((s: any) => s.telegram_message_id).filter(Boolean)
+  );
+
   const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
 
-  // Filter to new messages only (after last processed, and within last 5 minutes)
+  // Filter to new messages only (not already processed, and within last 5 minutes)
   const newMessages = messages
-    .filter((m: any) => m.message && m.date * 1000 > Math.max(lastProcessedTime, fiveMinutesAgo))
+    .filter((m: any) => m.message && m.id && !processedMessageIds.has(m.id))
+    .filter((m: any) => m.date * 1000 > fiveMinutesAgo)
     .filter((m: any) => isLikelySignal(m.message));
 
   if (newMessages.length === 0) {
@@ -189,14 +193,21 @@ async function processChannel(db: any, channel: any) {
     try {
       const signal = await parseSignal(msg.message);
 
-      // Log to DB
+      // Log to DB (with Telegram message ID for deduplication)
       await db.from("telegram_signals").insert({
         channel_id: channelId,
         user_id: userId,
+        telegram_message_id: msg.id,
         raw_message: msg.message.slice(0, 2000),
         parsed: signal as any,
         status: signal.action === "UNKNOWN" ? "unparsed" : "parsed",
       });
+
+      // Reject BUY/SELL signals without stop loss
+      if (!signal.stopLoss && (signal.action === "BUY" || signal.action === "SELL")) {
+        signalResults.push({ action: signal.action, symbol: signal.symbol, status: "rejected_no_sl" });
+        continue;
+      }
 
       if (signal.action === "UNKNOWN" || !signal.symbol || signal.confidence < 50) {
         signalResults.push({ action: signal.action, symbol: signal.symbol, status: "skipped_low_confidence" });
@@ -261,6 +272,28 @@ async function executeTrade(
   riskPercent: number,
 ): Promise<{ success: boolean; orderId?: string; error?: string; lots?: number }> {
   try {
+    // Check position limit (max 10 open positions)
+    const positions = await metaApiFetch(
+      `${META_CLIENT_BASE}/users/current/accounts/${accountId}/positions`,
+      token
+    );
+    if (Array.isArray(positions) && positions.length >= 10) {
+      return { success: false, error: "Max 10 offene Positionen erreicht" };
+    }
+
+    // Slippage protection: check current price vs signal entry
+    if (signal.entryPrice) {
+      const tick = await metaApiFetch(
+        `${META_CLIENT_BASE}/users/current/accounts/${accountId}/symbols/${symbol}/current-price`,
+        token
+      );
+      const currentPrice = tick.bid || tick.ask || 0;
+      const maxSlippage = symbol === "XAUUSD" ? 5.0 : 0.005; // $5 for gold, 5 pips for forex
+      if (Math.abs(currentPrice - signal.entryPrice) > maxSlippage) {
+        return { success: false, error: `Slippage zu hoch: ${currentPrice} vs Signal ${signal.entryPrice}` };
+      }
+    }
+
     // Calculate lot size based on risk
     const slDistance = signal.stopLoss && signal.entryPrice
       ? Math.abs(signal.entryPrice - signal.stopLoss)

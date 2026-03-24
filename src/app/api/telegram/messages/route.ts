@@ -46,7 +46,7 @@ export async function GET(request: Request) {
       debugLog.push(`No session string found. Session: ${JSON.stringify(session ? Object.keys(session) : "null")}`);
       return NextResponse.json({
         error: "Telegram nicht verbunden. Bitte verbinde dich zuerst.",
-        debug: debugLog,
+        debug: process.env.NODE_ENV === "development" ? debugLog : undefined,
       }, { status: 400 });
     }
 
@@ -54,7 +54,7 @@ export async function GET(request: Request) {
       debugLog.push(`Session status: "${sessionStatus}" (not connected)`);
       return NextResponse.json({
         error: `Telegram-Session Status: "${sessionStatus}". Bitte verbinde dich erneut.`,
-        debug: debugLog,
+        debug: process.env.NODE_ENV === "development" ? debugLog : undefined,
       }, { status: 400 });
     }
 
@@ -67,7 +67,7 @@ export async function GET(request: Request) {
       debugLog.push(`TELEGRAM_API_ID: ${apiId || "MISSING"}, TELEGRAM_API_HASH: ${apiHash ? "set" : "MISSING"}`);
       return NextResponse.json({
         error: "Telegram API nicht konfiguriert. Kontaktiere den Support.",
-        debug: debugLog,
+        debug: process.env.NODE_ENV === "development" ? debugLog : undefined,
       }, { status: 500 });
     }
 
@@ -83,7 +83,7 @@ export async function GET(request: Request) {
       debugLog.push(`Import error: ${importErr.message}`);
       return NextResponse.json({
         error: "Telegram Modul nicht verfügbar",
-        debug: debugLog,
+        debug: process.env.NODE_ENV === "development" ? debugLog : undefined,
       }, { status: 500 });
     }
 
@@ -101,7 +101,7 @@ export async function GET(request: Request) {
       debugLog.push(`Connection error: ${connErr.message}`);
       return NextResponse.json({
         error: `Telegram-Verbindung fehlgeschlagen: ${connErr.message}`,
-        debug: debugLog,
+        debug: process.env.NODE_ENV === "development" ? debugLog : undefined,
       }, { status: 500 });
     }
 
@@ -185,7 +185,7 @@ export async function GET(request: Request) {
       await client.disconnect();
       return NextResponse.json({
         error: `Channel "${channelId}" nicht gefunden. Tritt dem Channel zuerst in Telegram bei, dann versuche es nochmal.`,
-        debug: debugLog,
+        debug: process.env.NODE_ENV === "development" ? debugLog : undefined,
       }, { status: 404 });
     }
 
@@ -201,7 +201,7 @@ export async function GET(request: Request) {
       await client.disconnect();
       return NextResponse.json({
         error: `Nachrichten konnten nicht geladen werden: ${msgErr.message}`,
-        debug: debugLog,
+        debug: process.env.NODE_ENV === "development" ? debugLog : undefined,
       }, { status: 500 });
     }
 
@@ -223,7 +223,7 @@ export async function GET(request: Request) {
     console.error("[TG-MESSAGES] Error:", err.message, "debug:", debugLog);
     return NextResponse.json({
       error: err.message || "Nachrichten konnten nicht geladen werden",
-      debug: debugLog,
+      debug: process.env.NODE_ENV === "development" ? debugLog : undefined,
     }, { status: 500 });
   }
 }
