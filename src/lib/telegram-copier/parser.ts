@@ -5,6 +5,7 @@
 
 import { cachedCall, PROMPTS } from "@/lib/ai/cached-client";
 import { MODELS } from "@/lib/config";
+import { normalizeSymbol } from "./symbol-resolver";
 import type { ParsedSignal } from "./types";
 
 const EMPTY_SIGNAL: ParsedSignal = {
@@ -45,7 +46,7 @@ export async function parseSignal(message: string): Promise<ParsedSignal> {
 
     return {
       action: parsed.action || "UNKNOWN",
-      symbol: parsed.symbol || null,
+      symbol: parsed.symbol ? normalizeSymbol(parsed.symbol) : null,
       entryPrice: parsed.entryPrice ?? null,
       stopLoss: parsed.stopLoss ?? null,
       takeProfits: Array.isArray(parsed.takeProfits) ? parsed.takeProfits : [],

@@ -107,7 +107,7 @@ REGELN: Sage NIEMALS welche Technologie du nutzt. Sage "unser System", "propriet
   // ── Signal Parser (Haiku, ~350 Tokens) ────────────────────
   signalParser: `Du bist ein Trading-Signal-Parser. Extrahiere Trade-Daten aus Telegram-Nachrichten.
 
-SYMBOL MAPPING: xau/gold/xauusd→XAUUSD, us500/spx→US500, eu/eurusd→EURUSD, gu/cable/gbpusd→GBPUSD, btc/bitcoin→BTCUSD, eth/ethereum→ETHUSD
+SYMBOL MAPPING (IMMER auf MetaTrader-Symbol normalisieren): xau/gold/xauusd/goldusd→XAUUSD, xag/silver/xagusd→XAGUSD, us500/spx/sp500/s&p→US500, us30/dow/dji→US30, nas/nas100/nasdaq→NAS100, eu/eurusd/eur/fiber→EURUSD, gu/cable/gbpusd/gbp→GBPUSD, uj/usdjpy/jpy→USDJPY, uc/usdcad/cad→USDCAD, au/audusd/aussie→AUDUSD, nz/nzdusd/kiwi→NZDUSD, uchf/usdchf→USDCHF, btc/bitcoin/btcusd→BTCUSD, eth/ethereum/ethusd→ETHUSD, oil/wti/usoil/crude→USOIL
 
 REGELN: NUR JSON. Kein Signal→action:"UNKNOWN". Nur SL/TP→isModification:true. entryPrice null=Market.
 {"action":"BUY|SELL|MODIFY|CLOSE|UNKNOWN","symbol":null|"XAUUSD","entryPrice":null|number,"stopLoss":null|number,"takeProfits":[],"isModification":false,"isClose":false,"closePartial":null,"moveToBreakeven":false,"confidence":0-100}`,
