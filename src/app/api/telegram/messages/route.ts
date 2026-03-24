@@ -49,12 +49,61 @@ export async function GET(request: Request) {
     await client.connect();
 
     const Api = (await import("telegram/tl" as any)).Api;
+    const { BigInteger } = await import("big-integer" as any).then(m => m.default ? { BigInteger: m.default } : { BigInteger: m });
 
-    // Resolve channel entity
+    // Resolve channel entity — handle -100xxx format properly
     let entity;
     try {
-      entity = await client.getEntity(channelId);
-    } catch {
+      // Try multiple resolution strategies
+      // 1. Direct numeric ID (works for most channels)
+      if (/^-?\d+$/.test(channelId)) {
+        try {
+          // For channels with -100 prefix: extract the real channel ID
+          const numericId = channelId.startsWith("-100")
+            ? channelId.slice(4) // remove -100 prefix
+            : channelId.startsWith("-")
+            ? channelId.slice(1) // remove - prefix for groups
+            : channelId;
+
+          // Try as InputPeerChannel first (most reliable for channels)
+          if (channelId.startsWith("-100")) {
+            const peerChannel = new Api.InputPeerChannel({
+              channelId: BigInteger(numericId),
+              accessHash: BigInteger(0),
+            });
+            // Get access hash from dialogs cache
+            try {
+              entity = await client.getEntity(peerChannel);
+            } catch {
+              // Fallback: try getEntity with the full numeric ID
+              entity = await client.getEntity(BigInteger(channelId));
+            }
+          } else {
+            entity = await client.getEntity(BigInteger(channelId));
+          }
+        } catch {
+          // Last resort: iterate dialogs to find matching channel
+          const dialogs = await client.getDialogs({ limit: 100 });
+          for (const dialog of dialogs) {
+            const e = dialog.entity;
+            if (!e) continue;
+            const isChannel = e.className === "Channel";
+            const isGroup = e.className === "Chat";
+            const eId = e.id?.toString() || "";
+            const fullId = isChannel ? `-100${eId}` : `-${eId}`;
+            if (fullId === channelId || eId === channelId) {
+              entity = e;
+              break;
+            }
+          }
+          if (!entity) throw new Error("not found in dialogs");
+        }
+      } else {
+        // Username-based: @channelname
+        entity = await client.getEntity(channelId);
+      }
+    } catch (resolveErr: any) {
+      console.error("[TG-MESSAGES] Entity resolve error:", resolveErr.message, "channelId:", channelId);
       await client.disconnect();
       return NextResponse.json({ error: "Channel nicht gefunden. Bist du dem Channel beigetreten?" }, { status: 404 });
     }
