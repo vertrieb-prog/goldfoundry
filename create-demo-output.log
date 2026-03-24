@@ -1,9 +1,0 @@
-Starting at 2026-03-24T13:44:18.754Z
-
-=== Creating Elite account ===
-Trying server: ICMarketsSC-Demo (retry 0 )
-(node:39668) Warning: Setting the NODE_TLS_REJECT_UNAUTHORIZED environment variable to '0' makes TLS connections and HTTPS requests insecure by disabling certificate verification.
-(Use `node --trace-warnings ...` to show where the warning was created)
-  Status: 429
-  Response: {"id":40289,"error":"TooManyRequestsError","message":"Your demo account generation requests have failed too many times recently. Please verify your account generation credentials and retry in 1 hour if credentials are indeed valid","metadata":{"recommendedRetryTime":"2026-03-24T14:44:19.327Z"}}
-  Rate limited until: 2026-03-24T14:44:19.327Z - waiting 3610 s
