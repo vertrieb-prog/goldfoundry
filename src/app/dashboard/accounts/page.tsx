@@ -235,6 +235,22 @@ export default function AccountsPage() {
                     </div>
                   </div>
 
+                  {/* Login Details */}
+                  <div className="grid grid-cols-3 gap-3 mb-4 p-2.5 rounded-lg" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid var(--gf-border)" }}>
+                    <div>
+                      <div className="text-[9px] uppercase tracking-wider" style={{ color: "var(--gf-text-dim)" }}>Login</div>
+                      <div className="text-xs font-mono font-semibold" style={{ color: "var(--gf-gold)" }}>{a.mt_login}</div>
+                    </div>
+                    <div>
+                      <div className="text-[9px] uppercase tracking-wider" style={{ color: "var(--gf-text-dim)" }}>Server</div>
+                      <div className="text-xs font-mono" style={{ color: "var(--gf-text-bright)" }}>{a.broker_server}</div>
+                    </div>
+                    <div>
+                      <div className="text-[9px] uppercase tracking-wider" style={{ color: "var(--gf-text-dim)" }}>Leverage</div>
+                      <div className="text-xs font-mono" style={{ color: "var(--gf-text-bright)" }}>1:{a.leverage}</div>
+                    </div>
+                  </div>
+
                   {/* Profit Bar */}
                   <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.05)" }}>
                     <div className="h-full rounded-full transition-all" style={{
