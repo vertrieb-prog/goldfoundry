@@ -70,6 +70,7 @@ export async function POST(request: Request) {
 
     // 1. Create a demo account via MetaApi provisioning
     const demoName = `GF-Demo-${user.id.slice(0, 8)}`;
+    const demoPassword = "demo_" + Date.now();
     const created = await metaApiFetch(`${META_PROV_BASE}/users/current/accounts`, token, {
       method: "POST",
       body: JSON.stringify({
@@ -83,7 +84,7 @@ export async function POST(request: Request) {
         // Try to create via demo server
         server: DEMO_SERVERS[0].server,
         login: "0", // MetaApi creates auto login for demos
-        password: "demo_" + Date.now(),
+        password: demoPassword,
       }),
     });
 
@@ -125,6 +126,7 @@ export async function POST(request: Request) {
         broker_server: DEMO_SERVERS[0].server,
         broker_name: "Demo",
         mt_login: info.login ?? "demo",
+        mt_password: demoPassword,
         platform: preferredPlatform,
         initial_balance: info.balance ?? 10000,
         current_equity: info.equity ?? info.balance ?? 10000,

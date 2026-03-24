@@ -3,7 +3,9 @@
 // Flow: Parse -> Risk Check -> Calculate Orders -> Execute
 // ═══════════════════════════════════════════════════════════════
 
-import { supabaseAdmin } from "@/lib/supabase-admin";
+import { createSupabaseAdmin } from "@/lib/supabase/server";
+
+const db = createSupabaseAdmin();
 import { parseSignal, isLikelySignal } from "./parser";
 import { calculateOrders } from "./smart-orders-v2";
 import { executeOrders } from "./executor-v2";
@@ -103,7 +105,7 @@ async function logSignalToDB(
   rawMessage: string,
   signal: ParsedSignal
 ): Promise<void> {
-  await supabaseAdmin.from("telegram_signals").insert({
+  await db.from("telegram_signals").insert({
     channel_id: channelId,
     user_id: userId,
     raw_message: rawMessage.slice(0, 2000),
@@ -117,7 +119,7 @@ async function updateSignalStatus(
   rawMessage: string,
   status: string
 ): Promise<void> {
-  await supabaseAdmin
+  await db
     .from("telegram_signals")
     .update({ status })
     .eq("channel_id", channelId)
@@ -134,7 +136,7 @@ async function getUserSettings(
   metaApiAccountId: string;
 } | null> {
   // Get channel settings
-  const { data: channel } = await supabaseAdmin
+  const { data: channel } = await db
     .from("telegram_active_channels")
     .select("settings")
     .eq("user_id", userId)
@@ -144,7 +146,7 @@ async function getUserSettings(
   if (!channel) return null;
 
   // Get user's MetaApi account
-  const { data: account } = await supabaseAdmin
+  const { data: account } = await db
     .from("slave_accounts")
     .select("metaapi_account_id, current_equity")
     .eq("user_id", userId)
@@ -175,7 +177,7 @@ async function checkRisk(userId: string, signal: ParsedSignal): Promise<boolean>
   if (slPercent > 3) return false;
 
   // Check open positions count
-  const { count } = await supabaseAdmin
+  const { count } = await db
     .from("telegram_signals")
     .select("*", { count: "exact", head: true })
     .eq("user_id", userId)
@@ -189,11 +191,11 @@ async function checkRisk(userId: string, signal: ParsedSignal): Promise<boolean>
 
 async function incrementChannelStats(channelId: string): Promise<void> {
   try {
-    await supabaseAdmin.rpc("increment_channel_signals", {
+    await db.rpc("increment_channel_signals", {
       p_channel_id: channelId,
     });
   } catch {
-    await supabaseAdmin
+    await db
       .from("telegram_active_channels")
       .update({ updated_at: new Date().toISOString() })
       .eq("channel_id", channelId);

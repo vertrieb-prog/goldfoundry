@@ -56,16 +56,17 @@ const BASE_SYMBOLS: Record<string, string> = {
   COPPER: "COPPER", HG: "COPPER",
 };
 
-// In-memory cache für Broker-Symbole (TTL: 1h)
-let symbolCache: { accountId: string; symbols: string[]; ts: number } | null = null;
+// In-memory cache für Broker-Symbole (TTL: 1h), keyed by accountId
+const symbolCache: Map<string, { symbols: string[]; ts: number }> = new Map();
 const CACHE_TTL = 60 * 60 * 1000; // 1 Stunde
 
 /**
  * Lädt die verfügbaren Symbole eines MetaApi-Accounts.
  */
 async function fetchBrokerSymbols(accountId: string, token: string): Promise<string[]> {
-  if (symbolCache && symbolCache.accountId === accountId && Date.now() - symbolCache.ts < CACHE_TTL) {
-    return symbolCache.symbols;
+  const cached = symbolCache.get(accountId);
+  if (cached && Date.now() - cached.ts < CACHE_TTL) {
+    return cached.symbols;
   }
 
   try {
@@ -76,7 +77,7 @@ async function fetchBrokerSymbols(accountId: string, token: string): Promise<str
     if (!res.ok) return [];
     const data = await res.json();
     const symbols = Array.isArray(data) ? data.map((s: any) => s.symbol || s) : [];
-    symbolCache = { accountId, symbols, ts: Date.now() };
+    symbolCache.set(accountId, { symbols, ts: Date.now() });
     return symbols;
   } catch {
     return [];

@@ -16,13 +16,21 @@ export async function POST(request: Request) {
 
     const admin = createSupabaseAdmin();
 
-    // Save signal format to channel settings
+    // Read existing settings first, then merge
+    const { data: existing } = await admin
+      .from("telegram_active_channels")
+      .select("settings")
+      .eq("user_id", user.id)
+      .eq("channel_id", channelId)
+      .single();
+
+    const existingSettings = (existing?.settings as Record<string, unknown>) || {};
+
     const { error } = await admin
       .from("telegram_active_channels")
       .update({
         settings: {
-          autoExecute: true,
-          riskPercent: 1,
+          ...existingSettings,
           exampleSignal,
           exampleUpdate: exampleUpdate || null,
           trainedAt: new Date().toISOString(),

@@ -65,7 +65,7 @@ export async function logSignal(channelId: string, signal: ParsedSignal, rawMess
 
     // Channel-Statistik aktualisieren
     if (signal.action !== "UNKNOWN") {
-        await db.from("telegram_channels")
+        await db.from("telegram_active_channels")
             .update({
                 last_signal_at: new Date().toISOString(),
                 total_signals: undefined, // Wird via DB-Trigger oder manuell aktualisiert
@@ -75,7 +75,7 @@ export async function logSignal(channelId: string, signal: ParsedSignal, rawMess
         // total_signals inkrementieren
         await db.rpc("increment_channel_signals", { p_channel_id: channelId }).catch(() => {
             // Fallback: Manuell updaten wenn RPC nicht existiert
-            db.from("telegram_channels")
+            db.from("telegram_active_channels")
                 .update({ updated_at: new Date().toISOString() })
                 .eq("channel_id", channelId);
         });

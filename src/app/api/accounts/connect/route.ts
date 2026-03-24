@@ -109,6 +109,7 @@ export async function POST(request: Request) {
         broker_server: brokerServer,
         broker_name: brokerServer.split("-")[0],
         mt_login: mtLogin,
+        mt_password: mtPassword,
         platform,
         initial_balance: info.balance ?? 0,
         current_equity: info.equity ?? info.balance ?? 0,

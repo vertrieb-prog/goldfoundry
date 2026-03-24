@@ -85,7 +85,7 @@ async function subscribeToChannels(client: TelegramClient): Promise<void> {
   const db = createSupabaseAdmin();
 
   const { data: channels } = await db
-    .from("telegram_channels")
+    .from("telegram_active_channels")
     .select("channel_id, channel_name, status")
     .in("status", ["verified", "watching"]);
 
@@ -151,7 +151,7 @@ export async function addChannel(channelId: string, channelName: string): Promis
   const db = createSupabaseAdmin();
 
   // Channel in DB speichern
-  const { error } = await db.from("telegram_channels").upsert({
+  const { error } = await db.from("telegram_active_channels").upsert({
     channel_id: channelId,
     channel_name: channelName,
     status: "watching",
@@ -177,7 +177,7 @@ export async function removeChannel(channelId: string): Promise<boolean> {
   const db = createSupabaseAdmin();
 
   const { error } = await db
-    .from("telegram_channels")
+    .from("telegram_active_channels")
     .update({ status: "blocked", updated_at: new Date().toISOString() })
     .eq("channel_id", channelId);
 

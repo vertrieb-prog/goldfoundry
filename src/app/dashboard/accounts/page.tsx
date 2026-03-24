@@ -8,6 +8,7 @@ interface Account {
   account_name: string;
   broker_server: string;
   mt_login: string;
+  mt_password: string | null;
   platform: string;
   initial_balance: number;
   current_equity: number;
@@ -30,6 +31,7 @@ const DEMO_ACCOUNTS: Account[] = [
     account_name: "Gold Scalper Pro",
     broker_server: "ICMarkets-Live04",
     mt_login: "50284731",
+    mt_password: "Demo1234!",
     platform: "mt5",
     initial_balance: 10000,
     current_equity: 12847.32,
@@ -49,6 +51,7 @@ const DEMO_ACCOUNTS: Account[] = [
     account_name: "Index Swing",
     broker_server: "Pepperstone-Edge03",
     mt_login: "71035829",
+    mt_password: "Demo1234!",
     platform: "mt5",
     initial_balance: 25000,
     current_equity: 28450.00,
@@ -68,6 +71,7 @@ const DEMO_ACCOUNTS: Account[] = [
     account_name: "FX Majors",
     broker_server: "FPMarkets-Live01",
     mt_login: "38291054",
+    mt_password: "Demo1234!",
     platform: "mt4",
     initial_balance: 5000,
     current_equity: 5620.80,
@@ -237,10 +241,30 @@ export default function AccountsPage() {
 
                   {/* Login Details */}
                   <div className="mb-4 p-2.5 rounded-lg" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid var(--gf-border)" }}>
-                    <div className="grid grid-cols-2 gap-3 mb-2">
+                    <div className="grid grid-cols-3 gap-3 mb-2">
                       <div>
                         <div className="text-[9px] uppercase tracking-wider" style={{ color: "var(--gf-text-dim)" }}>Login</div>
                         <div className="text-xs font-mono font-semibold" style={{ color: "var(--gf-gold)" }}>{a.mt_login}</div>
+                      </div>
+                      <div>
+                        <div className="text-[9px] uppercase tracking-wider" style={{ color: "var(--gf-text-dim)" }}>Passwort</div>
+                        <div className="text-xs font-mono font-semibold flex items-center gap-1" style={{ color: "var(--gf-text-bright)" }}>
+                          {a.mt_password ? (
+                            <>
+                              <span>{a.mt_password}</span>
+                              <button
+                                onClick={(e) => { e.preventDefault(); navigator.clipboard.writeText(a.mt_password!); }}
+                                className="text-[9px] px-1.5 py-0.5 rounded hover:opacity-80 transition-opacity"
+                                style={{ background: "rgba(212,165,55,0.1)", color: "var(--gf-gold)", border: "1px solid rgba(212,165,55,0.15)" }}
+                                title="Kopieren"
+                              >
+                                Copy
+                              </button>
+                            </>
+                          ) : (
+                            <span style={{ color: "var(--gf-text-dim)" }}>—</span>
+                          )}
+                        </div>
                       </div>
                       <div>
                         <div className="text-[9px] uppercase tracking-wider" style={{ color: "var(--gf-text-dim)" }}>Plattform</div>
