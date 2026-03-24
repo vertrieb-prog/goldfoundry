@@ -442,8 +442,8 @@ export default function TelegramPage() {
                 <div className="text-sm font-semibold text-white mb-1">Schritt 2: Update-Nachricht (optional)</div>
                 <p className="text-xs text-zinc-500 mb-4">Gibt es eine Folge-Nachricht die SL/TP anpasst? Wenn ja, klicke darauf. Wenn nicht, überspringe diesen Schritt.</p>
 
-                <div className="space-y-1.5 max-h-40 overflow-y-auto">
-                  {channelMessages.filter(m => m.id !== selectedSignal).slice(0, 10).map(m => (
+                <div className="space-y-1.5 max-h-[500px] overflow-y-auto">
+                  {channelMessages.filter(m => m.id !== selectedSignal).map(m => (
                     <button
                       key={m.id}
                       onClick={() => selectUpdateAndParse(selectedUpdate === m.id ? null : m.id)}
