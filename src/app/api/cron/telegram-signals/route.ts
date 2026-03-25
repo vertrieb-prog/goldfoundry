@@ -13,10 +13,105 @@ import { calculateLotSize } from "@/lib/telegram-copier/lot-calculator";
 import { sendTradeNotification } from "@/lib/telegram-copier/notifier";
 
 const META_CLIENT_BASE = "https://mt-client-api-v1.new-york.agiliumtrade.ai";
+const META_PROV_BASE = "https://mt-provisioning-api-v1.agiliumtrade.agiliumtrade.ai";
 
 const log = (level: string, msg: string) => {
   console.log(`[${new Date().toISOString()}] [TG-CRON] [${level}] ${msg}`);
 };
+
+// ── Self-Healing: Log actions to DB ─────────────────────────
+async function logSelfHeal(db: any, userId: string, channelId: string, action: string, details: string) {
+  try {
+    await db.from("telegram_signals").insert({
+      channel_id: channelId,
+      user_id: userId,
+      telegram_message_id: 0,
+      raw_message: `[SELF-HEAL] ${action}: ${details}`,
+      parsed: { action: "SELF_HEAL", healAction: action, details } as any,
+      status: "self_healed",
+    });
+  } catch (e: any) {
+    log("WARN", `Failed to log self-heal action: ${e.message}`);
+  }
+}
+
+// ── Self-Healing: Verify & fix linked account ───────────────
+async function selfHeal(db: any, channel: any, userId: string): Promise<string | null> {
+  const settings = (channel.settings as any) || {};
+  const linkedAccountId = settings.linkedAccountId;
+  const channelId = channel.channel_id;
+
+  // Check 1: Is the linked account still valid?
+  if (linkedAccountId) {
+    const { data: linkedAccount } = await db
+      .from("slave_accounts")
+      .select("id, copier_active")
+      .eq("id", linkedAccountId)
+      .eq("user_id", userId)
+      .single();
+
+    if (!linkedAccount) {
+      // Linked account was DELETED! Auto-fix: find ANY active account
+      log("WARN", `[SELF-HEAL] Linked account ${linkedAccountId} deleted, finding replacement...`);
+      const { data: anyAccount } = await db
+        .from("slave_accounts")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("copier_active", true)
+        .limit(1)
+        .single();
+
+      if (anyAccount) {
+        await db.from("telegram_active_channels")
+          .update({ settings: { ...settings, linkedAccountId: anyAccount.id } })
+          .eq("user_id", userId)
+          .eq("channel_id", channelId);
+        log("INFO", `[SELF-HEAL] Re-linked channel ${channelId} to account: ${anyAccount.id}`);
+        await logSelfHeal(db, userId, channelId, "RELINK_ACCOUNT",
+          `Deleted account ${linkedAccountId} replaced with ${anyAccount.id}`);
+        return anyAccount.id;
+      }
+
+      // No active accounts at all — try to find ANY account and activate it
+      const { data: inactiveAccount } = await db
+        .from("slave_accounts")
+        .select("id")
+        .eq("user_id", userId)
+        .limit(1)
+        .single();
+
+      if (inactiveAccount) {
+        await db.from("slave_accounts")
+          .update({ copier_active: true })
+          .eq("id", inactiveAccount.id);
+        await db.from("telegram_active_channels")
+          .update({ settings: { ...settings, linkedAccountId: inactiveAccount.id } })
+          .eq("user_id", userId)
+          .eq("channel_id", channelId);
+        log("INFO", `[SELF-HEAL] Activated & linked inactive account: ${inactiveAccount.id}`);
+        await logSelfHeal(db, userId, channelId, "ACTIVATE_AND_RELINK",
+          `No active accounts. Activated ${inactiveAccount.id} and linked it.`);
+        return inactiveAccount.id;
+      }
+
+      await logSelfHeal(db, userId, channelId, "NO_ACCOUNTS",
+        `Linked account ${linkedAccountId} deleted and no replacement found.`);
+      return null; // No accounts at all
+    }
+
+    if (!linkedAccount.copier_active) {
+      // Account exists but copier is disabled — re-enable it
+      await db.from("slave_accounts")
+        .update({ copier_active: true })
+        .eq("id", linkedAccountId);
+      log("INFO", `[SELF-HEAL] Re-enabled copier on account: ${linkedAccountId}`);
+      await logSelfHeal(db, userId, channelId, "REENABLE_COPIER",
+        `Account ${linkedAccountId} had copier_active=false, re-enabled.`);
+    }
+  }
+
+  return linkedAccountId;
+}
 
 async function metaApiFetch(url: string, token: string, options?: RequestInit) {
   const res = await fetch(url, {
@@ -218,17 +313,19 @@ async function processChannel(db: any, channel: any) {
   const settings = (channel.settings as any) || {};
   const autoExecute = settings.autoExecute ?? true;
   const riskPercent = settings.riskPercent ?? 1;
-  const linkedAccountId = settings.linkedAccountId || null;
 
-  // Get user's trading account — use linked account if set, otherwise first active
+  // ── SELF-HEALING: Verify linked account before processing ──
+  const healedAccountId = await selfHeal(db, channel, userId);
+
+  // Get user's trading account — use healed account if set, otherwise first active
   let accountQuery = db
     .from("slave_accounts")
     .select("*")
     .eq("user_id", userId)
     .eq("copier_active", true);
 
-  if (linkedAccountId) {
-    accountQuery = accountQuery.eq("id", linkedAccountId);
+  if (healedAccountId) {
+    accountQuery = accountQuery.eq("id", healedAccountId);
   }
 
   const { data: account } = await accountQuery.limit(1).single();
@@ -280,7 +377,7 @@ async function processChannel(db: any, channel: any) {
       const brokerSymbol = await resolveSymbol(signal.symbol, account.metaapi_account_id, metaApiToken);
 
       // Execute trade via REST API (not SDK — avoids "window is not defined")
-      const tradeResult = await executeTrade(
+      let tradeResult = await executeTrade(
         metaApiToken,
         account.metaapi_account_id,
         brokerSymbol,
@@ -289,6 +386,28 @@ async function processChannel(db: any, channel: any) {
         riskPercent,
         Number(account.leverage) || 30
       );
+
+      // ── SELF-HEALING: Retry once on recoverable errors ──
+      if (!tradeResult.success && tradeResult.error &&
+          (tradeResult.error.includes("not found") ||
+           tradeResult.error.includes("not connected") ||
+           tradeResult.error.includes("UNDEPLOYED") ||
+           tradeResult.error.includes("timeout"))) {
+        log("WARN", `[RETRY] Trade failed (${tradeResult.error}), retrying in 3s...`);
+        await new Promise(r => setTimeout(r, 3000));
+        tradeResult = await executeTrade(
+          metaApiToken,
+          account.metaapi_account_id,
+          brokerSymbol,
+          signal,
+          Number(account.current_equity) || 10000,
+          riskPercent,
+          Number(account.leverage) || 30
+        );
+        if (tradeResult.success) {
+          log("INFO", `[RETRY] Trade succeeded on retry!`);
+        }
+      }
 
       // Update signal status with execution details
       const executionResult = {
@@ -429,6 +548,26 @@ async function executeTrade(
   leverage: number = 30,
 ): Promise<TradeResult> {
   try {
+    // ── SELF-HEALING: Ensure MetaApi account is deployed ──
+    try {
+      const accStatus = await metaApiFetch(
+        `${META_PROV_BASE}/users/current/accounts/${accountId}`,
+        token
+      );
+      if (accStatus.state === "UNDEPLOYED") {
+        log("WARN", `[SELF-HEAL] Account ${accountId} UNDEPLOYED, redeploying...`);
+        await fetch(`${META_PROV_BASE}/users/current/accounts/${accountId}/deploy`, {
+          method: "POST",
+          headers: { "auth-token": token },
+        });
+        // Wait for deployment (10s)
+        await new Promise(r => setTimeout(r, 10000));
+        log("INFO", `[SELF-HEAL] Account ${accountId} redeploy requested, continuing...`);
+      }
+    } catch (e: any) {
+      log("WARN", `[SELF-HEAL] Account status check failed: ${e.message}`);
+    }
+
     // Check position limit (max 10 open positions)
     const positions = await metaApiFetch(
       `${META_CLIENT_BASE}/users/current/accounts/${accountId}/positions`,

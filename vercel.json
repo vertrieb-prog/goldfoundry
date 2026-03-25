@@ -5,6 +5,10 @@
       "schedule": "0 0 * * *"
     },
     {
+      "path": "/api/cron/health-check-signals",
+      "schedule": "0 7 * * *"
+    },
+    {
       "path": "/api/cron/telegram-signals",
       "schedule": "0 8 * * *"
     },
