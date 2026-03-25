@@ -4,7 +4,7 @@
 // Jeder Affiliate wird SOFORT informiert wenn etwas passiert
 // ============================================================
 
-const RESEND_KEY = process.env.RESEND_API_KEY ?? "";
+const RESEND_KEY = (process.env.RESEND_API_KEY ?? "").trim();
 
 function escapeHtml(str: string): string {
   return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");

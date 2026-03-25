@@ -1,7 +1,7 @@
 // src/lib/stripe/stripe-client.ts
 import Stripe from "stripe";
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+export const stripe = new Stripe((process.env.STRIPE_SECRET_KEY || "").trim(), {
   apiVersion: "2024-06-20",
 });
 

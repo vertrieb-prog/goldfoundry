@@ -5,7 +5,7 @@
 // Uses Resend API
 // ============================================================
 
-const RESEND_API_KEY = process.env.RESEND_API_KEY ?? "";
+const RESEND_API_KEY = (process.env.RESEND_API_KEY ?? "").trim();
 const FROM_EMAIL = "forge@goldfoundry.de";
 const BRAND_NAME = "Gold Foundry";
 const BASE_URL = "https://goldfoundry.de";

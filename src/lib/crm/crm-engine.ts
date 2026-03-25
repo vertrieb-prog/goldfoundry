@@ -229,7 +229,7 @@ export async function sendCRMEmail(
 
   // Note: sendEmail is not exported individually in the current email-engine
   // Using fetch to Resend directly here
-  const RESEND_KEY = process.env.RESEND_API_KEY;
+  const RESEND_KEY = (process.env.RESEND_API_KEY || "").trim();
   let emailStatus = "sent";
 
   if (RESEND_KEY) {

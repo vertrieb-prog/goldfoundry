@@ -8,7 +8,7 @@ export async function POST(request: Request) {
 
     const supabase = createSupabaseAdmin();
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${process.env.NEXT_PUBLIC_BASE_URL || "https://goldfoundry.de"}/auth/reset-password`,
+      redirectTo: `${(process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_BASE_URL || "https://goldfoundry.de").trim().replace(/\/$/,"")}/auth/reset-password`,
     });
 
     if (error) {

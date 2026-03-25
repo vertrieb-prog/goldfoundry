@@ -386,7 +386,7 @@ export async function runSalesDirectorPipeline(): Promise<{
   log(`Segmentierung: ${JSON.stringify(results.segmented)}`);
 
   // 2. Generate & send newsletters per segment
-  const RESEND_KEY = process.env.RESEND_API_KEY;
+  const RESEND_KEY = (process.env.RESEND_API_KEY || "").trim();
 
   for (const [segment, affiliates] of Object.entries(segments)) {
     if (!affiliates.length) continue;

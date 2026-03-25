@@ -18,7 +18,7 @@ import { cachedCall } from "@/lib/ai/cached-client";
 import { MODELS } from "@/lib/config";
 const log = (msg: string) => console.log(`[${new Date().toISOString()}] [UPLINE-PUSH] ${msg}`);
 
-const RESEND_KEY = process.env.RESEND_API_KEY ?? "";
+const RESEND_KEY = (process.env.RESEND_API_KEY ?? "").trim();
 
 async function sendPushMail(to: string, subject: string, html: string) {
   if (!RESEND_KEY) { log(`SIMULATED → ${to}: ${subject}`); return; }

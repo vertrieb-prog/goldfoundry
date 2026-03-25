@@ -13,7 +13,7 @@ export async function POST(request: Request) {
 
   let event;
   try {
-    event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!);
+    event = stripe.webhooks.constructEvent(body, sig, (process.env.STRIPE_WEBHOOK_SECRET || "").trim());
   } catch (err) {
     return NextResponse.json({ error: "Webhook signature failed" }, { status: 400 });
   }

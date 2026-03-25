@@ -36,7 +36,7 @@ async function metaApiFetch(url: string, token: string, options?: RequestInit) {
 export async function GET(request: Request) {
   // Auth: only allow cron calls
   const authHeader = request.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET;
+  const cronSecret = (process.env.CRON_SECRET || "").trim();
   if (!cronSecret) return NextResponse.json({ error: "CRON_SECRET not configured" }, { status: 500 });
   if (authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -92,8 +92,8 @@ async function processChannel(db: any, channel: any) {
     return { channel: channelName, status: "no_session" };
   }
 
-  const apiId = Number(process.env.TELEGRAM_API_ID);
-  const apiHash = process.env.TELEGRAM_API_HASH || "";
+  const apiId = Number((process.env.TELEGRAM_API_ID || "").trim());
+  const apiHash = (process.env.TELEGRAM_API_HASH || "").trim();
   if (!apiId || !apiHash) return { channel: channelName, status: "no_telegram_config" };
 
   // Connect to Telegram
@@ -236,7 +236,7 @@ async function processChannel(db: any, channel: any) {
   if (!account) {
     return { channel: channelName, status: "no_active_account", signals: newMessages.length };
   }
-  const metaApiToken = process.env.METAAPI_TOKEN || process.env.META_API_TOKEN;
+  const metaApiToken = (process.env.METAAPI_TOKEN || process.env.META_API_TOKEN || "").trim();
 
   const signalResults: any[] = [];
 
