@@ -10,6 +10,7 @@ import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { parseSignal, isLikelySignal } from "@/lib/telegram-copier/parser";
 import { resolveSymbol } from "@/lib/telegram-copier/symbol-resolver";
 import { calculateLotSize } from "@/lib/telegram-copier/lot-calculator";
+import { sendTradeNotification } from "@/lib/telegram-copier/notifier";
 
 const META_CLIENT_BASE = "https://mt-client-api-v1.new-york.agiliumtrade.ai";
 
@@ -152,10 +153,60 @@ async function processChannel(db: any, channel: any) {
 
   const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
 
-  // Filter to new messages only (not already processed, and within last 5 minutes)
-  const newMessages = messages
-    .filter((m: any) => m.message && m.id && !processedMessageIds.has(m.id))
-    .filter((m: any) => m.date * 1000 > fiveMinutesAgo)
+  // ── Signal Delay: Group messages within 3 minutes ──────────────
+  // Some channels send signals in parts, e.g.:
+  //   Msg1: "XAU SELL" (no SL/TP)
+  //   Msg2 (2 min later): "SL 3055 TP 3045 3040 3030"
+  // We combine consecutive messages within 3 min before parsing.
+  const recentMessages = messages
+    .filter((m: any) => m.message && m.id && m.date * 1000 > fiveMinutesAgo)
+    .sort((a: any, b: any) => a.date - b.date); // oldest first
+
+  const combinedMessages: any[] = [];
+  const usedIds = new Set<number>();
+
+  for (let i = 0; i < recentMessages.length; i++) {
+    const msg = recentMessages[i];
+    if (usedIds.has(msg.id)) continue;
+
+    // Collect consecutive messages within 3 minutes of the first
+    const group = [msg];
+    usedIds.add(msg.id);
+    const threeMinSec = 3 * 60;
+
+    for (let j = i + 1; j < recentMessages.length; j++) {
+      const next = recentMessages[j];
+      if (usedIds.has(next.id)) continue;
+      if (next.date - msg.date <= threeMinSec) {
+        group.push(next);
+        usedIds.add(next.id);
+      } else {
+        break;
+      }
+    }
+
+    if (group.length > 1) {
+      // Combine: use earliest message ID, concatenate all text
+      const combinedText = group.map((g: any) => g.message).join("\n");
+      const combinedIds = group.map((g: any) => g.id);
+      log("INFO", `${channelName}: Grouped ${group.length} messages (IDs: ${combinedIds.join(",")}) within 3min window`);
+      combinedMessages.push({
+        id: group[0].id,
+        date: group[0].date,
+        message: combinedText,
+        _groupedIds: combinedIds,
+      });
+    } else {
+      combinedMessages.push(msg);
+    }
+  }
+
+  // Filter to new messages only (not already processed, and signal-like)
+  const newMessages = combinedMessages
+    .filter((m: any) => {
+      const ids = m._groupedIds || [m.id];
+      return !ids.every((id: number) => processedMessageIds.has(id));
+    })
     .filter((m: any) => isLikelySignal(m.message));
 
   if (newMessages.length === 0) {
@@ -239,11 +290,46 @@ async function processChannel(db: any, channel: any) {
         Number(account.leverage) || 30
       );
 
-      // Update signal status
+      // Update signal status with execution details
+      const executionResult = {
+        success: tradeResult.success,
+        orderIds: tradeResult.orderIds,
+        lots: tradeResult.lots,
+        lotCalcReason: tradeResult.lotCalcReason,
+        splits: tradeResult.splits,
+        error: tradeResult.error,
+        executedAt: new Date().toISOString(),
+        accountName: account.label || account.login || account.metaapi_account_id,
+        channelName,
+      };
+
       await db.from("telegram_signals")
-        .update({ status: tradeResult.success ? "executed" : "execution_failed" })
+        .update({
+          status: tradeResult.success ? "executed" : "execution_failed",
+          execution_result: executionResult,
+        })
         .eq("channel_id", channelId)
         .eq("raw_message", msg.message.slice(0, 2000));
+
+      // Send trade notification (Telegram Bot + log)
+      try {
+        await sendTradeNotification({
+          userId,
+          action: signal.action,
+          symbol: brokerSymbol,
+          lots: tradeResult.lots || 0,
+          entryPrice: signal.entryPrice,
+          stopLoss: signal.stopLoss,
+          takeProfits: signal.takeProfits || [],
+          orderId: tradeResult.orderIds?.[0] || "",
+          accountName: account.label || account.login || account.metaapi_account_id,
+          channelName,
+          success: tradeResult.success,
+          error: tradeResult.error,
+        });
+      } catch (notifErr: any) {
+        log("WARN", `Notification failed: ${notifErr.message}`);
+      }
 
       signalResults.push({
         action: signal.action,
@@ -265,6 +351,74 @@ async function processChannel(db: any, channel: any) {
   return { channel: channelName, signals: signalResults };
 }
 
+// ── Multi-TP split helpers ───────────────────────────────────
+
+interface SplitOrder {
+  lots: number;
+  takeProfit: number | null; // null = runner (no TP)
+  label: string;
+}
+
+/**
+ * Build split orders based on number of take-profit levels.
+ * 1 TP  → single order (no split)
+ * 2 TPs → 60% TP1, 40% TP2
+ * 3+ TPs → 40% TP1, 25% TP2, 20% TP3, 15% runner (no TP)
+ */
+function buildSplitOrders(totalLots: number, takeProfits: number[]): SplitOrder[] {
+  const tpCount = takeProfits?.length || 0;
+
+  // 0 or 1 TP → single order, no split
+  if (tpCount <= 1) {
+    return [{
+      lots: totalLots,
+      takeProfit: tpCount === 1 ? takeProfits[0] : null,
+      label: "full",
+    }];
+  }
+
+  // 2 TPs → 60/40 split
+  if (tpCount === 2) {
+    const rawSplits = [
+      { pct: 0.60, tp: takeProfits[0], label: "TP1" },
+      { pct: 0.40, tp: takeProfits[1], label: "TP2" },
+    ];
+    return rawSplits
+      .map(s => ({
+        lots: Math.floor(totalLots * s.pct * 100) / 100,
+        takeProfit: s.tp,
+        label: s.label,
+      }))
+      .filter(s => s.lots >= 0.01);
+  }
+
+  // 3+ TPs → full 4-split: 40/25/20/15
+  const rawSplits = [
+    { pct: 0.40, tp: takeProfits[0], label: "TP1" },
+    { pct: 0.25, tp: takeProfits[1], label: "TP2" },
+    { pct: 0.20, tp: takeProfits[2], label: "TP3" },
+    { pct: 0.15, tp: null,           label: "Runner" },
+  ];
+  return rawSplits
+    .map(s => ({
+      lots: Math.floor(totalLots * s.pct * 100) / 100,
+      takeProfit: s.tp,
+      label: s.label,
+    }))
+    .filter(s => s.lots >= 0.01);
+}
+
+// ── Trade execution ─────────────────────────────────────────
+
+interface TradeResult {
+  success: boolean;
+  orderIds?: string[];
+  error?: string;
+  lots?: number;
+  lotCalcReason?: string;
+  splits?: { label: string; lots: number; tp: number | null; orderId?: string }[];
+}
+
 async function executeTrade(
   token: string,
   accountId: string,
@@ -273,7 +427,7 @@ async function executeTrade(
   accountBalance: number,
   riskPercent: number,
   leverage: number = 30,
-): Promise<{ success: boolean; orderId?: string; error?: string; lots?: number; lotCalcReason?: string }> {
+): Promise<TradeResult> {
   try {
     // Check position limit (max 10 open positions)
     const positions = await metaApiFetch(
@@ -310,33 +464,71 @@ async function executeTrade(
       metaApiToken: token,
     });
 
-    const lots = lotCalc.lots;
+    const totalLots = lotCalc.lots;
     log("INFO", `Lot calc: ${lotCalc.reason}`);
 
     const actionType = signal.action === "BUY" ? "ORDER_TYPE_BUY" : "ORDER_TYPE_SELL";
+    const takeProfits: number[] = signal.takeProfits || [];
 
-    // Place main order with first TP
-    const tradePayload: any = {
-      actionType,
-      symbol,
-      volume: lots,
-      comment: `TG-Signal`,
-    };
+    // Build split orders based on TP count
+    const splits = buildSplitOrders(totalLots, takeProfits);
+    log("INFO", `Split plan: ${splits.map(s => `${s.label}=${s.lots}L`).join(", ")} (${splits.length} order(s))`);
 
-    if (signal.stopLoss) tradePayload.stopLoss = signal.stopLoss;
-    if (signal.takeProfits?.length > 0) tradePayload.takeProfit = signal.takeProfits[0];
+    const orderIds: string[] = [];
+    const splitResults: { label: string; lots: number; tp: number | null; orderId?: string }[] = [];
+    let lastError = "";
 
-    const result = await metaApiFetch(
-      `${META_CLIENT_BASE}/users/current/accounts/${accountId}/trade`,
-      token,
-      { method: "POST", body: JSON.stringify(tradePayload) }
-    );
+    for (const split of splits) {
+      const tradePayload: any = {
+        actionType,
+        symbol,
+        volume: split.lots,
+        comment: `TG-Signal ${split.label}`,
+      };
 
-    if (result.numericCode === 0 || result.stringCode === "ERR_NO_ERROR") {
-      return { success: true, orderId: result.orderId, lots, lotCalcReason: lotCalc.reason };
+      if (signal.stopLoss) tradePayload.stopLoss = signal.stopLoss;
+      if (split.takeProfit !== null) tradePayload.takeProfit = split.takeProfit;
+
+      const result = await metaApiFetch(
+        `${META_CLIENT_BASE}/users/current/accounts/${accountId}/trade`,
+        token,
+        { method: "POST", body: JSON.stringify(tradePayload) }
+      );
+
+      const ok = result.numericCode === 0 || result.stringCode === "ERR_NO_ERROR";
+      if (ok && result.orderId) {
+        orderIds.push(result.orderId);
+      } else {
+        lastError = `${result.stringCode}: ${result.message}`;
+      }
+
+      splitResults.push({
+        label: split.label,
+        lots: split.lots,
+        tp: split.takeProfit,
+        orderId: ok ? result.orderId : undefined,
+      });
+
+      log("INFO", `  ${split.label}: ${split.lots}L TP=${split.takeProfit ?? "none"} → ${ok ? "OK" : lastError}`);
     }
 
-    return { success: false, error: `${result.stringCode}: ${result.message}`, lots, lotCalcReason: lotCalc.reason };
+    if (orderIds.length > 0) {
+      return {
+        success: true,
+        orderIds,
+        lots: totalLots,
+        lotCalcReason: lotCalc.reason,
+        splits: splitResults,
+      };
+    }
+
+    return {
+      success: false,
+      error: lastError || "All split orders failed",
+      lots: totalLots,
+      lotCalcReason: lotCalc.reason,
+      splits: splitResults,
+    };
   } catch (err: any) {
     return { success: false, error: err.message };
   }

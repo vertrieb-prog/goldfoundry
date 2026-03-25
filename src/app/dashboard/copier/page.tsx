@@ -4,6 +4,13 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import FeatureGate from "@/components/FeatureGate";
 
+interface CopierStats {
+  overview: { totalSignals: number; signalsExecuted: number; signalsBlocked: number; accountCount: number; totalEquity: number; totalProfit: number; winRate: number };
+  capitalProtection: { totalProtected: number; signalsWithoutSL: number; lowConfidence: number; riskBlocked: number; totalBlocked: number };
+  smartOrders: { advantage: number; features: { name: string; desc: string; icon: string }[] };
+  recentSignals: { date: string; action: string; symbol: string; confidence: number }[];
+}
+
 const DEMO_INTEL = {
   risk_level: "GREEN", risk_score: 18, regime: "TRENDING",
   geopolitical_risk: "LOW",
@@ -29,7 +36,7 @@ const RISK_COLORS: Record<string, string> = {
   GREEN: "var(--gf-green)", YELLOW: "var(--gf-gold)", ORANGE: "#f97316", RED: "var(--gf-red)", BLACK: "#666",
 };
 
-function StatCard({ label, value, color, sub }: { label: string; value: string; color?: string; sub?: string }) {
+function MiniCard({ label, value, color, sub }: { label: string; value: string; color?: string; sub?: string }) {
   return (
     <div className="text-center p-3 rounded-xl" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
       <div className="text-xl font-bold" style={{ color: color || "var(--gf-text-bright)" }}>{value}</div>
@@ -39,15 +46,96 @@ function StatCard({ label, value, color, sub }: { label: string; value: string; 
   );
 }
 
+/* ── Stats Dashboard Cards ── */
+function StatsSection({ stats }: { stats: CopierStats }) {
+  const cp = stats.capitalProtection;
+  const so = stats.smartOrders;
+  const ov = stats.overview;
+  const recent = stats.recentSignals;
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+      {/* Kapitalschutz */}
+      <div className="gf-panel p-5" style={{ borderColor: "rgba(34,197,94,0.2)" }}>
+        <div className="text-[10px] font-medium tracking-wide uppercase mb-3" style={{ color: "var(--gf-green)" }}>Kapitalschutz</div>
+        <div className="text-2xl font-bold mb-1" style={{ color: "var(--gf-green)" }}>{"\u20ac"}{cp.totalProtected.toLocaleString("de-DE")} geschützt</div>
+        <div className="text-xs mb-3" style={{ color: "var(--gf-text-dim)" }}>{cp.totalBlocked} Signale blockiert</div>
+        <div className="flex flex-wrap gap-2 text-[10px]">
+          <span className="px-2 py-1 rounded-md" style={{ background: "rgba(34,197,94,0.08)", color: "var(--gf-green)" }}>{cp.signalsWithoutSL} ohne SL</span>
+          <span className="px-2 py-1 rounded-md" style={{ background: "rgba(34,197,94,0.08)", color: "var(--gf-green)" }}>{cp.lowConfidence} niedrige Konfidenz</span>
+          <span className="px-2 py-1 rounded-md" style={{ background: "rgba(34,197,94,0.08)", color: "var(--gf-green)" }}>{cp.riskBlocked} Risk Shield</span>
+        </div>
+      </div>
+
+      {/* Smart Order Vorteil */}
+      <div className="gf-panel p-5" style={{ borderColor: "rgba(250,239,112,0.2)" }}>
+        <div className="text-[10px] font-medium tracking-wide uppercase mb-3" style={{ color: "var(--gf-gold)" }}>Smart Order Vorteil</div>
+        <div className="text-2xl font-bold mb-3" style={{ color: "var(--gf-gold)" }}>+{"\u20ac"}{so.advantage.toLocaleString("de-DE")} Extra-Profit</div>
+        <div className="space-y-1.5">
+          {so.features.map(f => (
+            <div key={f.name} className="flex items-center gap-2 text-xs">
+              <span>{f.icon}</span>
+              <span className="font-medium text-white">{f.name}</span>
+              <span style={{ color: "var(--gf-text-dim)" }}>{"\u2014"} {f.desc}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Signal-Übersicht */}
+      <div className="gf-panel p-5 md:col-span-2 xl:col-span-1">
+        <div className="text-[10px] font-medium tracking-wide uppercase mb-3" style={{ color: "var(--gf-text-dim)" }}>Signal-Übersicht</div>
+        <div className="grid grid-cols-3 gap-3 mb-4">
+          <div className="text-center">
+            <div className="text-lg font-bold text-white">{ov.signalsExecuted}</div>
+            <div className="text-[10px]" style={{ color: "var(--gf-text-dim)" }}>Ausgeführt</div>
+          </div>
+          <div className="text-center">
+            <div className="text-lg font-bold" style={{ color: "var(--gf-red)" }}>{ov.signalsBlocked}</div>
+            <div className="text-[10px]" style={{ color: "var(--gf-text-dim)" }}>Blockiert</div>
+          </div>
+          <div className="text-center">
+            <div className="text-lg font-bold" style={{ color: "var(--gf-gold)" }}>{ov.totalSignals}</div>
+            <div className="text-[10px]" style={{ color: "var(--gf-text-dim)" }}>Gesamt</div>
+          </div>
+        </div>
+        {ov.winRate > 0 && (
+          <div className="mb-3 text-center p-2 rounded-lg" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
+            <span className="text-xs" style={{ color: "var(--gf-text-dim)" }}>Win Rate </span>
+            <span className="text-sm font-bold" style={{ color: "var(--gf-green)" }}>{ov.winRate}%</span>
+          </div>
+        )}
+        {recent.length > 0 && (
+          <div className="space-y-1.5">
+            {recent.map((s, i) => (
+              <div key={i} className="flex items-center justify-between text-xs px-2 py-1.5 rounded-lg" style={{ background: "var(--gf-obsidian)" }}>
+                <span className="font-mono" style={{ color: "var(--gf-text-dim)" }}>{new Date(s.date).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" })}</span>
+                <span className="font-semibold text-white">{s.symbol}</span>
+                <span className={s.action === "BUY" ? "text-green-400" : "text-red-400"}>{s.action}</span>
+                <span style={{ color: "var(--gf-gold)" }}>{s.confidence}%</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function CopierPage() {
   const [accounts, setAccounts] = useState<any[]>(DEMO_ACCOUNTS);
   const [intel, setIntel] = useState<any>(DEMO_INTEL);
+  const [stats, setStats] = useState<CopierStats | null>(null);
   const [isDemo, setIsDemo] = useState(true);
 
   useEffect(() => {
     fetch("/api/copier/status")
       .then(r => r.json())
       .then(d => { if (d.accounts?.length) { setAccounts(d.accounts); setIsDemo(false); } if (d.intel) setIntel(d.intel); })
+      .catch(() => {});
+    fetch("/api/copier/stats")
+      .then(r => r.json())
+      .then(d => { if (d.overview) setStats(d); })
       .catch(() => {});
   }, []);
 
@@ -72,6 +160,9 @@ export default function CopierPage() {
           <Link href="/dashboard/accounts/add" className="gf-btn gf-btn-sm">+ Konto verbinden</Link>
         </div>
       </div>
+
+      {/* Stats Dashboard */}
+      {stats && <StatsSection stats={stats} />}
 
       {/* INTEL Bar */}
       {intel && (
@@ -118,7 +209,6 @@ export default function CopierPage() {
       {/* Account Cards */}
       {accounts.map((acc: any) => (
         <div key={acc.id} className="gf-panel overflow-hidden">
-          {/* Account Header */}
           <div className="flex items-center justify-between p-5 border-b" style={{ borderColor: "var(--gf-border)" }}>
             <div className="flex items-center gap-3">
               <div className="w-3 h-3 rounded-full" style={{ background: acc.copierActive ? "var(--gf-green)" : "var(--gf-red)", boxShadow: acc.copierActive ? "0 0 8px rgba(34,197,94,0.4)" : "none" }} />
@@ -136,18 +226,14 @@ export default function CopierPage() {
               {acc.copierActive ? "Pausieren" : "Fortsetzen"}
             </button>
           </div>
-
-          {/* Stats */}
           <div className="p-5">
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-5">
-              <StatCard label="Equity" value={`\u20ac${acc.equity?.toLocaleString("de-DE")}`} />
-              <StatCard label="DD Buffer" value={`${acc.ddBuffer}%`} color={acc.ddBuffer > 40 ? "var(--gf-green)" : acc.ddBuffer > 15 ? "var(--gf-gold)" : "var(--gf-red)"} />
-              <StatCard label="Multiplier" value={`${acc.lastMultiplier}x`} color="var(--gf-gold)" />
-              <StatCard label="Heute P&L" value={`${acc.todayPnl >= 0 ? "+" : ""}\u20ac${acc.todayPnl?.toFixed(0)}`} color={acc.todayPnl >= 0 ? "var(--gf-green)" : "var(--gf-red)"} />
-              <StatCard label="Trades" value={`${acc.todayCopied}/${acc.todayCopied + acc.todaySkipped}`} sub={`${acc.todaySkipped} geskippt`} />
+              <MiniCard label="Equity" value={`\u20ac${acc.equity?.toLocaleString("de-DE")}`} />
+              <MiniCard label="DD Buffer" value={`${acc.ddBuffer}%`} color={acc.ddBuffer > 40 ? "var(--gf-green)" : acc.ddBuffer > 15 ? "var(--gf-gold)" : "var(--gf-red)"} />
+              <MiniCard label="Multiplier" value={`${acc.lastMultiplier}x`} color="var(--gf-gold)" />
+              <MiniCard label="Heute P&L" value={`${acc.todayPnl >= 0 ? "+" : ""}\u20ac${acc.todayPnl?.toFixed(0)}`} color={acc.todayPnl >= 0 ? "var(--gf-green)" : "var(--gf-red)"} />
+              <MiniCard label="Trades" value={`${acc.todayCopied}/${acc.todayCopied + acc.todaySkipped}`} sub={`${acc.todaySkipped} geskippt`} />
             </div>
-
-            {/* Risk Factors */}
             {acc.lastFactors && (
               <div>
                 <div className="text-[10px] font-medium tracking-wide text-zinc-600 mb-3">RISK FACTORS</div>
@@ -167,7 +253,6 @@ export default function CopierPage() {
                 </div>
               </div>
             )}
-
             {acc.pausedReason && (
               <div className="mt-4 p-3 rounded-lg flex items-start gap-2 text-xs" style={{ background: "rgba(239,68,68,0.05)", border: "1px solid rgba(239,68,68,0.12)", color: "var(--gf-red)" }}>
                 <span>{"\u26a0\ufe0f"}</span> {acc.pausedReason}
