@@ -747,11 +747,18 @@ export default function SalesFunnel() {
     };
   }, [step, emailVerified, contact.email]);
 
-  // Step 2: skip button after 10 seconds
+  // Step 2: skip button after 10 seconds (persisted via localStorage)
   useEffect(() => {
     if (step !== 2) return;
-    setShowEmailSkip(false);
-    const skipTimer = setTimeout(() => setShowEmailSkip(true), 10000);
+    const alreadyShown = typeof window !== "undefined" && localStorage.getItem("gf_skip_shown") === "1";
+    if (alreadyShown) {
+      setShowEmailSkip(true);
+      return;
+    }
+    const skipTimer = setTimeout(() => {
+      setShowEmailSkip(true);
+      if (typeof window !== "undefined") localStorage.setItem("gf_skip_shown", "1");
+    }, 10000);
     return () => clearTimeout(skipTimer);
   }, [step]);
 

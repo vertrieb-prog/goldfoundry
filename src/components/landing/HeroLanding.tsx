@@ -209,6 +209,7 @@ export default function HeroLanding() {
             </a>
           ))}
         </div>
+        <a href="/auth/login" className="px-3 py-1.5 text-xs rounded-full hover:bg-white/5 transition-colors" style={{ color: "#cec0a0", fontSize: 14, fontWeight: 500, textDecoration: "none", padding: "8px 16px", borderRadius: 8 }}>Login</a>
         <button
           onClick={() => window.dispatchEvent(new Event("openFunnel"))}
           className="ml-2 px-4 py-1.5 rounded-full text-xs font-semibold transition-all hover:scale-105"

@@ -1,9 +1,12 @@
 // ═══════════════════════════════════════════════════════════════
 // GET /api/funnel/confirm-email?token=xxx — Confirm email
+// ALWAYS redirects to website, NEVER returns JSON
 // ═══════════════════════════════════════════════════════════════
 
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+
+const BASE_URL = (process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_BASE_URL || "https://goldfoundry.de").trim().replace(/\/$/,"");
 
 export async function GET(request: Request) {
   try {
@@ -11,13 +14,10 @@ export async function GET(request: Request) {
     const token = searchParams.get("token");
 
     if (!token) {
-      return NextResponse.json(
-        { error: "Token erforderlich" },
-        { status: 400 }
-      );
+      return NextResponse.redirect(`${BASE_URL}/?error=missing-token`);
     }
 
-    // Find lead by token
+    // Find lead by plaintext token using service role client
     const { data: lead, error: findError } = await supabaseAdmin
       .from("funnel_leads")
       .select("id, email, email_confirmed")
@@ -25,18 +25,12 @@ export async function GET(request: Request) {
       .single();
 
     if (findError || !lead) {
-      return NextResponse.json(
-        { error: "Ungueltiger oder abgelaufener Token" },
-        { status: 404 }
-      );
+      return NextResponse.redirect(`${BASE_URL}/?error=invalid-token`);
     }
 
     if (lead.email_confirmed) {
-      return NextResponse.json({
-        success: true,
-        message: "E-Mail bereits bestaetigt",
-        email: lead.email,
-      });
+      // Already confirmed — redirect to success
+      return NextResponse.redirect(`${BASE_URL}/auth/verify-email?verified=1&email=${encodeURIComponent(lead.email)}`);
     }
 
     // Confirm email
@@ -51,16 +45,10 @@ export async function GET(request: Request) {
 
     if (updateError) throw updateError;
 
-    return NextResponse.json({
-      success: true,
-      message: "E-Mail erfolgreich bestaetigt",
-      email: lead.email,
-    });
+    // Always redirect
+    return NextResponse.redirect(`${BASE_URL}/auth/verify-email?verified=1&email=${encodeURIComponent(lead.email)}`);
   } catch (err: any) {
     console.error("[FUNNEL] Confirm email error:", err.message);
-    return NextResponse.json(
-      { error: err.message || "Bestaetigung fehlgeschlagen" },
-      { status: 500 }
-    );
+    return NextResponse.redirect(`${BASE_URL}/?error=confirm-failed`);
   }
 }

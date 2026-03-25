@@ -4,7 +4,7 @@ import { sendEmail } from "@/lib/email/email-engine";
 import { pushLeadAndEmail } from "@/lib/crm/ghl-sync";
 import crypto from "crypto";
 
-const SITE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://goldfoundry.de";
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_BASE_URL || "https://goldfoundry.de").trim().replace(/\/$/,"");
 
 export async function POST(request: Request) {
   try {
