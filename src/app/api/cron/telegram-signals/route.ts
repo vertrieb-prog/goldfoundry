@@ -9,6 +9,7 @@ import { NextResponse } from "next/server";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { parseSignal, isLikelySignal } from "@/lib/telegram-copier/parser";
 import { resolveSymbol } from "@/lib/telegram-copier/symbol-resolver";
+import { calculateLotSize } from "@/lib/telegram-copier/lot-calculator";
 
 const META_CLIENT_BASE = "https://mt-client-api-v1.new-york.agiliumtrade.ai";
 
@@ -234,7 +235,8 @@ async function processChannel(db: any, channel: any) {
         brokerSymbol,
         signal,
         Number(account.current_equity) || 10000,
-        riskPercent
+        riskPercent,
+        Number(account.leverage) || 30
       );
 
       // Update signal status
@@ -270,7 +272,8 @@ async function executeTrade(
   signal: any,
   accountBalance: number,
   riskPercent: number,
-): Promise<{ success: boolean; orderId?: string; error?: string; lots?: number }> {
+  leverage: number = 30,
+): Promise<{ success: boolean; orderId?: string; error?: string; lots?: number; lotCalcReason?: string }> {
   try {
     // Check position limit (max 10 open positions)
     const positions = await metaApiFetch(
@@ -294,19 +297,21 @@ async function executeTrade(
       }
     }
 
-    // Calculate lot size based on risk
-    const slDistance = signal.stopLoss && signal.entryPrice
-      ? Math.abs(signal.entryPrice - signal.stopLoss)
-      : 0;
+    // Calculate lot size using professional calculator
+    const lotCalc = await calculateLotSize({
+      symbol,
+      action: signal.action,
+      entryPrice: signal.entryPrice || null,
+      stopLoss: signal.stopLoss,
+      accountBalance,
+      riskPercent,
+      leverage,
+      metaApiAccountId: accountId,
+      metaApiToken: token,
+    });
 
-    let lots = 0.01; // minimum
-    if (slDistance > 0) {
-      const riskAmount = accountBalance * (riskPercent / 100);
-      const pipValue = symbol.includes("JPY") ? 100 : symbol === "XAUUSD" ? 1 : 10;
-      const slPips = slDistance * pipValue;
-      lots = Math.max(0.01, Math.round((riskAmount / slPips) * 100) / 100);
-      lots = Math.min(lots, 1.0); // cap at 1 lot
-    }
+    const lots = lotCalc.lots;
+    log("INFO", `Lot calc: ${lotCalc.reason}`);
 
     const actionType = signal.action === "BUY" ? "ORDER_TYPE_BUY" : "ORDER_TYPE_SELL";
 
@@ -328,10 +333,10 @@ async function executeTrade(
     );
 
     if (result.numericCode === 0 || result.stringCode === "ERR_NO_ERROR") {
-      return { success: true, orderId: result.orderId, lots };
+      return { success: true, orderId: result.orderId, lots, lotCalcReason: lotCalc.reason };
     }
 
-    return { success: false, error: `${result.stringCode}: ${result.message}`, lots };
+    return { success: false, error: `${result.stringCode}: ${result.message}`, lots, lotCalcReason: lotCalc.reason };
   } catch (err: any) {
     return { success: false, error: err.message };
   }
