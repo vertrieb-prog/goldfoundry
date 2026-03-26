@@ -24,39 +24,78 @@ const EMPTY_SIGNAL: ParsedSignal = {
 /**
  * Regex pre-parser: extract clear signals without AI (saves ~200 tokens).
  */
+// All tradeable symbols with their aliases
+const SYMBOL_MAP: Record<string, string> = {
+  gold: "XAUUSD", xau: "XAUUSD", xauusd: "XAUUSD",
+  silver: "XAGUSD", xag: "XAGUSD", xagusd: "XAGUSD",
+  eurusd: "EURUSD", eur: "EURUSD", eu: "EURUSD", fiber: "EURUSD",
+  gbpusd: "GBPUSD", gbp: "GBPUSD", gu: "GBPUSD", cable: "GBPUSD", pound: "GBPUSD",
+  usdjpy: "USDJPY", uj: "USDJPY", jpy: "USDJPY",
+  usdcad: "USDCAD", uc: "USDCAD", ucad: "USDCAD",
+  usdchf: "USDCHF", uchf: "USDCHF",
+  audusd: "AUDUSD", au: "AUDUSD", aussie: "AUDUSD",
+  nzdusd: "NZDUSD", nz: "NZDUSD", kiwi: "NZDUSD",
+  eurgbp: "EURGBP", eg: "EURGBP",
+  eurjpy: "EURJPY", ej: "EURJPY",
+  gbpjpy: "GBPJPY", gj: "GBPJPY", guppy: "GBPJPY",
+  audnzd: "AUDNZD", an: "AUDNZD",
+  audcad: "AUDCAD", ac: "AUDCAD",
+  audjpy: "AUDJPY", aj: "AUDJPY",
+  nzdjpy: "NZDJPY", nj: "NZDJPY",
+  eurchf: "EURCHF", echf: "EURCHF",
+  euraud: "EURAUD", ea: "EURAUD",
+  eurnzd: "EURNZD",
+  eurcad: "EURCAD", ec: "EURCAD",
+  gbpaud: "GBPAUD", ga: "GBPAUD",
+  gbpcad: "GBPCAD", gc: "GBPCAD",
+  gbpnzd: "GBPNZD", gn: "GBPNZD",
+  gbpchf: "GBPCHF",
+  cadjpy: "CADJPY", cj: "CADJPY",
+  chfjpy: "CHFJPY",
+  cadchf: "CADCHF",
+  nzdcad: "NZDCAD",
+  btcusd: "BTCUSD", btc: "BTCUSD", bitcoin: "BTCUSD",
+  ethusd: "ETHUSD", eth: "ETHUSD", ethereum: "ETHUSD",
+  us500: "US500", spx: "US500", sp500: "US500",
+  us30: "US30", dow: "US30",
+  nas100: "NAS100", nasdaq: "NAS100", nas: "NAS100",
+  usoil: "USOIL", wti: "USOIL", oil: "USOIL", crude: "USOIL",
+};
+const SYM_PATTERN = Object.keys(SYMBOL_MAP).sort((a, b) => b.length - a.length).join("|");
+
 function tryRegexParse(message: string): ParsedSignal | null {
   const m = message.replace(/\n/g, " ").trim();
-  const lower = m.toLowerCase();
 
-  // Detect BUY or SELL action
+  // Detect BUY or SELL
   let action: "BUY" | "SELL" | null = null;
   if (/\b(buy|buying|long)\b/i.test(m)) action = "BUY";
   else if (/\b(sell|selling|short)\b/i.test(m)) action = "SELL";
   if (!action) return null;
 
-  // Must mention gold/xau somewhere
-  if (!/\b(gold|xau|xauusd)/i.test(m)) return null;
+  // Find symbol (longest first to avoid partial matches like "au" in "xau")
+  const symRegex = new RegExp(`(${SYM_PATTERN})`, "i");
+  const symMatch = m.match(symRegex);
+  if (!symMatch) return null;
+  const symbol = SYMBOL_MAP[symMatch[1].toLowerCase()] || symMatch[1].toUpperCase();
 
-  // Extract entry price: "at 4333", "@ 4333", "4444–4456", "Entry: 4530", "XAUUSD 4408"
+  // Extract entry price: "at 4333", "@ 4333", "Entry: 4530", "4444–4456", after symbol
   let entryPrice: number | null = null;
-  const atMatch = m.match(/(?:at|@|entry[:\s]*)\s*(\d{3,5}(?:\.\d{1,2})?)/i);
+  const atMatch = m.match(/(?:at|@|entry[:\s]*)\s*(\d+(?:\.\d{1,5})?)/i);
   const rangeMatch = m.match(/(\d{4,5}(?:\.\d{1,2})?)\s*[–\-]\s*(\d{4,5}(?:\.\d{1,2})?)/);
-  const afterSymMatch = m.match(/(?:xau(?:usd)?(?:\.?\w*)?|gold)\s+(\d{4,5}(?:\.\d{1,2})?)/i);
   if (atMatch) entryPrice = parseFloat(atMatch[1]);
   else if (rangeMatch) entryPrice = (parseFloat(rangeMatch[1]) + parseFloat(rangeMatch[2])) / 2;
-  else if (afterSymMatch) entryPrice = parseFloat(afterSymMatch[1]);
 
-  // Extract SL: "SL: 4462", "Sl 4323", "Stop Loss: 4548.87", "sl 4510"
-  const slMatch = m.match(/(?:SL|stop\s*loss|sl)[:\s]+(\d{3,5}(?:\.\d{1,2})?)/i);
+  // Extract SL
+  const slMatch = m.match(/(?:SL|stop\s*loss|sl)[:\s]+(\d+(?:\.\d{1,5})?)/i);
   const stopLoss = slMatch ? parseFloat(slMatch[1]) : null;
 
-  // Extract TPs: "TP1: 4440", "Tp: 4363", "Take Profit: 4476.94", "tp 4480"
-  const tpMatches = [...m.matchAll(/(?:TP\d?|take\s*profit\d?|tp\d?)[:\s]+(\d{3,5}(?:\.\d{1,2})?)/gi)];
+  // Extract TPs
+  const tpMatches = [...m.matchAll(/(?:TP\d?|take\s*profit\d?|tp\d?)[:\s]+(\d+(?:\.\d{1,5})?)/gi)];
   const takeProfits = tpMatches.map(t => parseFloat(t[1])).filter(n => !isNaN(n));
 
   return {
     action,
-    symbol: "XAUUSD",
+    symbol,
     entryPrice,
     stopLoss,
     takeProfits,
