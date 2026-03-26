@@ -230,7 +230,7 @@ async function processChannel(db: any, channel: any) {
   }
 
   // Get last 10 messages (only recent ones)
-  const messages = await client.getMessages(entity, { limit: 10 });
+  const messages = await client.getMessages(entity, { limit: 50 });
   await client.disconnect();
 
   // Get previously processed message IDs for deduplication
@@ -246,7 +246,10 @@ async function processChannel(db: any, channel: any) {
     (processedSignals || []).map((s: any) => s.telegram_message_id).filter(Boolean)
   );
 
-  const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
+  // Lookback: 24h (Vercel Hobby Cron läuft nur 1x/Tag)
+  // Duplikate werden über processedIds gefiltert
+  const lookbackMs = 24 * 60 * 60 * 1000;
+  const lookbackTime = Date.now() - lookbackMs;
 
   // ── Signal Delay: Group messages within 3 minutes ──────────────
   // Some channels send signals in parts, e.g.:
@@ -254,7 +257,8 @@ async function processChannel(db: any, channel: any) {
   //   Msg2 (2 min later): "SL 3055 TP 3045 3040 3030"
   // We combine consecutive messages within 3 min before parsing.
   const recentMessages = messages
-    .filter((m: any) => m.message && m.id && m.date * 1000 > fiveMinutesAgo)
+    .filter((m: any) => m.message && m.id && m.date * 1000 > lookbackTime)
+    .filter((m: any) => !processedMessageIds.has(m.id)) // Skip already processed
     .sort((a: any, b: any) => a.date - b.date); // oldest first
 
   const combinedMessages: any[] = [];
