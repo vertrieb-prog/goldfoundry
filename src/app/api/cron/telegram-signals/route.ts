@@ -550,11 +550,16 @@ function buildSplitOrders(totalLots: number, takeProfits: number[]): SplitOrder[
   }
 
   // 3+ TPs → full 4-split: 40/25/20/15
+  // Runner TP = letzter TP + (TP3-TP1 Distanz) — smart, nicht zu nah
+  const tpSpread = Math.abs(takeProfits[takeProfits.length - 1] - takeProfits[0]);
+  const runnerTp = takeProfits[0] > takeProfits[takeProfits.length - 1]
+    ? takeProfits[takeProfits.length - 1] - tpSpread // SELL: weiter runter
+    : takeProfits[takeProfits.length - 1] + tpSpread; // BUY: weiter hoch
   const rawSplits = [
     { pct: 0.40, tp: takeProfits[0], label: "TP1" },
     { pct: 0.25, tp: takeProfits[1], label: "TP2" },
     { pct: 0.20, tp: takeProfits[2], label: "TP3" },
-    { pct: 0.15, tp: null,           label: "Runner" },
+    { pct: 0.15, tp: Math.round(runnerTp * 100) / 100, label: "Runner" },
   ];
   return rawSplits
     .map(s => ({
