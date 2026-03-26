@@ -517,49 +517,35 @@ interface SplitOrder {
 }
 
 /**
- * Build split orders based on number of take-profit levels.
- * 1 TP  → single order (no split)
- * 2 TPs → 60% TP1, 40% TP2
- * 3+ TPs → 40% TP1, 25% TP2, 20% TP3, 15% runner (no TP)
+ * IMMER 4 Split-Orders: 40% TP1, 25% TP2, 20% TP3, 15% Runner
+ * Fehlende TPs werden automatisch berechnet (1.5x, 2.5x, 3.5x SL-Distanz)
  */
-function buildSplitOrders(totalLots: number, takeProfits: number[]): SplitOrder[] {
-  const tpCount = takeProfits?.length || 0;
+function buildSplitOrders(totalLots: number, takeProfits: number[], entryPrice?: number | null, stopLoss?: number | null, action?: string): SplitOrder[] {
+  // Immer mindestens 4 TPs generieren
+  const tps = [...(takeProfits || [])];
+  const entry = entryPrice || tps[0] || 0;
+  const sl = stopLoss || 0;
+  const slDist = sl && entry ? Math.abs(entry - sl) : 0;
+  const isBuy = action !== "SELL";
 
-  // 0 or 1 TP → single order, no split
-  if (tpCount <= 1) {
-    return [{
-      lots: totalLots,
-      takeProfit: tpCount === 1 ? takeProfits[0] : null,
-      label: "full",
-    }];
+  // Fehlende TPs berechnen basierend auf SL-Distanz
+  while (tps.length < 4 && slDist > 0) {
+    const mult = tps.length === 0 ? 1.5 : tps.length === 1 ? 2.5 : tps.length === 2 ? 3.5 : 5;
+    const newTp = isBuy ? entry + slDist * mult : entry - slDist * mult;
+    tps.push(Math.round(newTp * 100) / 100);
   }
 
-  // 2 TPs → 60/40 split
-  if (tpCount === 2) {
-    const rawSplits = [
-      { pct: 0.60, tp: takeProfits[0], label: "TP1" },
-      { pct: 0.40, tp: takeProfits[1], label: "TP2" },
-    ];
-    return rawSplits
-      .map(s => ({
-        lots: Math.floor(totalLots * s.pct * 100) / 100,
-        takeProfit: s.tp,
-        label: s.label,
-      }))
-      .filter(s => s.lots >= 0.01);
+  // Fallback: wenn keine TPs berechenbar → single order
+  if (tps.length === 0) {
+    return [{ lots: totalLots, takeProfit: null, label: "full" }];
   }
 
-  // 3+ TPs → full 4-split: 40/25/20/15
-  // Runner TP = letzter TP + (TP3-TP1 Distanz) — smart, nicht zu nah
-  const tpSpread = Math.abs(takeProfits[takeProfits.length - 1] - takeProfits[0]);
-  const runnerTp = takeProfits[0] > takeProfits[takeProfits.length - 1]
-    ? takeProfits[takeProfits.length - 1] - tpSpread // SELL: weiter runter
-    : takeProfits[takeProfits.length - 1] + tpSpread; // BUY: weiter hoch
+  // IMMER 4-Split: 40/25/20/15
   const rawSplits = [
-    { pct: 0.40, tp: takeProfits[0], label: "TP1" },
-    { pct: 0.25, tp: takeProfits[1], label: "TP2" },
-    { pct: 0.20, tp: takeProfits[2], label: "TP3" },
-    { pct: 0.15, tp: Math.round(runnerTp * 100) / 100, label: "Runner" },
+    { pct: 0.40, tp: tps[0], label: "TP1" },
+    { pct: 0.25, tp: tps[1] || tps[0], label: "TP2" },
+    { pct: 0.20, tp: tps[2] || tps[1] || tps[0], label: "TP3" },
+    { pct: 0.15, tp: tps[3] || tps[2] || tps[1] || tps[0], label: "Runner" },
   ];
   return rawSplits
     .map(s => ({
@@ -660,7 +646,7 @@ async function executeTrade(
     const takeProfits: number[] = signal.takeProfits || [];
 
     // Build split orders based on TP count
-    const splits = buildSplitOrders(totalLots, takeProfits);
+    const splits = buildSplitOrders(totalLots, takeProfits, signal.entryPrice, signal.stopLoss, signal.action);
     log("INFO", `Split plan: ${splits.map(s => `${s.label}=${s.lots}L`).join(", ")} (${splits.length} order(s))`);
 
     const orderIds: string[] = [];

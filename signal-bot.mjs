@@ -9,12 +9,14 @@ import { StringSession } from "telegram/sessions/index.js";
 import { NewMessage } from "telegram/events/index.js";
 
 // ── Config (aus .env.local laden) ──
-import { readFileSync } from "fs";
-import { join } from "path";
-const envPaths = [".env.local", "C:\\signal-bot\\.env.local", join(process.cwd(), ".env.local")];
-let envContent = "";
-for (const p of envPaths) { try { envContent = readFileSync(p, "utf8"); break; } catch {} }
-const getEnv = (k, fallback = "") => { const m = envContent.match(new RegExp(`${k}=(.+)`)); return m ? m[1].trim() : (process.env[k] || fallback); };
+import { readFileSync as readFS } from "fs";
+import { join as pathJoin } from "path";
+let _envContent = "";
+try { _envContent = readFS("C:\\signal-bot\\.env.local", "utf8"); } catch {}
+if (!_envContent) try { _envContent = readFS(".env.local", "utf8"); } catch {}
+if (!_envContent) try { _envContent = readFS(pathJoin(process.cwd(), ".env.local"), "utf8"); } catch {}
+const getEnv = (k, fallback = "") => { const m = _envContent.match(new RegExp(`${k}=(.+)`)); return m ? m[1].trim() : (process.env[k] || fallback); };
+if (!_envContent) console.log("WARN: .env.local nicht gefunden, nutze Fallback-Werte");
 
 const CONFIG = {
   TG_API_ID: parseInt(getEnv("TELEGRAM_API_ID", "27346428")),
@@ -50,7 +52,8 @@ async function main() {
   console.log("🚀 GoldFoundry REALTIME Signal Bot");
   console.log("═══════════════════════════════════════\n");
 
-  if (!CONFIG.SB_KEY || !CONFIG.TG_API_HASH) { console.error("❌ .env.local nicht gefunden oder unvollständig!"); process.exit(1); }
+  if (!CONFIG.SB_KEY) { console.error("❌ SUPABASE_SERVICE_KEY fehlt!"); process.exit(1); }
+  if (!CONFIG.TG_API_HASH) CONFIG.TG_API_HASH = "474624b94fcf276b0f787d2061b1aa09"; // fallback
   const sessionString = await getSession();
   if (!sessionString) { console.error("❌ Keine Telegram-Session gefunden!"); return; }
 
