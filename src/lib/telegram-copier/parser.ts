@@ -71,7 +71,9 @@ export function isLikelySignal(message: string): boolean {
     "buy", "sell", "long", "short",
     "tp", "sl", "take profit", "stop loss",
     "entry", "close", "modify",
-    "xauusd", "gold", "eurusd", "gbpusd", "btcusd",
+    "re-entry", "reentry", "re entry", "nochmal rein", "wieder rein",
+    "signal alert", "setup",
+    "xauusd", "gold", "xau", "eurusd", "gbpusd", "btcusd", "nas", "us500",
   ];
   return keywords.some((kw) => lower.includes(kw));
 }
