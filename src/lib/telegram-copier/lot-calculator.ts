@@ -3,7 +3,12 @@
 // Risk-based position sizing with margin checks
 // ═══════════════════════════════════════════════════════════════
 
-const META_CLIENT_BASE = "https://mt-client-api-v1.new-york.agiliumtrade.ai";
+// Try multiple regions for price fetching
+const API_BASES = [
+  "https://mt-client-api-v1.agiliumtrade.agiliumtrade.ai",
+  "https://mt-client-api-v1.london.agiliumtrade.ai",
+  "https://mt-client-api-v1.new-york.agiliumtrade.ai",
+];
 
 const log = (level: string, msg: string) => {
   console.log(`[${new Date().toISOString()}] [LOT-CALC] [${level}] ${msg}`);
@@ -79,14 +84,18 @@ async function fetchCurrentPrice(
   token: string,
 ): Promise<number | null> {
   try {
-    const url = `${META_CLIENT_BASE}/users/current/accounts/${accountId}/symbols/${symbol}/current-price`;
-    const res = await fetch(url, {
-      headers: { "auth-token": token, "Content-Type": "application/json" },
-      signal: AbortSignal.timeout(10000),
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data.ask || data.bid || null;
+    for (const base of API_BASES) {
+      try {
+        const res = await fetch(`${base}/users/current/accounts/${accountId}/symbols/${symbol}/current-price`, {
+          headers: { "auth-token": token, "Content-Type": "application/json" },
+          signal: AbortSignal.timeout(8000),
+        });
+        if (!res.ok) continue;
+        const data = await res.json();
+        if (data.ask || data.bid) return data.ask || data.bid;
+      } catch { continue; }
+    }
+    return null;
   } catch {
     return null;
   }

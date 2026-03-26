@@ -8,44 +8,40 @@ import { TelegramClient } from "telegram";
 import { StringSession } from "telegram/sessions/index.js";
 import { NewMessage } from "telegram/events/index.js";
 
-// ── Config ──
+// ── Config (aus .env.local laden) ──
+import { readFileSync } from "fs";
+import { join } from "path";
+const envPaths = [".env.local", "C:\\signal-bot\\.env.local", join(process.cwd(), ".env.local")];
+let envContent = "";
+for (const p of envPaths) { try { envContent = readFileSync(p, "utf8"); break; } catch {} }
+const getEnv = (k, fallback = "") => { const m = envContent.match(new RegExp(`${k}=(.+)`)); return m ? m[1].trim() : (process.env[k] || fallback); };
+
 const CONFIG = {
-  TG_API_ID: 27346428,
-  TG_API_HASH: "474624b94fcf276b0f787d2061b1aa09",
-  SB_URL: "https://exgmqztwuvwlncrmgmhq.supabase.co",
-  CRON_URL: "https://goldfoundry.de/api/cron/trigger-all",
-  CRON_SECRET: "goldfoundry-cron-secret-2024",
+  TG_API_ID: parseInt(getEnv("TELEGRAM_API_ID", "27346428")),
+  TG_API_HASH: getEnv("TELEGRAM_API_HASH"),
+  SB_URL: getEnv("NEXT_PUBLIC_SUPABASE_URL", "https://exgmqztwuvwlncrmgmhq.supabase.co"),
+  SB_KEY: getEnv("SUPABASE_SERVICE_KEY"),
+  CRON_URL: getEnv("CRON_TRIGGER_URL", "https://goldfoundry.de/api/cron/trigger-all"),
+  CRON_SECRET: getEnv("CRON_SECRET"),
   CHANNELS: {
     "-1002568714747": "THE TRADING PHENEX",
     "-1002359719499": "Elite Channel",
   },
 };
 
-// ── Get secrets from Supabase ──
-async function getSecrets() {
-  const fs = await import("fs");
-  const path = await import("path");
-  // Try multiple locations for .env.local
-  const envPaths = [".env.local", "C:\\signal-bot\\.env.local", path.join(process.cwd(), ".env.local")];
-  let envLocal = "";
-  for (const p of envPaths) {
-    try { envLocal = fs.readFileSync(p, "utf8"); break; } catch {}
-  }
-  if (!envLocal) { console.error("❌ .env.local nicht gefunden!"); process.exit(1); }
-  const sbKey = envLocal.match(/SUPABASE_SERVICE_KEY=(.+)/)?.[1]?.trim();
-
-  // Get Telegram session
+// ── Get Telegram session from Supabase ──
+async function getSession() {
   const r = await fetch(`${CONFIG.SB_URL}/rest/v1/telegram_sessions?select=session_string&status=eq.connected&limit=1`, {
-    headers: { apikey: sbKey, Authorization: `Bearer ${sbKey}` },
+    headers: { apikey: CONFIG.SB_KEY, Authorization: `Bearer ${CONFIG.SB_KEY}` },
   });
   const sessions = await r.json();
-  return { sbKey, sessionString: sessions[0]?.session_string };
+  return sessions[0]?.session_string;
 }
 
 // ── Signal Detection (same as server) ──
 function isLikelySignal(text) {
   const lower = text.toLowerCase();
-  const keywords = ["buy", "sell", "long", "short", "signal alert", "re-entry", "reentry", "entry", "tp", "sl", "stop loss", "take profit"];
+  const keywords = ["buy", "sell", "buying", "selling", "long", "short", "signal alert", "signal", "re-entry", "reentry", "entry", "setup", "tp", "sl", "stop loss", "stoploss", "take profit", "takeprofit", "breakeven", "break even", "xauusd", "gold", "xau", "eurusd", "gbpusd", "btcusd", "nas", "us500"];
   return keywords.some(kw => lower.includes(kw));
 }
 
@@ -54,7 +50,8 @@ async function main() {
   console.log("🚀 GoldFoundry REALTIME Signal Bot");
   console.log("═══════════════════════════════════════\n");
 
-  const { sessionString } = await getSecrets();
+  if (!CONFIG.SB_KEY || !CONFIG.TG_API_HASH) { console.error("❌ .env.local nicht gefunden oder unvollständig!"); process.exit(1); }
+  const sessionString = await getSession();
   if (!sessionString) { console.error("❌ Keine Telegram-Session gefunden!"); return; }
 
   // Connect to Telegram
@@ -125,10 +122,11 @@ async function main() {
 
       const elapsed = Date.now() - start;
 
-      // Check results
-      const results = data.signals?.results || [];
+      // Check results (trigger-all returns { results: { "telegram-signals": { data: ... } } })
+      const sigData = data.results?.["telegram-signals"]?.data || data;
+      const channels = sigData.results || [];
       let executed = 0;
-      for (const ch of results) {
+      for (const ch of (Array.isArray(channels) ? channels : [])) {
         for (const s of (ch.signals || [])) {
           if (s.success) executed++;
         }

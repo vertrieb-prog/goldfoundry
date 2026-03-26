@@ -165,6 +165,34 @@ async function managePosition(
     }
   }
 
+  // ── RUNNER SPEZIAL: Kurz vor TP → SL eng + TP erweitern ──
+  const isRunner = comment?.includes("Runner");
+  if (isRunner && takeProfit && currentPrice && openPrice && stopLoss) {
+    const tpDist = Math.abs(takeProfit - openPrice);
+    const currentToTp = Math.abs(takeProfit - currentPrice);
+    // Wenn Runner 85% zum TP gelaufen → SL eng nachziehen + TP erweitern
+    if (currentToTp < tpDist * 0.15) {
+      const pip = symbol.includes("JPY") ? 0.01 : symbol.includes("XAU") || symbol.includes("GOLD") ? 0.1 : 0.0001;
+      const tightSL = isBuy
+        ? Math.round((currentPrice - tpDist * 0.1) * 100) / 100  // SL nur 10% der TP-Distanz unter Preis
+        : Math.round((currentPrice + tpDist * 0.1) * 100) / 100;
+      const newTP = isBuy
+        ? Math.round((takeProfit + tpDist * 0.5) * 100) / 100  // TP um 50% erweitern
+        : Math.round((takeProfit - tpDist * 0.5) * 100) / 100;
+      const betterSL = isBuy ? tightSL > stopLoss : tightSL < stopLoss;
+      if (betterSL) {
+        try {
+          await metaApiFetch(`${clientBase}/users/current/accounts/${accountId}/trade`, token, {
+            method: "POST",
+            body: JSON.stringify({ actionType: "POSITION_MODIFY", positionId: posId, stopLoss: tightSL, takeProfit: newTP }),
+          });
+          log("INFO", `RUNNER EXTEND ${symbol} ${posId}: SL ${stopLoss}→${tightSL} TP ${takeProfit}→${newTP} (85% zum TP)`);
+          return { symbol, posId, action: "runner_extend", oldSL: stopLoss, newSL: tightSL, oldTP: takeProfit, newTP: newTP };
+        } catch (e: any) { log("WARN", `Runner extend failed: ${e.message}`); }
+      }
+    }
+  }
+
   // ── MIT-TREND TP HOCHZIEHEN ──
   // Wenn Position mit dem Trend läuft und gut im Profit → TP dynamisch erweitern
   const isWithTrend = (trend === "BULLISH" && isBuy) || (trend === "BEARISH" && !isBuy);
