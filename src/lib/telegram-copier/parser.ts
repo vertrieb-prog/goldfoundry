@@ -72,6 +72,7 @@ export function isLikelySignal(message: string): boolean {
     "tp", "sl", "take profit", "stop loss", "stoploss", "takeprofit",
     "entry", "close", "modify", "breakeven", "break even",
     "re-entry", "reentry", "re entry", "nochmal rein", "wieder rein",
+    "raus", "schließen", "dicht", "profit nehmen", "profite",
     "signal alert", "setup", "signal",
     "xauusd", "gold", "xau", "eurusd", "gbpusd", "btcusd", "nas", "us500",
   ];
