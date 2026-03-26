@@ -611,6 +611,18 @@ async function executeTrade(
       return { success: false, error: "Max 10 offene Positionen erreicht" };
     }
 
+    // Exposure check: max 3 same-direction positions per symbol
+    if (Array.isArray(positions)) {
+      const sameDir = positions.filter((p: any) =>
+        p.symbol === symbol &&
+        ((signal.action === "BUY" && p.type === "POSITION_TYPE_BUY") ||
+         (signal.action === "SELL" && p.type === "POSITION_TYPE_SELL"))
+      );
+      if (sameDir.length >= 3) {
+        return { success: false, error: "Max 3 gleiche Richtung pro Symbol" };
+      }
+    }
+
     // Slippage protection: check current price vs signal entry
     if (signal.entryPrice) {
       const tick = await metaApiFetch(
