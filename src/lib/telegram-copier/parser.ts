@@ -25,29 +25,37 @@ const EMPTY_SIGNAL: ParsedSignal = {
  * Regex pre-parser: extract clear signals without AI (saves ~200 tokens).
  */
 function tryRegexParse(message: string): ParsedSignal | null {
-  const m = message.replace(/\n/g, " ");
+  const m = message.replace(/\n/g, " ").trim();
+  const lower = m.toLowerCase();
 
-  // Pattern: "SIGNAL ALERT BUY/SELL XAUUSD 4444-4456 TP1: 4440 TP2: 4433 SL: 4462"
-  const alertMatch = m.match(/(?:SIGNAL\s*ALERT\s*)?(BUY|SELL|BUYING|SELLING)\s+(?:GOLD|XAU(?:USD)?|XAUUSD\.?\w*)\s*(?:@?\s*(\d{3,5}(?:\.\d{1,2})?))?\s*(?:[–\-]\s*(\d{3,5}(?:\.\d{1,2})?))?/i);
-  if (!alertMatch) return null;
-
-  const action = alertMatch[1].toUpperCase().startsWith("BUY") ? "BUY" : "SELL";
-  const entry1 = alertMatch[2] ? parseFloat(alertMatch[2]) : null;
-  const entry2 = alertMatch[3] ? parseFloat(alertMatch[3]) : null;
-  const entryPrice = entry1 && entry2 ? (entry1 + entry2) / 2 : entry1 || null;
-
-  // Extract SL
-  const slMatch = m.match(/(?:SL|Stop\s*Loss|Sl)[:\s]+(\d{3,5}(?:\.\d{1,2})?)/i);
-  const stopLoss = slMatch ? parseFloat(slMatch[1]) : null;
-
-  // Extract TPs
-  const tpMatches = [...m.matchAll(/(?:TP\d?|Take\s*Profit\d?|Tp\d?)[:\s]+(\d{3,5}(?:\.\d{1,2})?)/gi)];
-  const takeProfits = tpMatches.map(t => parseFloat(t[1])).filter(n => !isNaN(n));
-
+  // Detect BUY or SELL action
+  let action: "BUY" | "SELL" | null = null;
+  if (/\b(buy|buying|long)\b/i.test(m)) action = "BUY";
+  else if (/\b(sell|selling|short)\b/i.test(m)) action = "SELL";
   if (!action) return null;
 
+  // Must mention gold/xau somewhere
+  if (!/\b(gold|xau|xauusd)/i.test(m)) return null;
+
+  // Extract entry price: "at 4333", "@ 4333", "4444–4456", "Entry: 4530", "XAUUSD 4408"
+  let entryPrice: number | null = null;
+  const atMatch = m.match(/(?:at|@|entry[:\s]*)\s*(\d{3,5}(?:\.\d{1,2})?)/i);
+  const rangeMatch = m.match(/(\d{4,5}(?:\.\d{1,2})?)\s*[–\-]\s*(\d{4,5}(?:\.\d{1,2})?)/);
+  const afterSymMatch = m.match(/(?:xau(?:usd)?(?:\.?\w*)?|gold)\s+(\d{4,5}(?:\.\d{1,2})?)/i);
+  if (atMatch) entryPrice = parseFloat(atMatch[1]);
+  else if (rangeMatch) entryPrice = (parseFloat(rangeMatch[1]) + parseFloat(rangeMatch[2])) / 2;
+  else if (afterSymMatch) entryPrice = parseFloat(afterSymMatch[1]);
+
+  // Extract SL: "SL: 4462", "Sl 4323", "Stop Loss: 4548.87", "sl 4510"
+  const slMatch = m.match(/(?:SL|stop\s*loss|sl)[:\s]+(\d{3,5}(?:\.\d{1,2})?)/i);
+  const stopLoss = slMatch ? parseFloat(slMatch[1]) : null;
+
+  // Extract TPs: "TP1: 4440", "Tp: 4363", "Take Profit: 4476.94", "tp 4480"
+  const tpMatches = [...m.matchAll(/(?:TP\d?|take\s*profit\d?|tp\d?)[:\s]+(\d{3,5}(?:\.\d{1,2})?)/gi)];
+  const takeProfits = tpMatches.map(t => parseFloat(t[1])).filter(n => !isNaN(n));
+
   return {
-    action: action as any,
+    action,
     symbol: "XAUUSD",
     entryPrice,
     stopLoss,
