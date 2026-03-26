@@ -650,7 +650,7 @@ async function executeTrade(
         { method: "POST", body: JSON.stringify(tradePayload) }
       );
 
-      const ok = result.numericCode === 0 || result.stringCode === "ERR_NO_ERROR";
+      const ok = result.numericCode === 0 || result.stringCode === "ERR_NO_ERROR" || result.stringCode === "TRADE_RETCODE_DONE";
       if (ok && result.orderId) {
         orderIds.push(result.orderId);
       } else {
