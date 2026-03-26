@@ -20,6 +20,8 @@ interface Account {
   win_rate: number;
   copier_active: boolean;
   account_type: string;
+  linked_channel: string | null;
+  last_signal: { time: string; action: string; symbol: string; status: string } | null;
   last_sync: string | null;
   created_at: string;
 }
@@ -43,6 +45,8 @@ const DEMO_ACCOUNTS: Account[] = [
     win_rate: 73.2,
     copier_active: true,
     account_type: "copier",
+    linked_channel: null,
+    last_signal: null,
     last_sync: "2026-03-16T14:32:00Z",
     created_at: "2025-11-01T10:00:00Z",
   },
@@ -63,6 +67,8 @@ const DEMO_ACCOUNTS: Account[] = [
     win_rate: 68.4,
     copier_active: true,
     account_type: "copier",
+    linked_channel: null,
+    last_signal: null,
     last_sync: "2026-03-16T14:28:00Z",
     created_at: "2025-09-15T08:00:00Z",
   },
@@ -83,6 +89,8 @@ const DEMO_ACCOUNTS: Account[] = [
     win_rate: 71.1,
     copier_active: false,
     account_type: "tracking",
+    linked_channel: null,
+    last_signal: null,
     last_sync: "2026-03-16T13:55:00Z",
     created_at: "2026-01-10T12:00:00Z",
   },
@@ -185,13 +193,29 @@ export default function AccountsPage() {
                     <div className="gf-icon-ring text-sm">
                       {a.platform === "mt5" ? "5" : "4"}
                     </div>
-                    <div>
+                    <div className="flex-1">
                       <div className="font-semibold text-sm" style={{ color: "var(--gf-text-bright)" }}>
                         {a.account_name || `#${a.mt_login}`}
                       </div>
                       <div className="text-xs" style={{ color: "var(--gf-text-dim)" }}>
                         {a.broker_server}
                       </div>
+                      {a.linked_channel && (
+                        <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                          <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: "rgba(34,197,94,0.08)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.15)" }}>
+                            📢 {a.linked_channel}
+                          </span>
+                          {a.last_signal && (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full" style={{
+                              background: a.last_signal.status === "executed" ? "rgba(34,197,94,0.08)" : "rgba(250,239,112,0.08)",
+                              color: a.last_signal.status === "executed" ? "#22c55e" : "var(--gf-gold)",
+                              border: `1px solid ${a.last_signal.status === "executed" ? "rgba(34,197,94,0.15)" : "rgba(250,239,112,0.15)"}`,
+                            }}>
+                              {a.last_signal.action} {a.last_signal.symbol} · {new Date(a.last_signal.time).toLocaleString("de-DE", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
 
