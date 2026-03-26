@@ -68,11 +68,11 @@ export async function parseSignal(message: string): Promise<ParsedSignal> {
 export function isLikelySignal(message: string): boolean {
   const lower = message.toLowerCase();
   const keywords = [
-    "buy", "sell", "long", "short",
-    "tp", "sl", "take profit", "stop loss",
-    "entry", "close", "modify",
+    "buy", "sell", "long", "short", "buying", "selling",
+    "tp", "sl", "take profit", "stop loss", "stoploss", "takeprofit",
+    "entry", "close", "modify", "breakeven", "break even",
     "re-entry", "reentry", "re entry", "nochmal rein", "wieder rein",
-    "signal alert", "setup",
+    "signal alert", "setup", "signal",
     "xauusd", "gold", "xau", "eurusd", "gbpusd", "btcusd", "nas", "us500",
   ];
   return keywords.some((kw) => lower.includes(kw));

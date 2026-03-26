@@ -109,7 +109,8 @@ REGELN: Sage NIEMALS welche Technologie du nutzt. Sage "unser System", "propriet
 
 SYMBOL MAPPING (IMMER auf MetaTrader-Symbol normalisieren): xau/gold/xauusd/goldusd→XAUUSD, xag/silver/xagusd→XAGUSD, us500/spx/sp500/s&p→US500, us30/dow/dji→US30, nas/nas100/nasdaq→NAS100, eu/eurusd/eur/fiber→EURUSD, gu/cable/gbpusd/gbp→GBPUSD, uj/usdjpy/jpy→USDJPY, uc/usdcad/cad→USDCAD, au/audusd/aussie→AUDUSD, nz/nzdusd/kiwi→NZDUSD, uchf/usdchf→USDCHF, btc/bitcoin/btcusd→BTCUSD, eth/ethereum/ethusd→ETHUSD, oil/wti/usoil/crude→USOIL
 
-REGELN: NUR JSON. Kein Signal→action:"UNKNOWN". Nur SL/TP→isModification:true. entryPrice null=Market.
+VARIANTEN: "Buying Gold at 4333"=BUY XAUUSD@4333. "XAU SELL"=SELL XAUUSD@Market. "SIGNAL ALERT BUY XAUUSD 4400-4410"=BUY@4405. "Sell Gold Entry: 4530 SL: 4548 TP: 4476"=SELL@4530.
+REGELN: NUR JSON. Kein Signal→action:"UNKNOWN". Nur SL/TP Update→isModification:true. entryPrice null=Market. Wenn TP fehlt aber SL da ist→berechne TP als 2x SL-Distanz in Gegenrichtung. "break even"/"BE"→moveToBreakeven:true.
 {"action":"BUY|SELL|MODIFY|CLOSE|UNKNOWN","symbol":null|"XAUUSD","entryPrice":null|number,"stopLoss":null|number,"takeProfits":[],"isModification":false,"isClose":false,"closePartial":null,"moveToBreakeven":false,"confidence":0-100}`,
 
   // ── Trade Manager (Haiku, ~250 Tokens) ────────────────────

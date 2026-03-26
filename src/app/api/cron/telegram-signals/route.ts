@@ -377,6 +377,15 @@ async function processChannel(db: any, channel: any) {
         continue;
       }
 
+      // Auto-TP: wenn SL da aber kein TP → berechne 2:1 R:R
+      if (signal.stopLoss && signal.entryPrice && (!signal.takeProfits || signal.takeProfits.length === 0)) {
+        const slDist = Math.abs(signal.entryPrice - signal.stopLoss);
+        const tp1 = signal.action === "BUY" ? signal.entryPrice + slDist * 1.5 : signal.entryPrice - slDist * 1.5;
+        const tp2 = signal.action === "BUY" ? signal.entryPrice + slDist * 2.5 : signal.entryPrice - slDist * 2.5;
+        signal.takeProfits = [Math.round(tp1 * 100) / 100, Math.round(tp2 * 100) / 100];
+        log("INFO", `Auto-TP berechnet: ${signal.takeProfits.join(", ")} (2:1 R:R)`);
+      }
+
       if (signal.action === "UNKNOWN" || !signal.symbol || signal.confidence < 50) {
         signalResults.push({ action: signal.action, symbol: signal.symbol, status: "skipped_low_confidence" });
         continue;
