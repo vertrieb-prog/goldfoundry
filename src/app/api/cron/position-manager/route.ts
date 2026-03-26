@@ -66,7 +66,7 @@ export async function GET(request: Request) {
     // Get all active accounts
     const { data: accounts } = await db
       .from("slave_accounts")
-      .select("metaapi_account_id, user_id, label, login")
+      .select("metaapi_account_id, user_id, account_name, mt_login")
       .eq("copier_active", true);
 
     if (!accounts?.length) {

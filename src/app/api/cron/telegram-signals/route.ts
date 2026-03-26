@@ -251,10 +251,10 @@ async function processChannel(db: any, channel: any) {
     (processedSignals || []).map((s: any) => s.telegram_message_id).filter(Boolean)
   );
 
-  // Lookback: 24h (Vercel Hobby Cron läuft nur 1x/Tag)
-  // Duplikate werden über processedIds gefiltert
-  const lookbackMs = 24 * 60 * 60 * 1000;
-  const lookbackTime = Date.now() - lookbackMs;
+  // Lookback: max 30 Min — Signale älter als 30 Min sind abgelaufen (Setup vorbei)
+  // Bei täglichem Cron werden nur frische Signale ausgeführt
+  const SIGNAL_MAX_AGE_MS = 30 * 60 * 1000; // 30 Minuten
+  const lookbackTime = Date.now() - SIGNAL_MAX_AGE_MS;
 
   // ── Signal Delay: Group messages within 3 minutes ──────────────
   // Some channels send signals in parts, e.g.:
