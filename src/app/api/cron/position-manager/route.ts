@@ -112,11 +112,21 @@ export async function GET(request: Request) {
         const tgPositions = positions.filter(
           (p: any) => p.comment && p.comment.startsWith("TG-Signal")
         );
+        if (!tgPositions.length) continue;
 
-        log("INFO", `Account ${account.label || accountId}: ${tgPositions.length} TG-Signal position(s)`);
+        // ── MARKT-ANALYSE: Trend bestimmen ──
+        // Berechne Gesamt-PnL pro Richtung → zeigt den Trend
+        const buyPnL = tgPositions.filter((p: any) => p.type === "POSITION_TYPE_BUY").reduce((s: number, p: any) => s + (p.profit || 0), 0);
+        const sellPnL = tgPositions.filter((p: any) => p.type === "POSITION_TYPE_SELL").reduce((s: number, p: any) => s + (p.profit || 0), 0);
+        const buyCount = tgPositions.filter((p: any) => p.type === "POSITION_TYPE_BUY").length;
+        const sellCount = tgPositions.filter((p: any) => p.type === "POSITION_TYPE_SELL").length;
+
+        // Trend: wenn BUYs im Plus und SELLs im Minus → bullish, umgekehrt bearish
+        const trend = buyPnL > 0 && sellPnL < 0 ? "BULLISH" : sellPnL > 0 && buyPnL < 0 ? "BEARISH" : "NEUTRAL";
+        log("INFO", `Account ${account.account_name}: ${tgPositions.length} pos | BUY P/L:$${buyPnL.toFixed(0)} (${buyCount}) | SELL P/L:$${sellPnL.toFixed(0)} (${sellCount}) | Trend: ${trend}`);
 
         for (const pos of tgPositions) {
-          const mod = await managePosition(pos, accountId, clientBase, metaApiToken, hasHighImpactNews);
+          const mod = await managePosition(pos, accountId, clientBase, metaApiToken, hasHighImpactNews, trend);
           if (mod) modifications.push(mod);
         }
       } catch (err: any) {
@@ -134,10 +144,51 @@ export async function GET(request: Request) {
 }
 
 async function managePosition(
-  pos: any, accountId: string, clientBase: string, token: string, hasHighImpactNews: boolean
+  pos: any, accountId: string, clientBase: string, token: string, hasHighImpactNews: boolean, trend: string = "NEUTRAL"
 ): Promise<any | null> {
   const { id: posId, type, symbol, openPrice, currentPrice, stopLoss, takeProfit, volume, profit, comment } = pos;
   const isBuy = type === "POSITION_TYPE_BUY";
+
+  // ── TREND-BASIERTE SOFORT-AKTION ──
+  // Gegen-Trend Positionen im Verlust → sofort schließen
+  const isAgainstTrend = (trend === "BULLISH" && !isBuy) || (trend === "BEARISH" && isBuy);
+  if (isAgainstTrend && profit < 0) {
+    try {
+      await metaApiFetch(`${clientBase}/users/current/accounts/${accountId}/trade`, token, {
+        method: "POST",
+        body: JSON.stringify({ actionType: "POSITION_CLOSE_ID", positionId: posId }),
+      });
+      log("INFO", `TREND CLOSE ${symbol} ${posId}: ${isBuy?"BUY":"SELL"} gegen ${trend} Trend, P/L:$${profit.toFixed(2)}`);
+      return { symbol, posId, action: "trend_close", trend, profit: +profit.toFixed(2) };
+    } catch (e: any) {
+      log("WARN", `Trend close failed: ${e.message}`);
+    }
+  }
+
+  // ── MIT-TREND TP HOCHZIEHEN ──
+  // Wenn Position mit dem Trend läuft und gut im Profit → TP dynamisch erweitern
+  const isWithTrend = (trend === "BULLISH" && isBuy) || (trend === "BEARISH" && !isBuy);
+  if (isWithTrend && profit > 0 && takeProfit && stopLoss && openPrice) {
+    const slDist = Math.abs(openPrice - stopLoss);
+    const currentDist = Math.abs(currentPrice - openPrice);
+    // Wenn Preis schon 80% zum TP gelaufen → TP erweitern um 1x SL-Distanz
+    if (takeProfit && currentDist > Math.abs(takeProfit - openPrice) * 0.8) {
+      const extension = slDist * 1.5;
+      const newTp = isBuy
+        ? Math.round((takeProfit + extension) * 100) / 100
+        : Math.round((takeProfit - extension) * 100) / 100;
+      try {
+        await metaApiFetch(`${clientBase}/users/current/accounts/${accountId}/trade`, token, {
+          method: "POST",
+          body: JSON.stringify({ actionType: "POSITION_MODIFY", positionId: posId, stopLoss, takeProfit: newTp }),
+        });
+        log("INFO", `TP EXTEND ${symbol} ${posId}: TP ${takeProfit}→${newTp} (${trend} trend)`);
+        return { symbol, posId, action: "tp_extend", oldTP: takeProfit, newTP: newTp, trend };
+      } catch (e: any) {
+        log("WARN", `TP extend failed: ${e.message}`);
+      }
+    }
+  }
 
   // Original SL distance (in price)
   if (!stopLoss || !openPrice || !currentPrice) return null;
