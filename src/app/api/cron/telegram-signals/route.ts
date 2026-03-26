@@ -1,5 +1,5 @@
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+export const maxDuration = 300;
 // ═══════════════════════════════════════════════════════════════
 // CRON: Telegram Signal Poller
 // Polls active channels for new messages, parses signals, executes trades
@@ -230,7 +230,7 @@ async function processChannel(db: any, channel: any) {
   }
 
   // Get last 10 messages (only recent ones)
-  const messages = await client.getMessages(entity, { limit: 50 });
+  const messages = await client.getMessages(entity, { limit: 30 });
   await client.disconnect();
 
   // Get previously processed message IDs for deduplication
