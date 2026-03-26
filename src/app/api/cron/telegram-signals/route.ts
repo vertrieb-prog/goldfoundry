@@ -22,7 +22,7 @@ const META_PROV_BASE = "https://mt-provisioning-api-v1.agiliumtrade.agiliumtrade
 
 // ── Region Cache: avoid repeated provisioning API calls ──
 const regionCache = new Map<string, { region: string; ts: number }>();
-const REGION_TTL = 60 * 60 * 1000; // 1 hour
+const REGION_TTL = 24 * 60 * 60 * 1000; // 24h — Region ändert sich nie
 
 function getCachedRegion(accountId: string): string | null {
   const c = regionCache.get(accountId);

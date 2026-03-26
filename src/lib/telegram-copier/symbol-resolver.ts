@@ -63,7 +63,7 @@ const BASE_SYMBOLS: Record<string, string> = {
 
 // In-memory cache für Broker-Symbole (TTL: 1h), keyed by accountId
 const symbolCache: Map<string, { symbols: string[]; ts: number }> = new Map();
-const CACHE_TTL = 60 * 60 * 1000; // 1 Stunde
+const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 Stunden — Broker-Symbole ändern sich nie
 
 /**
  * Lädt die verfügbaren Symbole eines MetaApi-Accounts.
