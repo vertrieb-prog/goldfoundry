@@ -63,6 +63,19 @@ export async function GET(request: Request) {
   const modifications: any[] = [];
 
   try {
+    // Check for upcoming high-impact news (next 30 minutes)
+    const { data: upcomingNews } = await db
+      .from("economic_calendar")
+      .select("title, tier, event_time")
+      .lte("event_time", new Date(Date.now() + 30 * 60000).toISOString())
+      .gte("event_time", new Date().toISOString())
+      .in("tier", [0, 1]);
+
+    const hasHighImpactNews = (upcomingNews?.length || 0) > 0;
+    if (hasHighImpactNews) {
+      log("WARN", `${upcomingNews!.length} high-impact news event(s) in next 30min — news partial close active`);
+    }
+
     // Get all active accounts
     const { data: accounts } = await db
       .from("slave_accounts")
@@ -103,7 +116,7 @@ export async function GET(request: Request) {
         log("INFO", `Account ${account.label || accountId}: ${tgPositions.length} TG-Signal position(s)`);
 
         for (const pos of tgPositions) {
-          const mod = await managePosition(pos, accountId, clientBase, metaApiToken);
+          const mod = await managePosition(pos, accountId, clientBase, metaApiToken, hasHighImpactNews);
           if (mod) modifications.push(mod);
         }
       } catch (err: any) {
@@ -121,7 +134,7 @@ export async function GET(request: Request) {
 }
 
 async function managePosition(
-  pos: any, accountId: string, clientBase: string, token: string
+  pos: any, accountId: string, clientBase: string, token: string, hasHighImpactNews: boolean
 ): Promise<any | null> {
   const { id: posId, type, symbol, openPrice, currentPrice, stopLoss, takeProfit, volume, profit, comment } = pos;
   const isBuy = type === "POSITION_TYPE_BUY";
@@ -179,6 +192,23 @@ async function managePosition(
       }
     }
     return null; // trailing took priority, skip breakeven
+  }
+
+  // ── News Partial Close: high-impact news + in profit ───────
+  if (hasHighImpactNews && profit > 0 && volume > 0.02) {
+    const closeVol = Math.floor(volume * 50) / 100; // 50% rounded down to 0.01
+    if (closeVol >= 0.01) {
+      try {
+        await metaApiFetch(`${clientBase}/users/current/accounts/${accountId}/trade`, token, {
+          method: "POST",
+          body: JSON.stringify({ actionType: "POSITION_PARTIAL", positionId: posId, volume: closeVol }),
+        });
+        log("INFO", `NEWS PARTIAL ${symbol} ${posId}: closed ${closeVol}L (profit €${profit.toFixed(2)}, news protection)`);
+        return { symbol, posId, action: "news_partial_close", volume: closeVol, profit: +profit.toFixed(2) };
+      } catch (e: any) {
+        log("WARN", `News partial close failed ${posId}: ${e.message}`);
+      }
+    }
   }
 
   // ── Auto Breakeven: profit > 50% of SL distance ───────────

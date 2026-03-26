@@ -317,6 +317,10 @@ async function processChannel(db: any, channel: any) {
     return { channel: channelName, status: "no_new_signals", checked: messages.length };
   }
 
+  // Session filter: only trade during London+NY (07:00-20:00 UTC)
+  const hour = new Date().getUTCHours();
+  const isActiveSession = hour >= 7 && hour <= 20;
+
   log("INFO", `${channelName}: ${newMessages.length} new signal(s) found`);
 
   const settings = (channel.settings as any) || {};
@@ -360,6 +364,12 @@ async function processChannel(db: any, channel: any) {
         parsed: signal as any,
         status: signal.action === "UNKNOWN" ? "unparsed" : "parsed",
       });
+
+      // Skip BUY/SELL outside active trading session
+      if (!isActiveSession && (signal.action === "BUY" || signal.action === "SELL")) {
+        signalResults.push({ action: signal.action, symbol: signal.symbol, status: "outside_session" });
+        continue;
+      }
 
       // Reject BUY/SELL signals without stop loss
       if (!signal.stopLoss && (signal.action === "BUY" || signal.action === "SELL")) {
@@ -468,6 +478,16 @@ async function processChannel(db: any, channel: any) {
         confidence: signal.confidence,
         ...tradeResult,
       });
+
+      // Signal scoring: track channel performance
+      if (tradeResult.success) {
+        await db.from("telegram_active_channels")
+          .update({
+            signals_received: (channel.signals_received || 0) + 1,
+            last_signal_at: new Date().toISOString()
+          })
+          .eq("id", channel.id);
+      }
 
       log("INFO", `${tradeResult.success ? "EXECUTED" : "FAILED"}: ${signal.action} ${brokerSymbol} (${signal.confidence}%)`);
     } catch (err: any) {
