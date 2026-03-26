@@ -695,7 +695,7 @@ async function executeTrade(
 
     return {
       success: false,
-      error: lastError || "All split orders failed",
+      error: "Split orders partially failed",
       lots: totalLots,
       lotCalcReason: lotCalc.reason,
       splits: splitResults,
