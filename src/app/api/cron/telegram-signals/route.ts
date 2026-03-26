@@ -651,41 +651,37 @@ async function executeTrade(
 
     const orderIds: string[] = [];
     const splitResults: { label: string; lots: number; tp: number | null; orderId?: string }[] = [];
-    let lastError = "";
 
-    for (const split of splits) {
+    // PARALLEL: Alle Split-Orders gleichzeitig senden (Geschwindigkeit!)
+    const tradePromises = splits.map(async (split) => {
       const tradePayload: any = {
-        actionType,
-        symbol,
-        volume: split.lots,
+        actionType, symbol, volume: split.lots,
         comment: `TG-Signal ${split.label}`,
       };
-
       if (signal.stopLoss) tradePayload.stopLoss = signal.stopLoss;
       if (split.takeProfit !== null) tradePayload.takeProfit = split.takeProfit;
 
-      const result = await metaApiFetch(
-        `${clientBase}/users/current/accounts/${accountId}/trade`,
-        token,
-        { method: "POST", body: JSON.stringify(tradePayload) }
-      );
-
-      const ok = result.numericCode === 0 || result.stringCode === "ERR_NO_ERROR" || result.stringCode === "TRADE_RETCODE_DONE";
-      if (ok && result.orderId) {
-        orderIds.push(result.orderId);
-      } else {
-        lastError = `${result.stringCode}: ${result.message}`;
+      // Retry einmal bei Fehler
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          const result = await metaApiFetch(
+            `${clientBase}/users/current/accounts/${accountId}/trade`,
+            token,
+            { method: "POST", body: JSON.stringify(tradePayload) }
+          );
+          const ok = result.numericCode === 0 || result.stringCode === "ERR_NO_ERROR" || result.stringCode === "TRADE_RETCODE_DONE";
+          if (ok && result.orderId) {
+            orderIds.push(result.orderId);
+            splitResults.push({ label: split.label, lots: split.lots, tp: split.takeProfit, orderId: result.orderId });
+            return;
+          }
+          if (attempt === 0) await new Promise(r => setTimeout(r, 500)); // kurz warten vor Retry
+        } catch {}
       }
+      splitResults.push({ label: split.label, lots: split.lots, tp: split.takeProfit });
+    });
 
-      splitResults.push({
-        label: split.label,
-        lots: split.lots,
-        tp: split.takeProfit,
-        orderId: ok ? result.orderId : undefined,
-      });
-
-      log("INFO", `  ${split.label}: ${split.lots}L TP=${split.takeProfit ?? "none"} → ${ok ? "OK" : lastError}`);
-    }
+    await Promise.allSettled(tradePromises);
 
     if (orderIds.length > 0) {
       return {
