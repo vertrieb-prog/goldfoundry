@@ -176,7 +176,7 @@ export default function AccountsPage() {
               const g = gain(a);
               const isPositive = g >= 0;
               return (
-                <div key={a.id} className="gf-panel p-5 block relative" style={isDemo ? { cursor: "default" } : undefined}>
+                <Link key={a.id} href={`/dashboard/accounts/${a.id}`} className="gf-panel p-5 block relative hover:border-[rgba(212,165,55,0.25)] transition-colors" style={isDemo ? { cursor: "default" } : undefined}>
                   {/* Demo badge per card */}
                   {isDemo && (
                     <span className="absolute top-3 right-3 text-[10px] font-bold tracking-widest px-2.5 py-1 rounded-full" style={{
@@ -277,7 +277,7 @@ export default function AccountsPage() {
                             <>
                               <span>{a.mt_password}</span>
                               <button
-                                onClick={(e) => { e.preventDefault(); navigator.clipboard.writeText(a.mt_password!); }}
+                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); navigator.clipboard.writeText(a.mt_password!); }}
                                 className="text-[9px] px-1.5 py-0.5 rounded hover:opacity-80 transition-opacity"
                                 style={{ background: "rgba(212,165,55,0.1)", color: "var(--gf-gold)", border: "1px solid rgba(212,165,55,0.15)" }}
                                 title="Kopieren"
@@ -332,7 +332,7 @@ export default function AccountsPage() {
                       <span>{a.leverage ? `1:${a.leverage}` : ""} · {a.currency}</span>
                     </div>
                   </div>
-                </div>
+                </Link>
               );
             })}
 
