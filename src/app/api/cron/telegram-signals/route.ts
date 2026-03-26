@@ -12,7 +12,12 @@ import { resolveSymbol } from "@/lib/telegram-copier/symbol-resolver";
 import { calculateLotSize } from "@/lib/telegram-copier/lot-calculator";
 import { sendTradeNotification } from "@/lib/telegram-copier/notifier";
 
-const META_CLIENT_BASE = "https://mt-client-api-v1.new-york.agiliumtrade.ai";
+// Dynamic: use account region (london, new-york, etc.) — fallback to default
+function getClientBase(region?: string): string {
+  if (region && region !== "default") return `https://mt-client-api-v1.${region}.agiliumtrade.ai`;
+  return "https://mt-client-api-v1.agiliumtrade.agiliumtrade.ai";
+}
+const META_CLIENT_BASE = "https://mt-client-api-v1.agiliumtrade.agiliumtrade.ai";
 const META_PROV_BASE = "https://mt-provisioning-api-v1.agiliumtrade.agiliumtrade.ai";
 
 const log = (level: string, msg: string) => {
@@ -552,19 +557,24 @@ async function executeTrade(
   leverage: number = 30,
 ): Promise<TradeResult> {
   try {
-    // ── SELF-HEALING: Ensure MetaApi account is deployed ──
+    // ── SELF-HEALING: Ensure MetaApi account is deployed + get region ──
+    let clientBase = META_CLIENT_BASE;
     try {
       const accStatus = await metaApiFetch(
         `${META_PROV_BASE}/users/current/accounts/${accountId}`,
         token
       );
+      // Use account's region for API calls
+      if (accStatus.region) {
+        clientBase = getClientBase(accStatus.region);
+        log("INFO", `Using region: ${accStatus.region} → ${clientBase}`);
+      }
       if (accStatus.state === "UNDEPLOYED") {
         log("WARN", `[SELF-HEAL] Account ${accountId} UNDEPLOYED, redeploying...`);
         await fetch(`${META_PROV_BASE}/users/current/accounts/${accountId}/deploy`, {
           method: "POST",
           headers: { "auth-token": token },
         });
-        // Wait for deployment (10s)
         await new Promise(r => setTimeout(r, 10000));
         log("INFO", `[SELF-HEAL] Account ${accountId} redeploy requested, continuing...`);
       }
@@ -574,7 +584,7 @@ async function executeTrade(
 
     // Check position limit (max 10 open positions)
     const positions = await metaApiFetch(
-      `${META_CLIENT_BASE}/users/current/accounts/${accountId}/positions`,
+      `${clientBase}/users/current/accounts/${accountId}/positions`,
       token
     );
     if (Array.isArray(positions) && positions.length >= 10) {
@@ -584,7 +594,7 @@ async function executeTrade(
     // Slippage protection: check current price vs signal entry
     if (signal.entryPrice) {
       const tick = await metaApiFetch(
-        `${META_CLIENT_BASE}/users/current/accounts/${accountId}/symbols/${symbol}/current-price`,
+        `${clientBase}/users/current/accounts/${accountId}/symbols/${symbol}/current-price`,
         token
       );
       const currentPrice = tick.bid || tick.ask || 0;
@@ -633,7 +643,7 @@ async function executeTrade(
       if (split.takeProfit !== null) tradePayload.takeProfit = split.takeProfit;
 
       const result = await metaApiFetch(
-        `${META_CLIENT_BASE}/users/current/accounts/${accountId}/trade`,
+        `${clientBase}/users/current/accounts/${accountId}/trade`,
         token,
         { method: "POST", body: JSON.stringify(tradePayload) }
       );

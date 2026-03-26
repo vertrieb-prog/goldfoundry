@@ -3,7 +3,12 @@
 // Mappt Signal-Symbole (XAU, GOLD) auf Broker-Symbole (XAUUSD.pro)
 // ═══════════════════════════════════════════════════════════════
 
-const META_API_BASE = "https://mt-manager-api-v1.agiliumtrade.agiliumtrade.ai";
+// Try multiple API regions for symbol lookup
+const API_BASES = [
+  "https://mt-client-api-v1.agiliumtrade.agiliumtrade.ai",
+  "https://mt-client-api-v1.london.agiliumtrade.ai",
+  "https://mt-client-api-v1.new-york.agiliumtrade.ai",
+];
 
 // Alle bekannten Signal-Abkürzungen → MetaTrader Standard-Symbol
 const BASE_SYMBOLS: Record<string, string> = {
@@ -69,19 +74,23 @@ async function fetchBrokerSymbols(accountId: string, token: string): Promise<str
     return cached.symbols;
   }
 
-  try {
-    const res = await fetch(
-      `${META_API_BASE}/users/current/accounts/${accountId}/symbols`,
-      { headers: { "auth-token": token, "Content-Type": "application/json" } }
-    );
-    if (!res.ok) return [];
-    const data = await res.json();
-    const symbols = Array.isArray(data) ? data.map((s: any) => s.symbol || s) : [];
-    symbolCache.set(accountId, { symbols, ts: Date.now() });
-    return symbols;
-  } catch {
-    return [];
+  // Try multiple regions until one works
+  for (const base of API_BASES) {
+    try {
+      const res = await fetch(
+        `${base}/users/current/accounts/${accountId}/symbols`,
+        { headers: { "auth-token": token, "Content-Type": "application/json" }, signal: AbortSignal.timeout(10000) }
+      );
+      if (!res.ok) continue;
+      const data = await res.json();
+      const symbols = Array.isArray(data) ? data.map((s: any) => s.symbol || s) : [];
+      if (symbols.length > 0) {
+        symbolCache.set(accountId, { symbols, ts: Date.now() });
+        return symbols;
+      }
+    } catch { continue; }
   }
+  return [];
 }
 
 /**
