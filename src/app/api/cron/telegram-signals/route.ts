@@ -20,6 +20,20 @@ function getClientBase(region?: string): string {
 const META_CLIENT_BASE = "https://mt-client-api-v1.agiliumtrade.agiliumtrade.ai";
 const META_PROV_BASE = "https://mt-provisioning-api-v1.agiliumtrade.agiliumtrade.ai";
 
+// ── Region Cache: avoid repeated provisioning API calls ──
+const regionCache = new Map<string, { region: string; ts: number }>();
+const REGION_TTL = 60 * 60 * 1000; // 1 hour
+
+function getCachedRegion(accountId: string): string | null {
+  const c = regionCache.get(accountId);
+  if (c && Date.now() - c.ts < REGION_TTL) return c.region;
+  return null;
+}
+
+function setCachedRegion(accountId: string, region: string) {
+  regionCache.set(accountId, { region, ts: Date.now() });
+}
+
 const log = (level: string, msg: string) => {
   console.log(`[${new Date().toISOString()}] [TG-CRON] [${level}] ${msg}`);
 };
@@ -579,27 +593,33 @@ async function executeTrade(
   try {
     // ── SELF-HEALING: Ensure MetaApi account is deployed + get region ──
     let clientBase = META_CLIENT_BASE;
-    try {
-      const accStatus = await metaApiFetch(
-        `${META_PROV_BASE}/users/current/accounts/${accountId}`,
-        token
-      );
-      // Use account's region for API calls
-      if (accStatus.region) {
-        clientBase = getClientBase(accStatus.region);
-        log("INFO", `Using region: ${accStatus.region} → ${clientBase}`);
+    const cached = getCachedRegion(accountId);
+    if (cached) {
+      clientBase = getClientBase(cached);
+    } else {
+      try {
+        const accStatus = await metaApiFetch(
+          `${META_PROV_BASE}/users/current/accounts/${accountId}`,
+          token
+        );
+        // Use account's region for API calls
+        if (accStatus.region) {
+          clientBase = getClientBase(accStatus.region);
+          setCachedRegion(accountId, accStatus.region);
+          log("INFO", `Using region: ${accStatus.region} → ${clientBase}`);
+        }
+        if (accStatus.state === "UNDEPLOYED") {
+          log("WARN", `[SELF-HEAL] Account ${accountId} UNDEPLOYED, redeploying...`);
+          await fetch(`${META_PROV_BASE}/users/current/accounts/${accountId}/deploy`, {
+            method: "POST",
+            headers: { "auth-token": token },
+          });
+          await new Promise(r => setTimeout(r, 10000));
+          log("INFO", `[SELF-HEAL] Account ${accountId} redeploy requested, continuing...`);
+        }
+      } catch (e: any) {
+        log("WARN", `[SELF-HEAL] Account status check failed: ${e.message}`);
       }
-      if (accStatus.state === "UNDEPLOYED") {
-        log("WARN", `[SELF-HEAL] Account ${accountId} UNDEPLOYED, redeploying...`);
-        await fetch(`${META_PROV_BASE}/users/current/accounts/${accountId}/deploy`, {
-          method: "POST",
-          headers: { "auth-token": token },
-        });
-        await new Promise(r => setTimeout(r, 10000));
-        log("INFO", `[SELF-HEAL] Account ${accountId} redeploy requested, continuing...`);
-      }
-    } catch (e: any) {
-      log("WARN", `[SELF-HEAL] Account status check failed: ${e.message}`);
     }
 
     // Check position limit (max 10 open positions)

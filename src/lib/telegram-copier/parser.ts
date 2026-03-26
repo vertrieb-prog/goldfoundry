@@ -22,12 +22,57 @@ const EMPTY_SIGNAL: ParsedSignal = {
 };
 
 /**
+ * Regex pre-parser: extract clear signals without AI (saves ~200 tokens).
+ */
+function tryRegexParse(message: string): ParsedSignal | null {
+  const m = message.replace(/\n/g, " ");
+
+  // Pattern: "SIGNAL ALERT BUY/SELL XAUUSD 4444-4456 TP1: 4440 TP2: 4433 SL: 4462"
+  const alertMatch = m.match(/(?:SIGNAL\s*ALERT\s*)?(BUY|SELL|BUYING|SELLING)\s+(?:GOLD|XAU(?:USD)?|XAUUSD\.?\w*)\s*(?:@?\s*(\d{3,5}(?:\.\d{1,2})?))?\s*(?:[–\-]\s*(\d{3,5}(?:\.\d{1,2})?))?/i);
+  if (!alertMatch) return null;
+
+  const action = alertMatch[1].toUpperCase().startsWith("BUY") ? "BUY" : "SELL";
+  const entry1 = alertMatch[2] ? parseFloat(alertMatch[2]) : null;
+  const entry2 = alertMatch[3] ? parseFloat(alertMatch[3]) : null;
+  const entryPrice = entry1 && entry2 ? (entry1 + entry2) / 2 : entry1 || null;
+
+  // Extract SL
+  const slMatch = m.match(/(?:SL|Stop\s*Loss|Sl)[:\s]+(\d{3,5}(?:\.\d{1,2})?)/i);
+  const stopLoss = slMatch ? parseFloat(slMatch[1]) : null;
+
+  // Extract TPs
+  const tpMatches = [...m.matchAll(/(?:TP\d?|Take\s*Profit\d?|Tp\d?)[:\s]+(\d{3,5}(?:\.\d{1,2})?)/gi)];
+  const takeProfits = tpMatches.map(t => parseFloat(t[1])).filter(n => !isNaN(n));
+
+  if (!action) return null;
+
+  return {
+    action: action as any,
+    symbol: "XAUUSD",
+    entryPrice,
+    stopLoss,
+    takeProfits,
+    isModification: false,
+    isClose: false,
+    closePartial: null,
+    moveToBreakeven: false,
+    confidence: stopLoss && takeProfits.length > 0 ? 90 : stopLoss ? 80 : 60,
+  };
+}
+
+/**
  * Parse a raw Telegram message into a structured ParsedSignal using AI.
  * Falls back to UNKNOWN on any error.
  */
 export async function parseSignal(message: string): Promise<ParsedSignal> {
   if (!message || message.trim().length < 3) {
     return { ...EMPTY_SIGNAL };
+  }
+
+  // Try regex first (free, instant)
+  const regexResult = tryRegexParse(message);
+  if (regexResult && regexResult.stopLoss) {
+    return { ...regexResult, symbol: normalizeSymbol(regexResult.symbol || "") || regexResult.symbol };
   }
 
   try {
