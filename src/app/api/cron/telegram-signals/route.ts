@@ -598,7 +598,9 @@ async function executeTrade(
         token
       );
       const currentPrice = tick.bid || tick.ask || 0;
-      const maxSlippage = symbol === "XAUUSD" ? 5.0 : 0.005; // $5 for gold, 5 pips for forex
+      // Slippage: Gold $20, Forex 20 pips — lockerer weil Cron nur 1x/Tag läuft
+      const isGold = symbol.toUpperCase().includes("XAU") || symbol.toUpperCase().includes("GOLD");
+      const maxSlippage = isGold ? 20.0 : 0.0020;
       if (Math.abs(currentPrice - signal.entryPrice) > maxSlippage) {
         return { success: false, error: `Slippage zu hoch: ${currentPrice} vs Signal ${signal.entryPrice}` };
       }
