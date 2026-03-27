@@ -14,6 +14,7 @@ if (!envContent) try { envContent = readFileSync(join(process.cwd(), ".env.local
 const getEnv = (k, fb = "") => { const m = envContent.match(new RegExp(`${k}=(.+)`)); return m ? m[1].trim() : (process.env[k] || fb); };
 
 const CRON_SECRET = getEnv("CRON_SECRET", "goldfoundry-cron-secret-2024");
+const SIGNAL_URL = "https://goldfoundry.de/api/cron/telegram-signals";
 const TICK_URL = "https://goldfoundry.de/api/cron/engine-tick";
 const POS_MGR_URL = "https://goldfoundry.de/api/cron/position-manager";
 const INTERVAL = 30_000; // 30 Sekunden
@@ -25,7 +26,18 @@ async function tick() {
   tickCount++;
   const ts = new Date().toLocaleTimeString("de-DE");
   try {
-    // 1. Engine Tick (alle 13 Strategien)
+    // 1. Telegram Signals (findet neue Signale + setzt Trades)
+    let executed = 0;
+    try {
+      const rs = await fetch(SIGNAL_URL, {
+        headers: { Authorization: `Bearer ${CRON_SECRET}` },
+        signal: AbortSignal.timeout(120000),
+      });
+      const ds = await rs.json();
+      for (const ch of (ds.results || [])) for (const s of (ch.signals || [])) if (s.success) { executed++; totalMods++; }
+    } catch {}
+
+    // 2. Engine Tick (alle 13 Strategien)
     const r1 = await fetch(TICK_URL, {
       headers: { Authorization: `Bearer ${CRON_SECRET}` },
       signal: AbortSignal.timeout(60000),
@@ -41,6 +53,9 @@ async function tick() {
     const mods = d2.modifications?.length || 0;
     totalMods += mods;
 
+    if (executed > 0) {
+      console.log(`\n[${ts}] 🎯 ${executed} TRADE(S) GESETZT! | Tick #${tickCount}`);
+    }
     if (mods > 0) {
       console.log(`[${ts}] ⚡ ${mods} Modifikation(en) | Tick #${tickCount}`);
       for (const m of (d2.modifications || [])) {
