@@ -19,6 +19,10 @@
     {
       "path": "/api/cron/position-manager",
       "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/engine",
+      "schedule": "* * * * *"
     }
   ]
 }

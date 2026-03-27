@@ -11,6 +11,7 @@ import { parseSignal, isLikelySignal } from "@/lib/telegram-copier/parser";
 import { resolveSymbol } from "@/lib/telegram-copier/symbol-resolver";
 import { calculateLotSize } from "@/lib/telegram-copier/lot-calculator";
 import { sendTradeNotification } from "@/lib/telegram-copier/notifier";
+import { MasterStrategyEngine, DEFAULT_CONFIG } from "@/lib/strategy-engine";
 
 // Dynamic: use account region (london, new-york, etc.) — fallback to default
 function getClientBase(region?: string): string {
@@ -188,6 +189,58 @@ export async function GET(request: Request) {
     log("ERROR", `Cron error: ${err.message}`);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
+}
+
+// ── Lightweight MetaApi REST adapter for Strategy Engine ──
+function createEngineMetaApi(token: string, accountId: string) {
+  let base = META_CLIENT_BASE;
+  const cachedR = getCachedRegion(accountId);
+  if (cachedR) base = getClientBase(cachedR);
+
+  const apiFetch = async (url: string, options?: RequestInit) => {
+    const res = await fetch(url, {
+      ...options,
+      headers: { "auth-token": token, "Content-Type": "application/json", ...(options?.headers ?? {}) },
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!res.ok) throw new Error(`MetaApi ${res.status}`);
+    return res.json();
+  };
+
+  return {
+    getSymbolPrice: (symbol: string) =>
+      apiFetch(`${base}/users/current/accounts/${accountId}/symbols/${symbol}/current-price`),
+    getCandles: (symbol: string, tf: string, count: number) =>
+      apiFetch(`${base}/users/current/accounts/${accountId}/historical-market-data/symbols/${symbol}/timeframes/${tf}/candles?limit=${count}`),
+    createMarketBuyOrder: (symbol: string, lots: number, sl?: number | null, tp?: number | null) => {
+      const payload: any = { actionType: "ORDER_TYPE_BUY", symbol, volume: lots };
+      if (sl) payload.stopLoss = sl;
+      if (tp) payload.takeProfit = tp;
+      return apiFetch(`${base}/users/current/accounts/${accountId}/trade`, { method: "POST", body: JSON.stringify(payload) });
+    },
+    createMarketSellOrder: (symbol: string, lots: number, sl?: number | null, tp?: number | null) => {
+      const payload: any = { actionType: "ORDER_TYPE_SELL", symbol, volume: lots };
+      if (sl) payload.stopLoss = sl;
+      if (tp) payload.takeProfit = tp;
+      return apiFetch(`${base}/users/current/accounts/${accountId}/trade`, { method: "POST", body: JSON.stringify(payload) });
+    },
+    createLimitBuyOrder: (symbol: string, lots: number, price: number, sl: number, tp: number) =>
+      apiFetch(`${base}/users/current/accounts/${accountId}/trade`, { method: "POST", body: JSON.stringify({ actionType: "ORDER_TYPE_BUY_LIMIT", symbol, volume: lots, openPrice: price, stopLoss: sl, takeProfit: tp }) }),
+    createLimitSellOrder: (symbol: string, lots: number, price: number, sl: number, tp: number) =>
+      apiFetch(`${base}/users/current/accounts/${accountId}/trade`, { method: "POST", body: JSON.stringify({ actionType: "ORDER_TYPE_SELL_LIMIT", symbol, volume: lots, openPrice: price, stopLoss: sl, takeProfit: tp }) }),
+    modifyPosition: (posId: string, sl: number | null, tp: number | null) => {
+      const payload: any = { actionType: "POSITION_MODIFY", positionId: posId };
+      if (sl !== null) payload.stopLoss = sl;
+      if (tp !== null) payload.takeProfit = tp;
+      return apiFetch(`${base}/users/current/accounts/${accountId}/trade`, { method: "POST", body: JSON.stringify(payload) });
+    },
+    closePosition: (posId: string) =>
+      apiFetch(`${base}/users/current/accounts/${accountId}/trade`, { method: "POST", body: JSON.stringify({ actionType: "POSITION_CLOSE_ID", positionId: posId }) }),
+    cancelOrder: (orderId: string) =>
+      apiFetch(`${base}/users/current/accounts/${accountId}/trade`, { method: "POST", body: JSON.stringify({ actionType: "ORDER_CANCEL", orderId }) }),
+    getPosition: (posId: string) =>
+      apiFetch(`${base}/users/current/accounts/${accountId}/positions/${posId}`),
+  };
 }
 
 async function processChannel(db: any, channel: any) {
@@ -418,6 +471,44 @@ async function processChannel(db: any, channel: any) {
       // Resolve symbol for this broker
       const brokerSymbol = await resolveSymbol(signal.symbol, account.metaapi_account_id, metaApiToken);
 
+      // ── ENGINE v3: Score & gate-check signal before execution ──
+      // Engine enhances, not replaces: SKIP → skip, OPEN → continue with existing 4-split logic
+      let engineDecision: string | null = null;
+      try {
+        // Create a lightweight MetaApi REST adapter for the engine's SafeAPI wrapper
+        const engineMetaApi = createEngineMetaApi(metaApiToken, account.metaapi_account_id);
+        const engine = new MasterStrategyEngine(
+          engineMetaApi, db, null,
+          { ...DEFAULT_CONFIG, testMode: true, propFirmMode: false }
+        );
+        engineDecision = await engine.processSignal(
+          {
+            action: signal.action,
+            symbol: brokerSymbol,
+            entryPrice: signal.entryPrice,
+            stopLoss: signal.stopLoss,
+            takeProfits: signal.takeProfits || [],
+          },
+          channelId
+        );
+        log("INFO", `[ENGINE] Decision for ${signal.action} ${brokerSymbol}: ${engineDecision}`);
+
+        // If engine says SKIP → skip the trade
+        if (engineDecision && engineDecision.startsWith("SKIP")) {
+          signalResults.push({
+            action: signal.action,
+            symbol: brokerSymbol,
+            status: "engine_skipped",
+            engineDecision,
+          });
+          continue;
+        }
+      } catch (engineErr: any) {
+        // Engine error should NOT block existing execution flow
+        log("WARN", `[ENGINE] Error (non-blocking): ${engineErr.message}`);
+        engineDecision = `ERROR:${engineErr.message}`;
+      }
+
       // Execute trade via REST API (not SDK — avoids "window is not defined")
       let tradeResult = await executeTrade(
         metaApiToken,
@@ -462,6 +553,7 @@ async function processChannel(db: any, channel: any) {
         executedAt: new Date().toISOString(),
         accountName: account.label || account.login || account.metaapi_account_id,
         channelName,
+        engineDecision: engineDecision || undefined,
       };
 
       await db.from("telegram_signals")

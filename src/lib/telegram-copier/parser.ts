@@ -116,10 +116,40 @@ export async function parseSignal(message: string): Promise<ParsedSignal> {
     return { ...EMPTY_SIGNAL };
   }
 
-  // Try regex first (free, instant)
+  // Try regex first (free, instant) — akzeptiere IMMER wenn action+symbol erkannt
   const regexResult = tryRegexParse(message);
-  if (regexResult && regexResult.stopLoss) {
-    return { ...regexResult, symbol: normalizeSymbol(regexResult.symbol || "") || regexResult.symbol };
+  if (regexResult) {
+    const normalized = { ...regexResult, symbol: normalizeSymbol(regexResult.symbol || "") || regexResult.symbol };
+    // Wenn Regex SL hat → direkt nutzen (kein AI nötig)
+    if (normalized.stopLoss) return normalized;
+    // Wenn kein SL → versuche AI, aber Regex als Fallback behalten
+    try {
+      const result = await cachedCall({
+        prompt: PROMPTS.signalParser,
+        message: message.slice(0, 500),
+        model: MODELS.fast,
+        maxTokens: 200,
+      });
+      const cleaned = result.replace(/```json\n?/g, "").replace(/```/g, "").trim();
+      const parsed = JSON.parse(cleaned);
+      if (parsed.action && parsed.action !== "UNKNOWN") {
+        return {
+          action: parsed.action || normalized.action,
+          symbol: parsed.symbol ? normalizeSymbol(parsed.symbol) : normalized.symbol,
+          entryPrice: parsed.entryPrice ?? normalized.entryPrice,
+          stopLoss: parsed.stopLoss ?? null,
+          takeProfits: Array.isArray(parsed.takeProfits) && parsed.takeProfits.length > 0 ? parsed.takeProfits : normalized.takeProfits,
+          isModification: !!parsed.isModification,
+          isClose: !!parsed.isClose,
+          closePartial: parsed.closePartial ?? null,
+          moveToBreakeven: !!parsed.moveToBreakeven,
+          confidence: parsed.confidence ?? normalized.confidence,
+        };
+      }
+    } catch {
+      // AI down → Regex-Ergebnis direkt nutzen (SIGNAL DARF NICHT VERLOREN GEHEN)
+    }
+    return normalized;
   }
 
   try {
