@@ -122,6 +122,29 @@ async function getBrokerSymbol(accountId, symbol) {
 // ── Place Trade DIREKT via MetaApi ──
 async function placeTrade(accountId, signal, brokerSymbol) {
   const actionType = signal.action === "BUY" ? "ORDER_TYPE_BUY" : "ORDER_TYPE_SELL";
+  const isBuy = signal.action === "BUY";
+  const isGold = /xau|gold/i.test(brokerSymbol);
+
+  // AUTO-SL: wenn kein SL im Signal → selbst berechnen
+  if (!signal.sl) {
+    let price = signal.entry;
+    if (!price) {
+      try {
+        const tick = await (await fetch(`${CLIENT_BASE}/users/current/accounts/${accountId}/symbols/${brokerSymbol}/current-price`, {
+          headers: { "auth-token": METAAPI_TOKEN }, signal: AbortSignal.timeout(8000),
+        })).json();
+        price = tick.bid || tick.ask || 0;
+      } catch {}
+    }
+    if (price) {
+      // SL basierend auf Symbol: Gold $10, Forex 30 Pips, Indices 20 Punkte
+      const slDist = isGold ? 10 : /jpy/i.test(brokerSymbol) ? 0.30 : /us500|nas|us30/i.test(brokerSymbol) ? 20 : 0.0030;
+      signal.sl = Math.round((isBuy ? price - slDist : price + slDist) * 100) / 100;
+      signal.entry = signal.entry || price;
+      console.log(`   🛡️ Auto-SL: ${signal.sl} (${slDist} vom Preis ${price})`);
+    }
+  }
+
   let balance = 10000;
   try {
     const info = await (await fetch(`${CLIENT_BASE}/users/current/accounts/${accountId}/account-information`, {

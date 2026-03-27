@@ -438,10 +438,15 @@ async function processChannel(db: any, channel: any) {
         continue;
       }
 
-      // Reject BUY/SELL signals without stop loss
-      if (!signal.stopLoss && (signal.action === "BUY" || signal.action === "SELL")) {
-        signalResults.push({ action: signal.action, symbol: signal.symbol, status: "rejected_no_sl" });
-        continue;
+      // Auto-SL: wenn kein SL im Signal → selbst berechnen
+      if (!signal.stopLoss && (signal.action === "BUY" || signal.action === "SELL") && signal.symbol) {
+        const isGold = /xau|gold/i.test(signal.symbol);
+        const entry = signal.entryPrice || 0;
+        const slDist = isGold ? 10 : /jpy/i.test(signal.symbol) ? 0.30 : /us500|nas|us30/i.test(signal.symbol) ? 20 : 0.0030;
+        if (entry) {
+          signal.stopLoss = signal.action === "BUY" ? entry - slDist : entry + slDist;
+          log("INFO", `Auto-SL: ${signal.stopLoss} (${slDist} vom Entry ${entry})`);
+        }
       }
 
       // Auto-TP: wenn SL da aber kein TP → berechne 2:1 R:R
