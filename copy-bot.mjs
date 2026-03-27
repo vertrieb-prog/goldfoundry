@@ -71,14 +71,44 @@ function buildSplits(totalLots, tps, entry, sl, action) {
    .filter(s => s.lots >= 0.01);
 }
 
+// ── Engine: Signal Scoring + Anti-Tilt (same as signal-bot) ──
+const copyLossTracker = { consecutive: 0, pauseUntil: 0 };
+
+function scoreCopySignal(sl, tp, entry) {
+  let score = 0;
+  if (sl) score += 25;
+  if (tp) score += 25;
+  if (entry) score += 15;
+  if (sl && entry) {
+    const dirOk = entry !== sl;
+    if (dirOk) score += 15;
+  }
+  if (sl && entry && tp) {
+    const risk = Math.abs(entry - sl);
+    const reward = Math.abs(tp - entry);
+    const rr = risk > 0 ? reward / risk : 0;
+    if (rr >= 2) score += 20;
+    else if (rr >= 1.5) score += 15;
+    else if (rr >= 1) score += 10;
+  }
+  return score;
+}
+
 // ── Copy a single position ──
-let copyAccountId = ""; // set per poll iteration
+let copyAccountId = "";
 async function copyPosition(pos) {
   const action = pos.type === "POSITION_TYPE_BUY" ? "BUY" : "SELL";
   const symbol = pos.symbol;
   const entry = pos.openPrice;
   const sl = pos.stopLoss;
   const tps = pos.takeProfit ? [pos.takeProfit] : [];
+
+  // Engine: Score + Anti-Tilt
+  const score = scoreCopySignal(sl, tps[0], entry);
+  const tiltMult = Date.now() < copyLossTracker.pauseUntil ? 0 : copyLossTracker.consecutive >= 5 ? 0 : copyLossTracker.consecutive >= 3 ? 0.5 : 1.0;
+  console.log(`  📊 Score: ${score}/100 | Tilt: ×${tiltMult}`);
+  if (tiltMult === 0) { console.log("  🛑 Anti-Tilt: Paused"); return; }
+  if (score < 30) { console.log(`  ⛔ Score too low (${score}<30)`); return; }
 
   // Get copy account balance
   let balance = 10000;
@@ -87,7 +117,9 @@ async function copyPosition(pos) {
     balance = info.equity || info.balance || 10000;
   } catch {}
 
-  const totalLots = calcLots(symbol, sl, entry, balance);
+  const lotMultiplier = (score / 100) * tiltMult;
+  let totalLots = calcLots(symbol, sl, entry, balance);
+  totalLots = Math.max(0.01, Math.floor(totalLots * lotMultiplier * 100) / 100);
   const splits = buildSplits(totalLots, [...tps], entry, sl, action);
   const actionType = action === "BUY" ? "ORDER_TYPE_BUY" : "ORDER_TYPE_SELL";
 
