@@ -165,7 +165,8 @@ for (let i = 0; i < COPY_PAIRS.length; i++) {
       for (const p of existing) knownPositions.get(i).add(`${p.id}-${p.type}-${p.symbol}`);
       console.log(`📋 ${COPY_PAIRS[i].name}: ${existing.length} bestehende Positionen`);
     }
-} catch {}
+  } catch {}
+}
 
 console.log("⚡ Warte auf neue Signale...\n");
 
