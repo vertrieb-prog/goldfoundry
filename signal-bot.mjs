@@ -7,7 +7,7 @@
  */
 import { TelegramClient } from "telegram";
 import { StringSession } from "telegram/sessions/index.js";
-import { NewMessage } from "telegram/events/index.js";
+// NewMessage nicht importieren — raw event handler nutzen (GramJS v24 fix)
 import { readFileSync } from "fs";
 import { join } from "path";
 
@@ -230,10 +230,11 @@ async function connectAndListen() {
 
   // ── Message Handler ──
   client.addEventHandler(async (event) => {
-    const message = event.message;
+    // Raw handler — filter UpdateNewMessage manually
+    const message = event?.message || event;
     if (!message?.message) return;
-    const chatId = message.chatId?.value?.toString() || message.chatId?.toString() || "";
-    const fullChatId = `-100${chatId}`;
+    const chatId = message.peerId?.channelId?.value?.toString() || message.chatId?.value?.toString() || message.chatId?.toString() || "";
+    const fullChatId = chatId.startsWith("-100") ? chatId : `-100${chatId}`;
     if (!CHANNELS[fullChatId]) return;
 
     const text = message.message;
@@ -272,26 +273,21 @@ async function connectAndListen() {
     const brokerSym = await getBrokerSymbol(acc.metaApiId, signal.symbol);
     const executed = await placeTrade(acc.metaApiId, signal, brokerSym);
     console.log(`   ${executed > 0 ? "🎯" : "❌"} ${executed} Order(s) in ${Date.now() - start}ms (${brokerSym}) [lots×${lotMultiplier.toFixed(2)}]`);
-  }, new NewMessage({}));
+  }); // raw handler — kein NewMessage Filter (GramJS v24 fix)
 
   // Heartbeat
-  const hb = setInterval(() => {
-    process.stdout.write(`\r[${new Date().toLocaleTimeString("de-DE")}] 💚 LIVE`);
-  }, 30000);
-
-  // Wait for disconnect
+  // Keep alive — heartbeat + connection check
   return new Promise((resolve) => {
-    client.addEventHandler(() => {}, { /* keep alive */ });
-    // If connection drops, cleanup and signal reconnect
-    const checkInterval = setInterval(async () => {
+    const check = setInterval(async () => {
       try {
         if (!client.connected) {
           console.log("\n⚠️  Verbindung verloren — Reconnect...");
-          clearInterval(checkInterval);
-          clearInterval(hb);
+          clearInterval(check);
           resolve(false);
+        } else {
+          process.stdout.write(`\r[${new Date().toLocaleTimeString("de-DE")}] 💚 LIVE`);
         }
-      } catch { clearInterval(checkInterval); clearInterval(hb); resolve(false); }
+      } catch { clearInterval(check); resolve(false); }
     }, 30000);
   });
 }
