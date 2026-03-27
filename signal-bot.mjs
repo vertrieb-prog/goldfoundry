@@ -55,6 +55,51 @@ function isLikelySignal(text) {
   return ["buy","sell","buying","selling","long","short","tp","sl","signal","gold","xau","entry","close","raus","profite"].some(k => l.includes(k));
 }
 
+// ── Signal Scoring (from Strategy Engine v3) ──
+// Score 0-100: hasSL(20) + hasTP(20) + confidence(20) + trendAlign(20) + R:R(20)
+const lossTracker = { consecutive: 0, pauseUntil: 0 };
+
+function scoreSignal(signal) {
+  let score = 0;
+  // 1. Has SL (20pts)
+  if (signal.sl) score += 20;
+  // 2. Has TP (20pts)
+  if (signal.tps?.length) score += 20;
+  // 3. Confidence — based on how complete the signal is (20pts)
+  let conf = 0;
+  if (signal.entry) conf += 7;
+  if (signal.sl) conf += 7;
+  if (signal.tps?.length >= 2) conf += 6;
+  score += conf;
+  // 4. Trend alignment — based on signal structure (20pts)
+  // If we have entry+SL we know direction is intentional
+  if (signal.entry && signal.sl) {
+    const dirOk = (signal.action === "BUY" && signal.entry > signal.sl) ||
+                  (signal.action === "SELL" && signal.entry < signal.sl);
+    if (dirOk) score += 20;
+  } else {
+    score += 10; // partial credit without entry
+  }
+  // 5. Risk:Reward ratio (20pts)
+  if (signal.sl && signal.entry && signal.tps?.length) {
+    const risk = Math.abs(signal.entry - signal.sl);
+    const reward = Math.abs(signal.tps[signal.tps.length - 1] - signal.entry);
+    const rr = risk > 0 ? reward / risk : 0;
+    if (rr >= 3) score += 20;
+    else if (rr >= 2) score += 15;
+    else if (rr >= 1.5) score += 10;
+    else if (rr >= 1) score += 5;
+  }
+  return score;
+}
+
+function getAntiTiltMultiplier() {
+  if (Date.now() < lossTracker.pauseUntil) return 0; // paused
+  if (lossTracker.consecutive >= 5) return 0;
+  if (lossTracker.consecutive >= 3) return 0.5;
+  return 1.0;
+}
+
 // ── Broker Symbol Cache ──
 const symbolCache = new Map();
 async function getBrokerSymbol(accountId, symbol) {
@@ -90,6 +135,10 @@ async function placeTrade(accountId, signal, brokerSymbol) {
     const slDist = Math.abs(signal.entry - signal.sl);
     const isGold = /xau|gold/i.test(signal.symbol);
     lots = Math.max(0.01, Math.min(Math.floor((balance * 0.01 / (slDist * (isGold ? 100 : 100000))) * 100) / 100, isGold ? 2 : 5));
+  }
+  // Apply engine lot multiplier (score + anti-tilt)
+  if (signal._lotMultiplier && signal._lotMultiplier < 1) {
+    lots = Math.max(0.01, Math.floor(lots * signal._lotMultiplier * 100) / 100);
   }
 
   const tps = [...(signal.tps || [])];
@@ -201,10 +250,28 @@ async function connectAndListen() {
     const acc = channelAccountMap[fullChatId];
     if (!acc) { console.log("   ❌ Kein Account verknüpft!"); return; }
 
+    // ── Engine Signal Scoring ──
+    const score = scoreSignal(signal);
+    const tiltMult = getAntiTiltMultiplier();
+    console.log(`   📊 Score: ${score}/100 | Tilt: ×${tiltMult}`);
+
+    if (tiltMult === 0) {
+      console.log("   🛑 Anti-Tilt: Paused — skipping trade");
+      return;
+    }
+    if (score < 40) {
+      console.log(`   ⛔ Score too low (${score}<40) — skipping trade`);
+      return;
+    }
+
+    // Adjust lot multiplier based on score + tilt
+    const lotMultiplier = (score / 100) * tiltMult;
+    signal._lotMultiplier = lotMultiplier;
+
     const start = Date.now();
     const brokerSym = await getBrokerSymbol(acc.metaApiId, signal.symbol);
     const executed = await placeTrade(acc.metaApiId, signal, brokerSym);
-    console.log(`   ${executed > 0 ? "🎯" : "❌"} ${executed} Order(s) in ${Date.now() - start}ms (${brokerSym})`);
+    console.log(`   ${executed > 0 ? "🎯" : "❌"} ${executed} Order(s) in ${Date.now() - start}ms (${brokerSym}) [lots×${lotMultiplier.toFixed(2)}]`);
   }, new NewMessage({}));
 
   // Heartbeat

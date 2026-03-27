@@ -19,6 +19,9 @@ function getClientBase(region?: string): string {
 const log = (level: string, msg: string) =>
   console.log(`[${new Date().toISOString()}] [POS-MGR] [${level}] ${msg}`);
 
+// ── Engine Strategy State (Anti-Tilt) ──
+const antiTiltState = { consecutiveLosses: 0, pauseUntil: 0 };
+
 async function metaApiFetch(url: string, token: string, options?: RequestInit) {
   const res = await fetch(url, {
     ...options,
@@ -124,6 +127,22 @@ export async function GET(request: Request) {
         // Trend: wenn BUYs im Plus und SELLs im Minus → bullish, umgekehrt bearish
         const trend = buyPnL > 0 && sellPnL < 0 ? "BULLISH" : sellPnL > 0 && buyPnL < 0 ? "BEARISH" : "NEUTRAL";
         log("INFO", `Account ${account.account_name}: ${tgPositions.length} pos | BUY P/L:$${buyPnL.toFixed(0)} (${buyCount}) | SELL P/L:$${sellPnL.toFixed(0)} (${sellCount}) | Trend: ${trend}`);
+
+        // ── ENGINE: Anti-Tilt — track consecutive losses per run ──
+        const closedLosses = tgPositions.filter((p: any) => p.profit < 0).length;
+        const closedWins = tgPositions.filter((p: any) => p.profit > 0).length;
+        if (closedLosses > closedWins) {
+          antiTiltState.consecutiveLosses += (closedLosses - closedWins);
+        } else {
+          antiTiltState.consecutiveLosses = 0;
+        }
+        if (antiTiltState.consecutiveLosses >= 5) {
+          antiTiltState.pauseUntil = Date.now() + 3600_000; // 1h pause
+          log("WARN", `ANTI-TILT: ${antiTiltState.consecutiveLosses} consecutive losses → pausing new DCA/pyramid for 1h`);
+        }
+        if (antiTiltState.consecutiveLosses >= 3) {
+          log("WARN", `ANTI-TILT: ${antiTiltState.consecutiveLosses} consecutive losses → reducing lot sizes by 50%`);
+        }
 
         for (const pos of tgPositions) {
           const mod = await managePosition(pos, accountId, clientBase, metaApiToken, hasHighImpactNews, trend);
@@ -287,6 +306,98 @@ async function managePosition(
       } catch (e: any) {
         log("WARN", `News partial close failed ${posId}: ${e.message}`);
       }
+    }
+  }
+
+  // ── ENGINE: Smart DCA — add lots when moving towards SL ──
+  // DCA1: 33% towards SL → add 50% more lots
+  // DCA2: 60% towards SL → add 30% more lots
+  if (profitRatio < 0 && volume >= 0.01) {
+    const lossRatio = Math.abs(profitRatio); // 0..1 where 1 = at SL
+    const dcaComment = comment || "";
+    const hasDCA1 = dcaComment.includes("DCA1");
+    const hasDCA2 = dcaComment.includes("DCA2");
+
+    if (!hasDCA1 && lossRatio >= 0.33 && lossRatio < 0.60) {
+      const dcaLots = Math.max(0.01, Math.floor(volume * 0.50 * 100) / 100);
+      try {
+        const actionType = isBuy ? "ORDER_TYPE_BUY" : "ORDER_TYPE_SELL";
+        await metaApiFetch(`${clientBase}/users/current/accounts/${accountId}/trade`, token, {
+          method: "POST",
+          body: JSON.stringify({ actionType, symbol, volume: dcaLots, stopLoss, comment: `TG-Signal DCA1` }),
+        });
+        log("INFO", `DCA1 ${symbol} ${posId}: +${dcaLots}L (${(lossRatio*100).toFixed(0)}% to SL)`);
+        return { symbol, posId, action: "dca1", lots: dcaLots, lossRatio: +lossRatio.toFixed(2) };
+      } catch (e: any) { log("WARN", `DCA1 failed: ${e.message}`); }
+    }
+
+    if (!hasDCA2 && lossRatio >= 0.60) {
+      const dcaLots = Math.max(0.01, Math.floor(volume * 0.30 * 100) / 100);
+      try {
+        const actionType = isBuy ? "ORDER_TYPE_BUY" : "ORDER_TYPE_SELL";
+        await metaApiFetch(`${clientBase}/users/current/accounts/${accountId}/trade`, token, {
+          method: "POST",
+          body: JSON.stringify({ actionType, symbol, volume: dcaLots, stopLoss, comment: `TG-Signal DCA2` }),
+        });
+        log("INFO", `DCA2 ${symbol} ${posId}: +${dcaLots}L (${(lossRatio*100).toFixed(0)}% to SL)`);
+        return { symbol, posId, action: "dca2", lots: dcaLots, lossRatio: +lossRatio.toFixed(2) };
+      } catch (e: any) { log("WARN", `DCA2 failed: ${e.message}`); }
+    }
+  }
+
+  // ── ENGINE: Time Decay — tighten or close stale positions ──
+  if (pos.time) {
+    const openTime = new Date(pos.time).getTime();
+    const ageHours = (Date.now() - openTime) / 3600_000;
+
+    // >8h open → close everything
+    if (ageHours > 8) {
+      try {
+        await metaApiFetch(`${clientBase}/users/current/accounts/${accountId}/trade`, token, {
+          method: "POST",
+          body: JSON.stringify({ actionType: "POSITION_CLOSE_ID", positionId: posId }),
+        });
+        log("INFO", `TIME DECAY CLOSE ${symbol} ${posId}: open ${ageHours.toFixed(1)}h > 8h`);
+        return { symbol, posId, action: "time_decay_close", ageHours: +ageHours.toFixed(1) };
+      } catch (e: any) { log("WARN", `Time decay close failed: ${e.message}`); }
+    }
+
+    // >4h open and not yet at breakeven → tighten SL by 20%
+    if (ageHours > 4 && profitRatio < 0.5 && profitRatio > -0.5) {
+      const tighterDist = originalSLDist * 0.80; // 20% tighter
+      const newSL = isBuy
+        ? Math.round((openPrice - tighterDist) / pip) * pip
+        : Math.round((openPrice + tighterDist) / pip) * pip;
+      const isBetter = isBuy ? newSL > stopLoss : newSL < stopLoss;
+      if (isBetter) {
+        try {
+          await metaApiFetch(`${clientBase}/users/current/accounts/${accountId}/trade`, token, {
+            method: "POST",
+            body: JSON.stringify({ actionType: "POSITION_MODIFY", positionId: posId, stopLoss: newSL, takeProfit: takeProfit ?? undefined }),
+          });
+          log("INFO", `TIME DECAY TIGHTEN ${symbol} ${posId}: SL ${stopLoss}→${newSL} (${ageHours.toFixed(1)}h open)`);
+          return { symbol, posId, action: "time_decay_tighten", oldSL: stopLoss, newSL, ageHours: +ageHours.toFixed(1) };
+        } catch (e: any) { log("WARN", `Time decay tighten failed: ${e.message}`); }
+      }
+    }
+  }
+
+  // ── ENGINE: Pyramiding — add lots on strong trends at TP2 ──
+  if (profitRatio > 1.5 && isWithTrend && !comment?.includes("Pyramid")) {
+    // Only pyramid if strong trend (using profit as trend proxy)
+    const pyramidLots = Math.max(0.01, Math.floor(volume * 0.30 * 100) / 100);
+    if (pyramidLots >= 0.01) {
+      try {
+        const actionType = isBuy ? "ORDER_TYPE_BUY" : "ORDER_TYPE_SELL";
+        // SL at breakeven for pyramid order
+        const pyramidSL = isBuy ? openPrice + pip : openPrice - pip;
+        await metaApiFetch(`${clientBase}/users/current/accounts/${accountId}/trade`, token, {
+          method: "POST",
+          body: JSON.stringify({ actionType, symbol, volume: pyramidLots, stopLoss: pyramidSL, comment: "TG-Signal Pyramid" }),
+        });
+        log("INFO", `PYRAMID ${symbol} ${posId}: +${pyramidLots}L (${trend} trend, ratio ${profitRatio.toFixed(1)}x)`);
+        return { symbol, posId, action: "pyramid", lots: pyramidLots, profitRatio: +profitRatio.toFixed(2) };
+      } catch (e: any) { log("WARN", `Pyramid failed: ${e.message}`); }
     }
   }
 
