@@ -54,12 +54,18 @@ async function apiFetch(accountId, path, opts) {
 }
 
 // ── Symbol Mapping: RoboForex → TagMarket ──
+// TagMarket: Forex/Metalle/Indices/Oil = .pro Suffix, Crypto/Aktien = plain
 function mapSymbol(symbol) {
-  const sym = symbol.toUpperCase();
-  if (sym.endsWith(".pro") || sym.endsWith(".a") || sym.endsWith(".b")) return symbol;
-  const proSymbols = ["XAUUSD", "XAGUSD", "EURUSD", "GBPUSD", "USDJPY", "GBPJPY", "AUDUSD", "NZDUSD", "USDCHF", "USDCAD", "EURJPY", "EURGBP"];
-  if (proSymbols.includes(sym)) return sym + ".pro";
-  return symbol;
+  const sym = symbol.toUpperCase().replace(/\.PRO$|\.A$|\.B$|\.M$|\.E$/, "");
+  const crypto = ["BTCUSD", "ETHUSD", "LTCUSD", "XRPUSD", "ADAUSD", "SOLUSD", "EOSUSD", "XLMUSD", "XMRUSD", "ETHEUR"];
+  if (crypto.includes(sym)) return sym;
+  const stocks = ["TESLA", "APPLE", "AMAZON", "MICROSOFT", "NETFLIX", "BOEING", "INTEL", "FORD", "GM",
+    "VISA", "IBM", "HP", "ORACLE", "CISCO", "FERRARI", "ADIDAS", "SIEMENS", "LUFTHANSA", "DAIMLER",
+    "ALLIANZ", "COMMERZBANK", "LVMH", "TOTAL", "BNP", "SOCIETE", "SANTANDER", "TELEFONICA",
+    "COINBASE", "EBAY", "FEDEX", "GE", "HILTON", "JPMORGAN", "GOLDMANS", "CITI", "AIG",
+    "AMEX", "CHEVRON", "EXXON", "JOHNSON", "MSTRCARD", "TEVA", "EON", "ALIBABA"];
+  if (stocks.includes(sym)) return sym;
+  return sym + ".pro";
 }
 
 // ── Lot Calculator ──

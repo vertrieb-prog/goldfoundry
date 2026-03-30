@@ -51,15 +51,26 @@ async function logCopyEvent(pair, pos, status, extra = {}) {
 }
 
 // ── Symbol Mapping: RoboForex → TagMarket ──
-// TagMarket uses .pro suffix for most symbols
+// TagMarket: Forex/Metalle/Indices/Oil = .pro Suffix, Crypto/Aktien = plain
+// Ergebnis aus Live-Test aller Symbole auf Account 66d8fe15
 function mapSymbol(symbol) {
-  const sym = symbol.toUpperCase();
-  // If already has suffix, keep it
-  if (sym.endsWith(".pro") || sym.endsWith(".a") || sym.endsWith(".b")) return symbol;
-  // Map common symbols to TagMarket .pro variants
-  const proSymbols = ["XAUUSD", "XAGUSD", "EURUSD", "GBPUSD", "USDJPY", "GBPJPY", "AUDUSD", "NZDUSD", "USDCHF", "USDCAD", "EURJPY", "EURGBP"];
-  if (proSymbols.includes(sym)) return sym + ".pro";
-  return symbol;
+  const sym = symbol.toUpperCase().replace(/\.PRO$|\.A$|\.B$|\.M$|\.E$/, ""); // Strip existing suffixes
+
+  // Crypto — KEIN Suffix (existieren plain auf TagMarket)
+  const crypto = ["BTCUSD", "ETHUSD", "LTCUSD", "XRPUSD", "ADAUSD", "SOLUSD", "EOSUSD", "XLMUSD", "XMRUSD", "ETHEUR"];
+  if (crypto.includes(sym)) return sym;
+
+  // Aktien — KEIN Suffix
+  const stocks = ["TESLA", "APPLE", "AMAZON", "MICROSOFT", "NETFLIX", "BOEING", "INTEL", "FORD", "GM",
+    "VISA", "IBM", "HP", "ORACLE", "CISCO", "FERRARI", "ADIDAS", "SIEMENS", "LUFTHANSA", "DAIMLER",
+    "ALLIANZ", "COMMERZBANK", "LVMH", "TOTAL", "BNP", "SOCIETE", "SANTANDER", "TELEFONICA",
+    "COINBASE", "EBAY", "FEDEX", "GE", "HILTON", "JPMORGAN", "GOLDMANS", "CITI", "AIG",
+    "AMEX", "CHEVRON", "EXXON", "JOHNSON", "MSTRCARD", "TEVA", "EON", "ALIBABA"];
+  if (stocks.includes(sym)) return sym;
+
+  // Alles andere (Forex, Metalle, Indices, Oil) → .pro Suffix
+  // Verifiziert: XAUUSD.pro, EURUSD.pro, GBPJPY.pro, US30.pro, NAS100.pro, USOIL.pro, etc.
+  return sym + ".pro";
 }
 
 // ── State ──
