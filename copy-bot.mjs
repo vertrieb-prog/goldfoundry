@@ -96,18 +96,27 @@ function getDefaultSlDist(symbol) {
   return 0.003; // Standard Forex
 }
 
-// ── Lot Calculator ──
+// ── Lot Calculator — IMMER 1% Risk per Trade ──
 function calcLots(symbol, sl, entry, balance = 10000, riskPct = 1) {
-  if (!sl || !entry) return 0.01;
-  const slDist = Math.abs(entry - sl);
+  if (!entry) return 0.01;
+  // Wenn kein SL gesetzt → Default SL-Distanz pro Instrument verwenden
+  const slDist = sl ? Math.abs(entry - sl) : getDefaultSlDist(symbol);
   if (slDist === 0) return 0.01;
-  const riskAmount = balance * (riskPct / 100);
+  const riskAmount = balance * (riskPct / 100); // 1% von Balance
   const isGold = /xau|gold/i.test(symbol);
-  const riskPerLot = slDist * (isGold ? 100 : /jpy/i.test(symbol) ? 1000 : 100000);
-  let lots = riskAmount / riskPerLot;
-  lots = Math.max(0.01, Math.min(lots, isGold ? 2.0 : 5.0));
+  const isJPY = /jpy/i.test(symbol);
+  const isIndex = /us500|us30|nas|de40|uk100|jp225/i.test(symbol);
+  const isOil = /oil/i.test(symbol);
+  // Pip-Value pro Standard-Lot (1.0 Lot)
+  const pipValue = isGold ? 100 : isJPY ? 1000 : isIndex ? 1 : isOil ? 10 : 100000;
+  let lots = riskAmount / (slDist * pipValue);
+  // Safety Caps pro Instrument
+  const maxLots = isGold ? 5.0 : isIndex ? 20.0 : isOil ? 10.0 : 10.0;
+  lots = Math.max(0.01, Math.min(lots, maxLots));
   return Math.floor(lots * 100) / 100;
 }
+// Beispiel: $10.000 Balance, XAUUSD, kein SL → Default $10 SL
+// Risk: $100 (1%) / ($10 × 100) = 0.10 Lots ✓
 
 // ── 4-Split Orders — IMMER 4, KEINE Filterung ──
 function buildSplits(totalLots, tps, entry, sl, action, symbol) {
