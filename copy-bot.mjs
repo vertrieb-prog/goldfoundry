@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * GoldFoundry ACCOUNT COPIER
- * Liest Trades vom RoboForex Signal-Konto und kopiert sie auf TagMarket mit unserer Strategie.
+ * GoldFoundry ACCOUNT COPIER v2 — ALL BUGS FIXED
+ * Liest Trades vom RoboForex Signal-Konto und kopiert sie auf TagMarket.
  * NUR LESEN auf RoboForex — NUR SCHREIBEN auf TagMarket.
  * Start: node copy-bot.mjs
  */
@@ -17,7 +17,7 @@ const getEnv = (k, fb = "") => { const m = envContent.match(new RegExp(`${k}=(.+
 
 const METAAPI_TOKEN = getEnv("METAAPI_TOKEN");
 const SB_KEY = getEnv("SUPABASE_SERVICE_KEY");
-if (!METAAPI_TOKEN) { console.error("❌ METAAPI_TOKEN fehlt!"); process.exit(1); }
+if (!METAAPI_TOKEN) { console.error("[ERR] METAAPI_TOKEN fehlt!"); process.exit(1); }
 
 // ── Account Pairs: Signal (READ ONLY) → Copy (WRITE) ──
 const COPY_PAIRS = [
@@ -25,11 +25,34 @@ const COPY_PAIRS = [
   { signal: "58934470-695b-404b-bcad-8c406fd7d04d", copy: "02f08a16-ae02-40f4-9195-2c62ec52e8eb", name: "RoboForex #2 → TagMarket Copy-Demo 2" },
 ];
 const CLIENT_BASE = "https://mt-client-api-v1.london.agiliumtrade.ai";
-const POLL_INTERVAL = 3000; // 3 Sekunden
+const POLL_INTERVAL = 3000;
 
-// ── State (per pair) ──
-const knownPositions = new Map(); // pairIndex → Set
-let lastCheck = 0;
+// ── Supabase Logging ──
+const SB_URL = getEnv("NEXT_PUBLIC_SUPABASE_URL");
+async function logCopyEvent(pair, pos, status, extra = {}) {
+  if (!SB_URL || !SB_KEY) return;
+  const data = {
+    pair_name: pair.name,
+    signal_account_id: pair.signal,
+    copy_account_id: pair.copy,
+    position_id: String(pos.id),
+    symbol: pos.symbol,
+    direction: pos.type?.replace("POSITION_TYPE_", "") || "UNKNOWN",
+    volume: pos.volume,
+    open_price: pos.openPrice,
+    status,
+    ...extra,
+  };
+  await fetch(`${SB_URL}/rest/v1/copy_events`, {
+    method: "POST",
+    headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, "Content-Type": "application/json", Prefer: "return=minimal" },
+    body: JSON.stringify(data),
+  }).catch(() => {});
+}
+
+// ── State ──
+const knownPositions = new Map();
+let errorCount = 0;
 
 async function apiFetch(url, opts) {
   const r = await fetch(url, {
@@ -40,7 +63,17 @@ async function apiFetch(url, opts) {
   return r.json();
 }
 
-// ── Lot Calculator (simplified) ──
+// ── FIX #3: SL-Distanz pro Instrument-Typ ──
+function getDefaultSlDist(symbol) {
+  const sym = symbol.toUpperCase();
+  if (/XAU|GOLD/.test(sym)) return 10;
+  if (/JPY/.test(sym)) return 0.30;
+  if (/BTC/.test(sym)) return 500;
+  if (/US500|NAS/.test(sym)) return 50;
+  return 0.003; // Standard Forex
+}
+
+// ── Lot Calculator ──
 function calcLots(symbol, sl, entry, balance = 10000, riskPct = 1) {
   if (!sl || !entry) return 0.01;
   const slDist = Math.abs(entry - sl);
@@ -53,25 +86,26 @@ function calcLots(symbol, sl, entry, balance = 10000, riskPct = 1) {
   return Math.floor(lots * 100) / 100;
 }
 
-// ── 4-Split Orders ──
-function buildSplits(totalLots, tps, entry, sl, action) {
+// ── 4-Split Orders — IMMER 4, KEINE Filterung ──
+function buildSplits(totalLots, tps, entry, sl, action, symbol) {
   const isBuy = action === "BUY";
-  const slDist = sl && entry ? Math.abs(entry - sl) : 10;
-  // Auto-generate TPs if missing
+  // FIX #3: Instrument-spezifische SL-Distanz
+  const slDist = sl && entry ? Math.abs(entry - sl) : getDefaultSlDist(symbol);
+
   while (tps.length < 4) {
-    const mult = tps.length === 0 ? 1.5 : tps.length === 1 ? 2.5 : tps.length === 2 ? 3.5 : 5;
+    const mult = [1.5, 2.5, 3.5, 5.0][tps.length];
     tps.push(Math.round((isBuy ? entry + slDist * mult : entry - slDist * mult) * 100) / 100);
   }
+  // FIX #1: KEINE Filterung — IMMER 4 Orders, min 0.01 Lots
   return [
     { pct: 0.40, tp: tps[0], label: "TP1" },
     { pct: 0.25, tp: tps[1], label: "TP2" },
     { pct: 0.20, tp: tps[2], label: "TP3" },
     { pct: 0.15, tp: tps[3], label: "Runner" },
-  ].map(s => ({ lots: Math.max(0.01, Math.floor(totalLots * s.pct * 100) / 100), ...s }))
-   .filter(s => s.lots >= 0.01);
+  ].map(s => ({ lots: Math.max(0.01, Math.floor(totalLots * s.pct * 100) / 100), ...s }));
 }
 
-// ── Engine: Signal Scoring + Anti-Tilt (same as signal-bot) ──
+// ── Signal Scoring + Anti-Tilt ──
 const copyLossTracker = { consecutive: 0, pauseUntil: 0 };
 
 function scoreCopySignal(sl, tp, entry) {
@@ -79,10 +113,7 @@ function scoreCopySignal(sl, tp, entry) {
   if (sl) score += 25;
   if (tp) score += 25;
   if (entry) score += 15;
-  if (sl && entry) {
-    const dirOk = entry !== sl;
-    if (dirOk) score += 15;
-  }
+  if (sl && entry && entry !== sl) score += 15;
   if (sl && entry && tp) {
     const risk = Math.abs(entry - sl);
     const reward = Math.abs(tp - entry);
@@ -95,22 +126,19 @@ function scoreCopySignal(sl, tp, entry) {
 }
 
 // ── Copy a single position ──
-let copyAccountId = "";
-async function copyPosition(pos) {
+async function copyPosition(pos, copyAccountId, pair) {
   const action = pos.type === "POSITION_TYPE_BUY" ? "BUY" : "SELL";
   const symbol = pos.symbol;
   const entry = pos.openPrice;
   const sl = pos.stopLoss;
   const tps = pos.takeProfit ? [pos.takeProfit] : [];
 
-  // Engine: Score + Anti-Tilt
   const score = scoreCopySignal(sl, tps[0], entry);
   const tiltMult = Date.now() < copyLossTracker.pauseUntil ? 0 : copyLossTracker.consecutive >= 5 ? 0 : copyLossTracker.consecutive >= 3 ? 0.5 : 1.0;
-  console.log(`  📊 Score: ${score}/100 | Tilt: ×${tiltMult}`);
-  if (tiltMult === 0) { console.log("  🛑 Anti-Tilt: Paused"); return; }
-  if (score < 30) { console.log(`  ⛔ Score too low (${score}<30)`); return; }
+  console.log(`  Score: ${score}/100 | Tilt: x${tiltMult}`);
+  if (tiltMult === 0) { console.log("  [TILT] Paused"); await logCopyEvent(pair, pos, "BLOCKED", { block_reason: "Tilt pause" }); return 0; }
+  if (score < 30) { console.log(`  [SKIP] Score too low (${score}<30)`); await logCopyEvent(pair, pos, "BLOCKED", { block_reason: `Score too low (${score}<30)` }); return 0; }
 
-  // Get copy account balance
   let balance = 10000;
   try {
     const info = await apiFetch(`${CLIENT_BASE}/users/current/accounts/${copyAccountId}/account-information`);
@@ -120,12 +148,11 @@ async function copyPosition(pos) {
   const lotMultiplier = (score / 100) * tiltMult;
   let totalLots = calcLots(symbol, sl, entry, balance);
   totalLots = Math.max(0.01, Math.floor(totalLots * lotMultiplier * 100) / 100);
-  const splits = buildSplits(totalLots, [...tps], entry, sl, action);
+  const splits = buildSplits(totalLots, [...tps], entry, sl, action, symbol);
   const actionType = action === "BUY" ? "ORDER_TYPE_BUY" : "ORDER_TYPE_SELL";
 
-  console.log(`  📊 ${action} ${symbol} | Entry:${entry} SL:${sl} TP:${tps[0] || "auto"} | ${totalLots}L → ${splits.length} orders`);
+  console.log(`  ${action} ${symbol} | Entry:${entry} SL:${sl} TP:${tps[0] || "auto"} | ${totalLots}L -> ${splits.length} orders`);
 
-  // Place all splits in parallel
   const results = await Promise.allSettled(splits.map(async (split) => {
     const payload = { actionType, symbol, volume: split.lots, comment: `COPY-${split.label}` };
     if (sl) payload.stopLoss = sl;
@@ -135,77 +162,115 @@ async function copyPosition(pos) {
       try {
         const r = await apiFetch(`${CLIENT_BASE}/users/current/accounts/${copyAccountId}/trade`, { method: "POST", body: JSON.stringify(payload) });
         if (r.numericCode === 0 || r.stringCode === "TRADE_RETCODE_DONE" || r.stringCode === "ERR_NO_ERROR") {
-          return { ok: true, orderId: r.orderId, label: split.label };
+          return { ok: true, label: split.label };
         }
-        if (attempt === 0) await new Promise(r => setTimeout(r, 500));
-      } catch {}
+        console.log(`  [DEBUG] ${split.label}: ${r.stringCode || "?"} ${(r.message || "").slice(0, 40)}`);
+        if (attempt === 0) await new Promise(resolve => setTimeout(resolve, 500));
+      } catch (e) {
+        console.log(`  [DEBUG] ${split.label} attempt ${attempt}: ${(e.message || "").slice(0, 40)}`);
+      }
     }
     return { ok: false, label: split.label };
   }));
 
   const success = results.filter(r => r.status === "fulfilled" && r.value.ok).length;
-  console.log(`  ✅ ${success}/${splits.length} Orders gesetzt`);
+  console.log(`  [${success > 0 ? "OK" : "FAIL"}] ${success}/${splits.length} Orders gesetzt`);
+  if (success > 0) {
+    await logCopyEvent(pair, pos, "COPIED", { latency_ms: Date.now() - (pos.time ? new Date(pos.time).getTime() : Date.now()) });
+  } else {
+    await logCopyEvent(pair, pos, "ERROR", { error_message: `0/${splits.length} orders failed` });
+  }
+  return success;
 }
 
 // ── Main Poll Loop ──
 async function poll() {
   for (let i = 0; i < COPY_PAIRS.length; i++) {
     const pair = COPY_PAIRS[i];
-    copyAccountId = pair.copy;
     if (!knownPositions.has(i)) knownPositions.set(i, new Set());
     const known = knownPositions.get(i);
 
     try {
       const positions = await apiFetch(`${CLIENT_BASE}/users/current/accounts/${pair.signal}/positions`);
       if (!Array.isArray(positions)) continue;
+      errorCount = 0; // Reset bei Erfolg
 
       for (const pos of positions) {
         const key = `${pos.id}-${pos.type}-${pos.symbol}`;
         if (known.has(key)) continue;
         known.add(key);
 
-        const age = Date.now() - (pos.time ? new Date(pos.time).getTime() : 0);
-        if (age > 5 * 60 * 1000 && known.size > 1) continue;
-
         const ts = new Date().toLocaleTimeString("de-DE");
-        console.log(`\n[${ts}] ⚡ SIGNAL: ${pair.name}`);
+        console.log(`\n[${ts}] SIGNAL: ${pair.name}`);
         console.log(`  ${pos.type.replace("POSITION_TYPE_", "")} ${pos.symbol} ${pos.volume}L @${pos.openPrice}`);
 
-        await copyPosition(pos);
+        await logCopyEvent(pair, pos, "DETECTED");
+        await copyPosition(pos, pair.copy, pair);
       }
 
       // Track closed
       const currentIds = new Set(positions.map(p => `${p.id}-${p.type}-${p.symbol}`));
       for (const key of known) { if (!currentIds.has(key)) known.delete(key); }
-    } catch {}
+    } catch (e) {
+      // FIX #2: Fehler loggen statt verschlucken
+      errorCount++;
+      if (errorCount <= 3 || errorCount % 10 === 0) {
+        console.log(`[${new Date().toLocaleTimeString("de-DE")}] [WARN] Poll-Fehler #${errorCount} (${pair.name}): ${(e.message || "").slice(0, 60)}`);
+      }
+      if (errorCount >= 20) {
+        console.log(`[${new Date().toLocaleTimeString("de-DE")}] [ERR] 20+ Fehler, warte 30s...`);
+        await new Promise(r => setTimeout(r, 30000));
+        errorCount = 0;
+      }
+    }
   }
 }
 
-// ── Start ──
-console.log("🚀 GoldFoundry ACCOUNT COPIER");
-console.log("═══════════════════════════════════════");
-for (const p of COPY_PAIRS) console.log(`  ${p.name}`);
-console.log(`  Poll: alle ${POLL_INTERVAL / 1000}s`);
-console.log("═══════════════════════════════════════\n");
+// ── FIX #4: Auto-Restart Wrapper ──
+async function start() {
+  console.log("GoldFoundry ACCOUNT COPIER v2");
+  console.log("=".repeat(40));
+  for (const p of COPY_PAIRS) console.log(`  ${p.name}`);
+  console.log(`  Poll: alle ${POLL_INTERVAL / 1000}s`);
+  console.log("=".repeat(40) + "\n");
 
-// Initial: load existing positions
-for (let i = 0; i < COPY_PAIRS.length; i++) {
-  knownPositions.set(i, new Set());
-  try {
-    const existing = await apiFetch(`${CLIENT_BASE}/users/current/accounts/${COPY_PAIRS[i].signal}/positions`);
-    if (Array.isArray(existing)) {
-      for (const p of existing) knownPositions.get(i).add(`${p.id}-${p.type}-${p.symbol}`);
-      console.log(`📋 ${COPY_PAIRS[i].name}: ${existing.length} bestehende Positionen`);
+  // Initial: load existing positions
+  for (let i = 0; i < COPY_PAIRS.length; i++) {
+    knownPositions.set(i, new Set());
+    try {
+      const existing = await apiFetch(`${CLIENT_BASE}/users/current/accounts/${COPY_PAIRS[i].signal}/positions`);
+      if (Array.isArray(existing)) {
+        for (const p of existing) knownPositions.get(i).add(`${p.id}-${p.type}-${p.symbol}`);
+        console.log(`  ${COPY_PAIRS[i].name}: ${existing.length} bestehende Positionen`);
+      }
+    } catch (e) {
+      console.log(`  ${COPY_PAIRS[i].name}: Fehler beim Laden: ${(e.message || "").slice(0, 40)}`);
     }
-  } catch {}
+  }
+
+  // FIX #4b: Tracked positions count
+  const totalTracked = [...knownPositions.values()].reduce((s, set) => s + set.size, 0);
+  console.log(`\n[LIVE] Warte auf neue Signale... (${totalTracked} tracked)\n`);
+
+  setInterval(poll, POLL_INTERVAL);
+
+  // Heartbeat mit korrektem Count
+  setInterval(() => {
+    const tracked = [...knownPositions.values()].reduce((s, set) => s + set.size, 0);
+    process.stdout.write(`\r[${new Date().toLocaleTimeString("de-DE")}] OK | ${tracked} positions tracked`);
+  }, 30000);
 }
 
-console.log("⚡ Warte auf neue Signale...\n");
+// FIX #4: Auto-Restart bei unerwarteten Fehlern
+start().catch(e => {
+  console.error(`[FATAL] ${e.message}`);
+  console.log("[RESTART] Neustart in 10s...");
+  setTimeout(() => {
+    start().catch(() => process.exit(1));
+  }, 10000);
+});
 
-// Poll every 3 seconds
-setInterval(poll, POLL_INTERVAL);
-
-// Heartbeat
-setInterval(() => {
-  process.stdout.write(`\r[${new Date().toLocaleTimeString("de-DE")}] 💚 Watching... (${knownPositions.size} tracked)`);
-}, 30000);
+// Unhandled rejections abfangen statt crashen
+process.on("unhandledRejection", (err) => {
+  console.error(`[WARN] Unhandled rejection: ${(err?.message || String(err)).slice(0, 80)}`);
+});

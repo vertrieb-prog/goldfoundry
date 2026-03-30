@@ -28,11 +28,11 @@ export function TelegramStats({ stats }: Props) {
   const maxChannel = tg.topChannels.length > 0 ? tg.topChannels[0].count : 1;
 
   return (
-    <div className="grid gap-4 md:grid-cols-3 mb-6">
+    <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 mb-6">
       {/* Signal counts */}
-      <div className="gf-panel p-5">
+      <div className="gf-panel p-4 sm:p-5">
         <h3 className="text-xs uppercase tracking-wider mb-3" style={{ color: "var(--gf-text-dim)" }}>Telegram Signals</h3>
-        <div className="text-3xl font-bold mono mb-3" style={{ color: "var(--gf-gold)" }}>{tg.totalSignals}</div>
+        <div className="text-2xl sm:text-3xl font-bold mono mb-3" style={{ color: "var(--gf-gold)" }}>{tg.totalSignals}</div>
         <div className="space-y-1.5">
           {statusOrder.map(s => {
             const count = tg.byStatus[s];
@@ -48,7 +48,7 @@ export function TelegramStats({ stats }: Props) {
       </div>
 
       {/* Top channels */}
-      <div className="gf-panel p-5">
+      <div className="gf-panel p-4 sm:p-5">
         <h3 className="text-xs uppercase tracking-wider mb-3" style={{ color: "var(--gf-text-dim)" }}>Top Channels</h3>
         {tg.topChannels.length === 0 && <div className="text-xs" style={{ color: "var(--gf-text-dim)" }}>No data</div>}
         {tg.topChannels.map((ch: any, i: number) => (
@@ -65,9 +65,9 @@ export function TelegramStats({ stats }: Props) {
       </div>
 
       {/* Active signal accounts */}
-      <div className="gf-panel p-5">
+      <div className="gf-panel p-4 sm:p-5">
         <h3 className="text-xs uppercase tracking-wider mb-3" style={{ color: "var(--gf-text-dim)" }}>Signal-Konten (Master)</h3>
-        <div className="text-3xl font-bold mono mb-3" style={{ color: "var(--gf-text-bright)" }}>
+        <div className="text-2xl sm:text-3xl font-bold mono mb-3" style={{ color: "var(--gf-text-bright)" }}>
           {stats.masters.active}<span className="text-sm" style={{ color: "var(--gf-text-dim)" }}> / {stats.masters.total}</span>
         </div>
         <div className="flex flex-wrap gap-1.5 mt-2">
@@ -86,37 +86,77 @@ export function TelegramStats({ stats }: Props) {
 export function AccountsTable({ stats }: Props) {
   const rows: any[] = stats.accountDetails || [];
   return (
-    <div className="gf-panel p-5 mb-6 overflow-x-auto">
+    <div className="gf-panel p-3 sm:p-5 mb-6">
       <h3 className="text-xs uppercase tracking-wider mb-4" style={{ color: "var(--gf-text-dim)" }}>Account Details</h3>
       {rows.length === 0 ? (
         <div className="text-xs py-4 text-center" style={{ color: "var(--gf-text-dim)" }}>No accounts found</div>
       ) : (
-        <table className="w-full text-xs" style={{ color: "var(--gf-text-dim)" }}>
-          <thead>
-            <tr className="border-b" style={{ borderColor: "var(--gf-border)" }}>
-              {["User", "Account", "Broker", "Login", "Platform", "Equity", "Profit", "Trades", "Win%", "Status", "Sync"].map(h => (
-                <th key={h} className="text-left py-2 px-2 text-[9px] uppercase tracking-wider font-medium">{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
+        <>
+          {/* Desktop Table */}
+          <div className="hidden md:block overflow-x-auto">
+            <table className="w-full text-xs" style={{ color: "var(--gf-text-dim)" }}>
+              <thead>
+                <tr className="border-b" style={{ borderColor: "var(--gf-border)" }}>
+                  {["User", "Account", "Broker", "Login", "Platform", "Equity", "Profit", "Trades", "Win%", "Status", "Sync"].map(h => (
+                    <th key={h} className="text-left py-2 px-2 text-[9px] uppercase tracking-wider font-medium">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r: any, i: number) => (
+                  <tr key={i} className="border-b" style={{ borderColor: "rgba(255,255,255,0.03)" }}>
+                    <td className="py-2 px-2 truncate max-w-[120px]">{r.email}</td>
+                    <td className="py-2 px-2">{r.accountName || "—"}</td>
+                    <td className="py-2 px-2">{r.broker || "—"}</td>
+                    <td className="py-2 px-2 mono">{r.login}</td>
+                    <td className="py-2 px-2 uppercase">{r.platform}</td>
+                    <td className="py-2 px-2 mono" style={{ color: "var(--gf-text-bright)" }}>{r.equity.toLocaleString()}</td>
+                    <td className="py-2 px-2 mono" style={{ color: r.profit >= 0 ? "#2ecc71" : "#e74c3c" }}>{r.profit.toLocaleString()}</td>
+                    <td className="py-2 px-2 mono">{r.trades}</td>
+                    <td className="py-2 px-2 mono">{r.winRate > 0 ? `${r.winRate}%` : "—"}</td>
+                    <td className="py-2 px-2"><StatusDot active={r.copierActive} /></td>
+                    <td className="py-2 px-2 text-[9px]">{r.lastSync ? new Date(r.lastSync).toLocaleDateString() : "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile Cards */}
+          <div className="md:hidden space-y-3">
             {rows.map((r: any, i: number) => (
-              <tr key={i} className="border-b" style={{ borderColor: "rgba(255,255,255,0.03)" }}>
-                <td className="py-2 px-2 truncate max-w-[120px]">{r.email}</td>
-                <td className="py-2 px-2">{r.accountName || "—"}</td>
-                <td className="py-2 px-2">{r.broker || "—"}</td>
-                <td className="py-2 px-2 mono">{r.login}</td>
-                <td className="py-2 px-2 uppercase">{r.platform}</td>
-                <td className="py-2 px-2 mono" style={{ color: "var(--gf-text-bright)" }}>{r.equity.toLocaleString()}</td>
-                <td className="py-2 px-2 mono" style={{ color: r.profit >= 0 ? "#2ecc71" : "#e74c3c" }}>{r.profit.toLocaleString()}</td>
-                <td className="py-2 px-2 mono">{r.trades}</td>
-                <td className="py-2 px-2 mono">{r.winRate > 0 ? `${r.winRate}%` : "—"}</td>
-                <td className="py-2 px-2"><StatusDot active={r.copierActive} /></td>
-                <td className="py-2 px-2 text-[9px]">{r.lastSync ? new Date(r.lastSync).toLocaleDateString() : "—"}</td>
-              </tr>
+              <div key={i} className="rounded-lg p-3 border" style={{ background: "rgba(255,255,255,0.02)", borderColor: "var(--gf-border)" }}>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="truncate max-w-[60%] text-[11px] font-medium" style={{ color: "var(--gf-text-bright)" }}>{r.email}</div>
+                  <StatusDot active={r.copierActive} />
+                </div>
+                <div className="flex items-center gap-2 mb-2 flex-wrap">
+                  {r.broker && <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ background: "rgba(212,165,55,0.08)", color: "var(--gf-gold)" }}>{r.broker}</span>}
+                  <span className="text-[10px] px-1.5 py-0.5 rounded uppercase" style={{ background: "rgba(255,255,255,0.05)", color: "var(--gf-text-dim)" }}>{r.platform}</span>
+                  <span className="text-[10px] mono" style={{ color: "var(--gf-text-dim)" }}>#{r.login}</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2 pt-2 border-t" style={{ borderColor: "rgba(255,255,255,0.05)" }}>
+                  <div>
+                    <div className="text-[9px] uppercase" style={{ color: "var(--gf-text-dim)" }}>Equity</div>
+                    <div className="text-[12px] mono font-semibold" style={{ color: "var(--gf-text-bright)" }}>{r.equity.toLocaleString()}</div>
+                  </div>
+                  <div>
+                    <div className="text-[9px] uppercase" style={{ color: "var(--gf-text-dim)" }}>Profit</div>
+                    <div className="text-[12px] mono font-semibold" style={{ color: r.profit >= 0 ? "#2ecc71" : "#e74c3c" }}>{r.profit.toLocaleString()}</div>
+                  </div>
+                  <div>
+                    <div className="text-[9px] uppercase" style={{ color: "var(--gf-text-dim)" }}>Win%</div>
+                    <div className="text-[12px] mono font-semibold" style={{ color: "var(--gf-text-bright)" }}>{r.winRate > 0 ? `${r.winRate}%` : "—"}</div>
+                  </div>
+                </div>
+                <div className="flex justify-between mt-2 pt-1.5">
+                  <span className="text-[10px]" style={{ color: "var(--gf-text-dim)" }}>{r.trades} Trades</span>
+                  <span className="text-[10px]" style={{ color: "var(--gf-text-dim)" }}>{r.lastSync ? `Sync: ${new Date(r.lastSync).toLocaleDateString("de-DE")}` : "Kein Sync"}</span>
+                </div>
+              </div>
             ))}
-          </tbody>
-        </table>
+          </div>
+        </>
       )}
     </div>
   );
@@ -124,9 +164,9 @@ export function AccountsTable({ stats }: Props) {
 
 export function RecentActivity({ stats }: Props) {
   return (
-    <div className="grid gap-4 md:grid-cols-2 mb-6">
+    <div className="grid gap-3 sm:gap-4 md:grid-cols-2 mb-6">
       {/* Recent signals */}
-      <div className="gf-panel p-5">
+      <div className="gf-panel p-4 sm:p-5">
         <h3 className="text-xs uppercase tracking-wider mb-3" style={{ color: "var(--gf-text-dim)" }}>Recent Signals</h3>
         {(stats.recentSignals || []).length === 0 && <div className="text-xs" style={{ color: "var(--gf-text-dim)" }}>No signals yet</div>}
         <div className="space-y-2">
@@ -145,7 +185,7 @@ export function RecentActivity({ stats }: Props) {
       </div>
 
       {/* Recent users */}
-      <div className="gf-panel p-5">
+      <div className="gf-panel p-4 sm:p-5">
         <h3 className="text-xs uppercase tracking-wider mb-3" style={{ color: "var(--gf-text-dim)" }}>Recent Users</h3>
         {(stats.recentUsers || []).length === 0 && <div className="text-xs" style={{ color: "var(--gf-text-dim)" }}>No users yet</div>}
         <div className="space-y-2">

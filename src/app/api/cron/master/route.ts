@@ -7,9 +7,10 @@ const CRON_ROUTES = [
   "/api/cron/fetch-trades",
   "/api/cron/equity-snapshot",
   "/api/cron/market-intel",
-  // Data Collection
+  // Data Collection & Analytics
   "/api/cron/collect-mql5",
   "/api/cron/collect-myfxbook",
+  "/api/cron/trade-analytics",
   "/api/cron/intelligence",
   "/api/cron/sentiment",
   "/api/cron/competitive-scan",

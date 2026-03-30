@@ -33,16 +33,16 @@ export default function AdminOverview() {
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold" style={{ color: "var(--gf-text-bright)" }}>Admin Overview</h1>
-          <p className="text-xs mt-1" style={{ color: "var(--gf-text-dim)" }}>
-            Gold Foundry Platform — Complete Dashboard
+      <div className="flex items-center justify-between mb-4 sm:mb-6 gap-3">
+        <div className="min-w-0">
+          <h1 className="text-lg sm:text-2xl font-bold truncate" style={{ color: "var(--gf-text-bright)" }}>Admin Overview</h1>
+          <p className="text-[10px] sm:text-xs mt-1" style={{ color: "var(--gf-text-dim)" }}>
+            <span className="hidden sm:inline">Gold Foundry Platform — </span>Dashboard
             {lastRefresh && <span className="ml-2">Updated {lastRefresh.toLocaleTimeString("de-DE")}</span>}
           </p>
         </div>
-        <button onClick={load} disabled={loading} className="text-xs px-4 py-2 rounded transition-all" style={{ background: "rgba(212,165,55,0.1)", color: "var(--gf-gold)", border: "1px solid rgba(212,165,55,0.2)", opacity: loading ? 0.5 : 1 }}>
-          {loading ? "Loading..." : "Refresh"}
+        <button onClick={load} disabled={loading} className="text-[11px] sm:text-xs px-3 sm:px-4 py-2 rounded transition-all shrink-0" style={{ background: "rgba(212,165,55,0.1)", color: "var(--gf-gold)", border: "1px solid rgba(212,165,55,0.2)", opacity: loading ? 0.5 : 1 }}>
+          {loading ? "..." : "Refresh"}
         </button>
       </div>
 
@@ -76,7 +76,7 @@ export default function AdminOverview() {
 
       {/* Quick Links */}
       <SectionLabel label="Quick Links" />
-      <div className="grid gap-3 md:grid-cols-4 mb-6">
+      <div className="grid gap-3 grid-cols-2 md:grid-cols-4 mb-6">
         {[
           { href: "/admin/accounts", label: "Accounts", desc: "Manage all trading accounts" },
           { href: "/admin/signals", label: "Signal-Konten", desc: "Master accounts & providers" },
@@ -95,9 +95,9 @@ export default function AdminOverview() {
 
 function SectionLabel({ label }: { label: string }) {
   return (
-    <div className="flex items-center gap-3 mb-3 mt-2">
+    <div className="flex items-center gap-2 sm:gap-3 mb-3 mt-2">
       <div className="h-px flex-1" style={{ background: "var(--gf-border)" }} />
-      <span className="text-[9px] uppercase tracking-[2px] font-medium" style={{ color: "var(--gf-text-dim)" }}>{label}</span>
+      <span className="text-[10px] sm:text-[11px] uppercase tracking-[1.5px] sm:tracking-[2px] font-medium whitespace-nowrap" style={{ color: "var(--gf-text-dim)" }}>{label}</span>
       <div className="h-px flex-1" style={{ background: "var(--gf-border)" }} />
     </div>
   );

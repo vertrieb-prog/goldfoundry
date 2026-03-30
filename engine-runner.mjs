@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 /**
- * GoldFoundry Engine Runner — Volle Strategy Engine v3 alle 30 Sekunden
- * 13 Strategien auf ALLEN Accounts: DCA, Recovery, Trail, Grid, Scoring,
- * Anti-Tilt, Pyramiding, Re-Entry, Time Decay, Volume, Correlation, Weekend
+ * GoldFoundry Engine Runner v2 — ALL BUGS FIXED
+ * 13 Strategien auf ALLEN Accounts alle 30 Sekunden
+ * DCA, Recovery, Trail, Grid, Scoring, Anti-Tilt, Pyramiding,
+ * Re-Entry, Time Decay, Volume, Correlation, Weekend
  */
 import { readFileSync } from "fs";
 import { join } from "path";
@@ -17,64 +18,109 @@ const CRON_SECRET = getEnv("CRON_SECRET", "goldfoundry-cron-secret-2024");
 const SIGNAL_URL = "https://goldfoundry.de/api/cron/telegram-signals";
 const TICK_URL = "https://goldfoundry.de/api/cron/engine-tick";
 const POS_MGR_URL = "https://goldfoundry.de/api/cron/position-manager";
-const INTERVAL = 30_000; // 30 Sekunden
+const INTERVAL = 30_000;
 
 let tickCount = 0;
 let totalMods = 0;
+let consecutiveErrors = 0;
+
+async function safeFetch(url, label) {
+  try {
+    const r = await fetch(url, {
+      headers: { Authorization: `Bearer ${CRON_SECRET}` },
+      signal: AbortSignal.timeout(120000),
+    });
+    if (!r.ok) {
+      console.log(`  [${label}] HTTP ${r.status}`);
+      return null;
+    }
+    return await r.json();
+  } catch (e) {
+    console.log(`  [${label}] ${(e.message || "").slice(0, 50)}`);
+    return null;
+  }
+}
 
 async function tick() {
   tickCount++;
   const ts = new Date().toLocaleTimeString("de-DE");
+
   try {
-    // 1. Telegram Signals (findet neue Signale + setzt Trades)
+    // 1. Telegram Signals
     let executed = 0;
-    try {
-      const rs = await fetch(SIGNAL_URL, {
-        headers: { Authorization: `Bearer ${CRON_SECRET}` },
-        signal: AbortSignal.timeout(120000),
-      });
-      const ds = await rs.json();
-      for (const ch of (ds.results || [])) for (const s of (ch.signals || [])) if (s.success) { executed++; totalMods++; }
-    } catch {}
+    const ds = await safeFetch(SIGNAL_URL, "SIGNALS");
+    if (ds) {
+      for (const ch of (ds.results || [])) {
+        for (const s of (ch.signals || [])) {
+          if (s.success) { executed++; totalMods++; }
+        }
+      }
+    }
 
-    // 2. Engine Tick (alle 13 Strategien)
-    const r1 = await fetch(TICK_URL, {
-      headers: { Authorization: `Bearer ${CRON_SECRET}` },
-      signal: AbortSignal.timeout(60000),
-    });
-    const d1 = await r1.json();
+    // 2. Engine Tick (13 Strategien)
+    const d1 = await safeFetch(TICK_URL, "ENGINE");
 
-    // 2. Position Manager (DCA, Trailing, Pyramiding, Time Decay, Trend)
-    const r2 = await fetch(POS_MGR_URL, {
-      headers: { Authorization: `Bearer ${CRON_SECRET}` },
-      signal: AbortSignal.timeout(60000),
-    });
-    const d2 = await r2.json();
-    const mods = d2.modifications?.length || 0;
+    // 3. Position Manager (DCA, Trailing, Pyramiding, Time Decay)
+    const d2 = await safeFetch(POS_MGR_URL, "POS-MGR");
+    const mods = d2?.modifications?.length || 0;
     totalMods += mods;
 
+    // FIX #6: Immer loggen bei Aktionen, sonst alle 10 Min
     if (executed > 0) {
-      console.log(`\n[${ts}] 🎯 ${executed} TRADE(S) GESETZT! | Tick #${tickCount}`);
+      console.log(`\n[${ts}] ${executed} TRADE(S) GESETZT! | Tick #${tickCount}`);
     }
     if (mods > 0) {
-      console.log(`[${ts}] ⚡ ${mods} Modifikation(en) | Tick #${tickCount}`);
+      console.log(`[${ts}] ${mods} Modifikation(en) | Tick #${tickCount}`);
       for (const m of (d2.modifications || [])) {
         console.log(`  ${m.action}: ${m.symbol || ""} ${m.posId?.slice(0, 8) || ""}`);
       }
     } else if (tickCount % 20 === 0) {
-      // Nur alle 10 Min loggen wenn nichts passiert
-      console.log(`[${ts}] 💚 Engine OK | ${d1.ticked || 0} Accounts | ${totalMods} Mods total | Tick #${tickCount}`);
+      console.log(`[${ts}] OK | ${d1?.ticked || 0} Accounts | ${totalMods} Mods total | Tick #${tickCount}`);
     }
+
+    consecutiveErrors = 0;
   } catch (e) {
-    if (tickCount % 10 === 0) console.log(`[${ts}] ❌ ${e.message?.slice(0, 40)}`);
+    consecutiveErrors++;
+    // FIX #6: ALLE Fehler loggen
+    console.log(`[${ts}] [ERR] Tick #${tickCount}: ${(e.message || "").slice(0, 60)}`);
+
+    if (consecutiveErrors >= 10) {
+      console.log(`[${ts}] [ERR] 10+ Fehler in Folge, warte 60s...`);
+      await new Promise(r => setTimeout(r, 60000));
+      consecutiveErrors = 0;
+    }
   }
 }
 
-console.log("🔥 GoldFoundry Engine Runner");
-console.log("═══════════════════════════════════════");
-console.log("  13 Strategien · Alle 30 Sekunden · Alle Accounts");
-console.log("  DCA · Recovery · Trail · Pyramid · Anti-Tilt · Time Decay");
-console.log("═══════════════════════════════════════\n");
+// ── Auto-Restart Wrapper (kein Interval-Leak!) ──
+let tickInterval = null;
 
-tick();
-setInterval(tick, INTERVAL);
+function start() {
+  console.log("GoldFoundry Engine Runner v2");
+  console.log("=".repeat(40));
+  console.log("  13 Strategien - Alle 30 Sekunden - Alle Accounts");
+  console.log("  DCA | Recovery | Trail | Pyramid | Anti-Tilt | Time Decay");
+  console.log("=".repeat(40) + "\n");
+
+  // Alten Interval stoppen falls vorhanden (verhindert Duplikate!)
+  if (tickInterval) clearInterval(tickInterval);
+  tick();
+  tickInterval = setInterval(tick, INTERVAL);
+}
+
+start();
+
+process.on("unhandledRejection", (err) => {
+  console.error(`[WARN] Unhandled rejection: ${(err?.message || String(err)).slice(0, 80)}`);
+});
+
+process.on("uncaughtException", (err) => {
+  console.error(`[FATAL] ${err.message}`);
+  console.log("[RESTART] Neustart in 10s...");
+  // Alten Interval stoppen BEVOR neu gestartet wird
+  if (tickInterval) clearInterval(tickInterval);
+  tickInterval = null;
+  setTimeout(() => {
+    start();
+  }, 10000);
+});

@@ -7,10 +7,10 @@ interface Props {
 
 function MetricCard({ label, value, sub, accent }: { label: string; value: string | number; sub?: string; accent?: boolean }) {
   return (
-    <div className="gf-panel p-4 flex flex-col justify-between">
-      <div className="text-[10px] uppercase tracking-wider mb-2" style={{ color: "var(--gf-text-dim)" }}>{label}</div>
-      <div className="text-2xl font-bold mono" style={{ color: accent ? "var(--gf-gold)" : "var(--gf-text-bright)" }}>{value}</div>
-      {sub && <div className="text-[10px] mt-1.5" style={{ color: "var(--gf-text-dim)" }}>{sub}</div>}
+    <div className="gf-panel p-3 sm:p-4 flex flex-col justify-between">
+      <div className="text-[10px] sm:text-[11px] uppercase tracking-wider mb-1.5 sm:mb-2" style={{ color: "var(--gf-text-dim)" }}>{label}</div>
+      <div className="text-lg sm:text-2xl font-bold mono" style={{ color: accent ? "var(--gf-gold)" : "var(--gf-text-bright)" }}>{value}</div>
+      {sub && <div className="text-[10px] sm:text-[11px] mt-1 sm:mt-1.5" style={{ color: "var(--gf-text-dim)" }}>{sub}</div>}
     </div>
   );
 }
@@ -77,9 +77,10 @@ export function BrokerDistribution({ stats }: Props) {
           <CssBar key={name} label={name} value={count as number} max={maxBroker} color={colors[i % colors.length]} />
         ))}
       </div>
-      <div className="gf-panel p-5">
+      <div className="gf-panel p-4 sm:p-5">
         <h3 className="text-xs uppercase tracking-wider mb-4" style={{ color: "var(--gf-text-dim)" }}>Platform Split</h3>
-        <div className="flex gap-4 items-end h-32">
+        {/* Desktop: vertical bars */}
+        <div className="hidden sm:flex gap-4 items-end h-32">
           {platforms.map(([name, count]) => {
             const total = platforms.reduce((s, [, c]) => s + (c as number), 0);
             const pct = total > 0 ? Math.round(((count as number) / total) * 100) : 0;
@@ -89,6 +90,24 @@ export function BrokerDistribution({ stats }: Props) {
                 <div className="w-full rounded-t" style={{ height: `${Math.max(pct, 5)}%`, background: name === "MT5" ? "var(--gf-gold)" : "#806020", minHeight: 8 }} />
                 <span className="text-[10px] mt-2 uppercase" style={{ color: "var(--gf-text-dim)" }}>{name}</span>
                 <span className="text-[10px] mono" style={{ color: "var(--gf-text-dim)" }}>{count as number}</span>
+              </div>
+            );
+          })}
+        </div>
+        {/* Mobile: horizontal bars */}
+        <div className="sm:hidden space-y-3">
+          {platforms.map(([name, count]) => {
+            const total = platforms.reduce((s, [, c]) => s + (c as number), 0);
+            const pct = total > 0 ? Math.round(((count as number) / total) * 100) : 0;
+            return (
+              <div key={name}>
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-[11px] uppercase font-medium" style={{ color: "var(--gf-text-dim)" }}>{name}</span>
+                  <span className="text-sm font-bold mono" style={{ color: "var(--gf-text-bright)" }}>{pct}% <span className="text-[10px] font-normal" style={{ color: "var(--gf-text-dim)" }}>({count as number})</span></span>
+                </div>
+                <div className="h-3 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.05)" }}>
+                  <div className="h-full rounded-full transition-all" style={{ width: `${Math.max(pct, 3)}%`, background: name === "MT5" ? "var(--gf-gold)" : "#806020" }} />
+                </div>
               </div>
             );
           })}

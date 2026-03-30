@@ -1,7 +1,9 @@
 export const dynamic = "force-dynamic";
 // src/app/api/chat/route.ts
+// FORGE Mentor Agent — mit Tool Use für Live-Daten + Aktionen
 import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server";
 import { buildMentorPrompt, extractMemoryUpdates, cleanResponseForUser, saveMemoryUpdate } from "@/lib/forge-ai-mentor";
+import { MENTOR_TOOLS, executeTool } from "@/lib/mentor-tools";
 import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
 
@@ -26,9 +28,7 @@ export async function POST(request: Request) {
     const usage = await checkUsageLimit(user.id);
 
     if (!usage.allowed) {
-      // Limit reached → return limit message + upline redirect
       let limitMsg = usage.upgradeMessage ?? "Nachrichten-Limit erreicht.";
-
       if (usage.redirectToUpline) {
         limitMsg += `\n\nDein Partner ${usage.redirectToUpline.name} hilft dir gerne weiter:\n📧 ${usage.redirectToUpline.email}`;
         if (usage.redirectToUpline.phone) limitMsg += `\n📱 ${usage.redirectToUpline.phone}`;
@@ -36,87 +36,148 @@ export async function POST(request: Request) {
       } else {
         limitMsg += `\n\nUpgrade für mehr Nachrichten → /pricing`;
       }
-
       return NextResponse.json({
-        limitReached: true,
-        message: limitMsg,
+        limitReached: true, message: limitMsg,
         usage: { used: usage.used, limit: usage.limit, remaining: 0 },
         upgradeUrl: "/pricing",
       });
     }
 
-    // Load MENTOR system prompt — TIER-OPTIMIERT für Kosteneffizienz
+    // Load MENTOR system prompt — TIER-OPTIMIERT
     const { data: userProfile } = await (await import("@/lib/supabase/server")).createSupabaseAdmin()
       .from("profiles").select("subscription_tier, subscription_active").eq("id", user.id).single();
     const userTier = (userProfile?.subscription_active ? userProfile?.subscription_tier : "free") ?? "free";
 
+    // Tool Use nur für zahlende User (Free bekommt Basic-Chat)
+    const useTools = userTier !== "free" && userTier !== "analyzer";
+
     let systemPrompt: string;
-    if (userTier === "free" || userTier === "analyzer") {
-      // KOMPAKT-PROMPT für Free/Analyzer (spart ~60% Input-Tokens)
-      systemPrompt = `Du bist FORGE Mentor auf Gold Foundry. Kurze, hilfreiche Antworten. Max 100 Wörter. Wenn der User Fragen hat die über Basics hinausgehen, empfiehl das Copier-Abo (29€/Mo) für ausführlichere Analysen. Sei freundlich aber effizient.`;
+    if (!useTools) {
+      systemPrompt = `Du bist FORGE Mentor auf Gold Foundry. Kurze, hilfreiche Antworten. Max 100 Wörter. Wenn der User Fragen hat die über Basics hinausgehen, empfiehl das Copier-Abo (29€/Mo) für ausführlichere Analysen. Sei freundlich aber effizient.
+
+FORMATIERUNG: Nutze ## für Überschriften, - für Listen, Zahlen mit Punkt für nummerierte Listen. KEINE langen Fliesstext-Absätze. Strukturiere visuell klar.`;
     } else {
-      // VOLLER Mentor-Prompt für zahlende User
       systemPrompt = await buildMentorPrompt(user.id, message);
     }
 
-    // Page context NUR für zahlende User (spart Tokens für Free)
-    if (pageContext?.page && userTier !== "free") {
+    // Page context für zahlende User
+    if (pageContext?.page && useTools) {
       const { getPageGuidance } = await import("@/lib/page-context");
       const guidance = getPageGuidance(pageContext);
       systemPrompt += `\n\n═══ AKTUELLE SEITE ═══\n${pageContext.page}\n${guidance}`;
     }
 
-    // Chat-History: weniger für niedrigere Tiers
+    // Chat-History
     const historyLimit = userTier === "free" ? 4 : userTier === "analyzer" ? 8 : 20;
-
-    // Load recent chat history (last 20 messages)
     const db = createSupabaseAdmin();
-    const { data: history } = await db
-      .from("chat_messages")
-      .select("role, content")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: true })
-      .limit(historyLimit);
+    const { data: history } = await db.from("chat_messages")
+      .select("role, content").eq("user_id", user.id)
+      .order("created_at", { ascending: true }).limit(historyLimit);
 
-    // Build messages array
-    const messages: Anthropic.MessageParam[] = [];
+    const msgs: Anthropic.MessageParam[] = [];
     if (history) {
       for (const msg of history) {
         if (msg.role === "user" || msg.role === "assistant") {
-          messages.push({ role: msg.role, content: msg.content });
+          msgs.push({ role: msg.role, content: msg.content });
         }
       }
     }
-    messages.push({ role: "user", content: message });
+    msgs.push({ role: "user", content: message });
 
     // Save user message
-    await db.from("chat_messages").insert({
-      user_id: user.id,
-      role: "user",
-      content: message,
-    });
+    await db.from("chat_messages").insert({ user_id: user.id, role: "user", content: message });
 
-    // Stream response from Claude
+    // ── Stream Response (with Tool Use Loop) ─────────────────
     const encoder = new TextEncoder();
     const stream = new ReadableStream({
       async start(controller) {
         let fullResponse = "";
 
         try {
-          const response = await anthropic.messages.create({
-            model: "claude-sonnet-4-20250514",
-            max_tokens: usage.maxTokens, // Tier-basiert: free=300, copier=800, pro=1000
-            system: systemPrompt,
-            messages,
-            stream: true,
-          });
+          // Tool Use Loop: Claude kann mehrfach Tools aufrufen
+          let currentMessages = [...msgs];
+          let toolRounds = 0;
+          const MAX_TOOL_ROUNDS = 5;
 
-          for await (const event of response) {
-            if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
-              const text = event.delta.text;
-              fullResponse += text;
-              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text })}\n\n`));
+          while (toolRounds < MAX_TOOL_ROUNDS) {
+            toolRounds++;
+
+            const createParams: Anthropic.MessageCreateParamsNonStreaming = {
+              model: "claude-sonnet-4-20250514",
+              max_tokens: usage.maxTokens || 1024,
+              system: systemPrompt,
+              messages: currentMessages,
+            };
+
+            // Tools nur für zahlende User
+            if (useTools) {
+              createParams.tools = MENTOR_TOOLS as any;
             }
+
+            // Nicht-streaming Call wenn Tools möglich (brauchen wir für tool_use blocks)
+            if (useTools && toolRounds === 1) {
+              // Erste Runde: non-streaming um Tool-Calls zu erkennen
+              const response = await anthropic.messages.create(createParams);
+
+              // Check ob Claude Tools aufrufen will
+              const toolUseBlocks = response.content.filter(b => b.type === "tool_use");
+              const textBlocks = response.content.filter(b => b.type === "text");
+
+              // Text vor Tool-Calls sofort streamen
+              for (const block of textBlocks) {
+                if (block.type === "text" && block.text) {
+                  fullResponse += block.text;
+                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: block.text })}\n\n`));
+                }
+              }
+
+              if (toolUseBlocks.length === 0) {
+                // Keine Tools → fertig
+                break;
+              }
+
+              // Tools ausführen
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ status: "Daten werden abgerufen..." })}\n\n`));
+
+              const toolResults: Anthropic.ToolResultBlockParam[] = [];
+              for (const toolBlock of toolUseBlocks) {
+                if (toolBlock.type === "tool_use") {
+                  try {
+                    const result = await executeTool(toolBlock.name, toolBlock.input as Record<string, any>, user.id);
+                    toolResults.push({ type: "tool_result", tool_use_id: toolBlock.id, content: result });
+                  } catch (err) {
+                    toolResults.push({
+                      type: "tool_result", tool_use_id: toolBlock.id,
+                      content: `Fehler: ${err instanceof Error ? err.message : "Unbekannt"}`,
+                      is_error: true,
+                    });
+                  }
+                }
+              }
+
+              // Nächste Runde: Claude bekommt Tool-Ergebnisse
+              currentMessages = [
+                ...currentMessages,
+                { role: "assistant", content: response.content as any },
+                { role: "user", content: toolResults as any },
+              ];
+              continue;
+            }
+
+            // Letzte Runde oder Free-Tier: Streaming
+            const streamResponse = await anthropic.messages.create({
+              ...createParams,
+              stream: true,
+            } as any);
+
+            for await (const event of streamResponse as any) {
+              if (event.type === "content_block_delta" && event.delta?.type === "text_delta") {
+                const text = event.delta.text;
+                fullResponse += text;
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text })}\n\n`));
+              }
+            }
+            break; // Streaming-Runde = fertig
           }
 
           // Save assistant response + extract memory updates
@@ -124,17 +185,14 @@ export async function POST(request: Request) {
           const cleanResponse = cleanResponseForUser(fullResponse);
 
           await db.from("chat_messages").insert({
-            user_id: user.id,
-            role: "assistant",
-            content: cleanResponse,
+            user_id: user.id, role: "assistant", content: cleanResponse,
           });
 
-          // Auto-save personal info the AI learned
           if (memoryUpdates) {
             await saveMemoryUpdate(user.id, memoryUpdates);
           }
 
-          // AUTO SUPPORT TICKET: Detect problems + log to CRM
+          // AUTO SUPPORT TICKET
           const problemKeywords = ["problem", "fehler", "bug", "funktioniert nicht", "hilfe", "kaputt", "geht nicht", "error", "broken", "support", "nicht möglich"];
           const isSupport = problemKeywords.some(k => message.toLowerCase().includes(k));
           if (isSupport) {
@@ -144,23 +202,20 @@ export async function POST(request: Request) {
               if (contact) {
                 await logActivity(contact.id, "support_request", `User meldet Problem: "${message.slice(0, 200)}..." → AI-Antwort gegeben.`);
               }
-              // Save as note in user micro-DB
               const { setUserData } = await import("@/lib/user-db");
               await setUserData(user.id, "notes", `support_${Date.now()}`, {
-                problem: message.slice(0, 500),
-                aiResponse: cleanResponse.slice(0, 500),
-                timestamp: new Date().toISOString(),
-                resolved: true, // AI handled it
+                problem: message.slice(0, 500), aiResponse: cleanResponse.slice(0, 500),
+                timestamp: new Date().toISOString(), resolved: true,
               });
-            } catch {} // Non-blocking
+            } catch {}
           }
 
-          // Track token usage for cost control
+          // Track token usage
           const estimatedInputTokens = Math.ceil((systemPrompt.length + message.length) / 4);
           const estimatedOutputTokens = Math.ceil(cleanResponse.length / 4);
           try { await trackTokenUsage(user.id, estimatedInputTokens, estimatedOutputTokens, "claude-sonnet-4-20250514"); } catch {}
 
-          // Send remaining count to frontend
+          // Send remaining count
           const newUsage = await checkUsageLimit(user.id);
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ done: true, usage: { remaining: newUsage.remaining, limit: newUsage.limit, used: newUsage.used } })}\n\n`));
         } catch (err) {

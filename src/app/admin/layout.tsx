@@ -7,9 +7,9 @@ import { useEffect, useState } from "react";
 const ADMIN_NAV = [
   { href: "/admin", label: "Overview", icon: "◆" },
   { href: "/admin/accounts", label: "Accounts", icon: "📊" },
-  { href: "/admin/signals", label: "Signal-Konten", icon: "📡" },
+  { href: "/admin/signals", label: "Signals", icon: "📡" },
   { href: "/admin/crm", label: "CRM", icon: "👥" },
-  { href: "/admin/settlements", label: "Abrechnungen", icon: "💰" },
+  { href: "/admin/settlements", label: "Abrechn.", icon: "💰" },
   { href: "/admin/users", label: "Users", icon: "👤" },
   { href: "/admin/partners", label: "Partners", icon: "🤝" },
   { href: "/admin/tickets", label: "Tickets", icon: "🎫" },
@@ -21,6 +21,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const [authorized, setAuthorized] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     fetch("/api/admin/overview")
@@ -35,6 +36,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       .catch(() => { router.push("/dashboard"); setLoading(false); });
   }, [router]);
 
+  useEffect(() => { setMobileMenuOpen(false); }, [path]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--gf-obsidian)" }}>
@@ -47,7 +50,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="min-h-screen flex" style={{ background: "var(--gf-obsidian)" }}>
-      {/* Sidebar */}
+      {/* Desktop Sidebar */}
       <aside className="hidden md:flex flex-col w-56 border-r py-6 px-4 shrink-0" style={{ background: "var(--gf-dark)", borderColor: "var(--gf-border)" }}>
         <Link href="/admin" className="mb-2 px-2">
           <span className="text-lg font-bold gf-gold-text">GOLD FOUNDRY</span>
@@ -78,21 +81,51 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       </aside>
 
-      {/* Mobile Nav */}
-      <div className="md:hidden fixed top-0 left-0 right-0 z-50 flex border-b overflow-x-auto" style={{ background: "var(--gf-dark)", borderColor: "var(--gf-border)" }}>
-        {ADMIN_NAV.map(n => {
-          const active = path === n.href || (n.href !== "/admin" && path.startsWith(n.href + "/"));
-          return (
-            <Link key={n.href} href={n.href} className="flex items-center gap-1.5 px-4 py-3 text-xs whitespace-nowrap shrink-0" style={{ color: active ? "var(--gf-gold)" : "var(--gf-text-dim)", borderBottom: active ? "2px solid var(--gf-gold)" : "2px solid transparent" }}>
-              <span>{n.icon}</span> {n.label}
+      {/* Mobile Header */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-50 border-b" style={{ background: "var(--gf-dark)", borderColor: "var(--gf-border)" }}>
+        <div className="flex items-center justify-between px-4 py-3">
+          <Link href="/admin" className="flex items-center gap-2">
+            <span className="text-sm font-bold gf-gold-text">GOLD FOUNDRY</span>
+            <span className="text-[8px] px-1.5 py-0.5 rounded-full font-semibold" style={{ background: "rgba(192,57,43,0.15)", color: "#e74c3c" }}>ADMIN</span>
+          </Link>
+          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="w-9 h-9 flex flex-col items-center justify-center gap-1.5 rounded-lg" style={{ background: "rgba(212,165,55,0.08)" }}>
+            {mobileMenuOpen ? (
+              <span className="text-lg" style={{ color: "var(--gf-gold)" }}>✕</span>
+            ) : (
+              <>
+                <span className="block w-4 h-0.5 rounded-full" style={{ background: "var(--gf-gold)" }} />
+                <span className="block w-4 h-0.5 rounded-full" style={{ background: "var(--gf-gold)" }} />
+                <span className="block w-4 h-0.5 rounded-full" style={{ background: "var(--gf-gold)" }} />
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* Mobile Dropdown Menu */}
+        {mobileMenuOpen && (
+          <nav className="border-t px-2 py-2 max-h-[70vh] overflow-y-auto" style={{ borderColor: "var(--gf-border)", background: "var(--gf-dark)" }}>
+            <div className="grid grid-cols-3 gap-1.5">
+              {ADMIN_NAV.map(n => {
+                const active = path === n.href || (n.href !== "/admin" && path.startsWith(n.href + "/"));
+                return (
+                  <Link key={n.href} href={n.href} className="flex flex-col items-center gap-1 py-3 rounded-lg text-center transition-all"
+                    style={{ color: active ? "var(--gf-gold)" : "var(--gf-text-dim)", background: active ? "rgba(212,165,55,0.08)" : "rgba(255,255,255,0.02)" }}>
+                    <span className="text-xl">{n.icon}</span>
+                    <span className="text-[11px] font-medium">{n.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
+            <Link href="/dashboard" className="flex items-center justify-center gap-2 mt-2 py-2.5 rounded-lg text-xs transition-colors" style={{ color: "var(--gf-text-dim)", background: "rgba(255,255,255,0.02)" }}>
+              ← Zum Dashboard
             </Link>
-          );
-        })}
+          </nav>
+        )}
       </div>
 
       {/* Content */}
-      <main className="flex-1 overflow-auto mt-12 md:mt-0">
-        <div className="p-4 md:p-8 max-w-7xl mx-auto animate-in">
+      <main className="flex-1 overflow-auto mt-14 md:mt-0">
+        <div className="p-3 sm:p-4 md:p-8 max-w-7xl mx-auto animate-in">
           {children}
         </div>
       </main>

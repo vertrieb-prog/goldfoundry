@@ -4,19 +4,49 @@ import { useState, useRef, useEffect } from "react";
 
 interface Message { role: "user" | "assistant"; content: string }
 
+/** Converts markdown-style text to clean HTML for chat display */
+function formatChat(text: string): string {
+  return text
+    // Headers: ## or # → bold large text
+    .replace(/^###\s+(.+)$/gm, '<div style="font-size:15px;font-weight:700;color:#faef70;margin:10px 0 4px">$1</div>')
+    .replace(/^##\s+(.+)$/gm, '<div style="font-size:16px;font-weight:700;color:#faef70;margin:12px 0 4px">$1</div>')
+    .replace(/^#\s+(.+)$/gm, '<div style="font-size:17px;font-weight:700;color:#faef70;margin:14px 0 6px">$1</div>')
+    // Bold: **text** → <strong>
+    .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#fff;font-weight:600">$1</strong>')
+    // Italic: *text* → <em>
+    .replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>')
+    // Bullet lists: - item or • item
+    .replace(/^[-•]\s+(.+)$/gm, '<div style="padding-left:12px;margin:2px 0">▸ $1</div>')
+    // Numbered lists: 1. item
+    .replace(/^(\d+)\.\s+(.+)$/gm, '<div style="padding-left:12px;margin:2px 0"><span style="color:#faef70;font-weight:600">$1.</span> $2</div>')
+    // Emoji indicators for status
+    .replace(/✅/g, '<span style="color:#4ade80">✅</span>')
+    .replace(/❌/g, '<span style="color:#f87171">❌</span>')
+    .replace(/⚠️/g, '<span style="color:#fbbf24">⚠️</span>')
+    // Horizontal rules
+    .replace(/^[-=]{3,}$/gm, '<div style="border-top:1px solid rgba(250,239,112,0.15);margin:8px 0"></div>')
+    // Code inline: `code`
+    .replace(/`([^`]+)`/g, '<code style="background:rgba(250,239,112,0.08);padding:1px 5px;border-radius:4px;font-size:12px;color:#faef70">$1</code>')
+    // Line breaks
+    .replace(/\n/g, '<br/>');
+}
+
 const WELCOME = "Hey! Ich bin FORGE Mentor \u2014 dein pers\u00f6nlicher KI-Trading-Agent.\n\nIch kenne deine Konten, analysiere Trades in Echtzeit und optimiere deine Strategie. Frag mich alles!";
 
 const QUICK_ACTIONS = [
-  { label: "Status-Check", icon: "\ud83d\udcca", q: "Wie steht mein Account? Gib mir einen kompletten Status-Check." },
-  { label: "Trades analysieren", icon: "\ud83d\udd2c", q: "Analysiere meine letzten Trades. Wo kann ich mich verbessern?" },
-  { label: "Markt-Update", icon: "\ud83c\udf0d", q: "Was passiert gerade am Markt? Gibt es Risiken?" },
-  { label: "Strategie", icon: "\u2699\ufe0f", q: "Schlage mir eine optimale Strategie vor basierend auf meinen Daten." },
+  { label: "Status-Check", icon: "\ud83d\udcca", q: "Wie steht mein Account? Gib mir einen kompletten Status-Check mit allen Zahlen." },
+  { label: "Trade-Analyse", icon: "\ud83d\udd2c", q: "Analysiere meine letzten 30 Tage Trades. Was läuft gut, was nicht?" },
+  { label: "Markt-Update", icon: "\ud83c\udf0d", q: "Was passiert gerade am Markt? Aktuelle Risiken und Chancen?" },
+  { label: "Investment-Plan", icon: "\ud83c\udfaf", q: "Erstelle mir einen Investment-Plan. Wie kann ich mein Kapital am besten wachsen lassen?" },
+  { label: "Compounding", icon: "\ud83d\udcc8", q: "Berechne mir eine Zinseszins-Projektion basierend auf meiner aktuellen Performance." },
+  { label: "Positionen", icon: "\u26a1", q: "Welche Trades sind gerade offen? Zeig mir alle Positionen." },
 ];
 
 export default function ForgeChat() {
   const [messages, setMessages] = useState<Message[]>([{ role: "assistant", content: WELCOME }]);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
+  const [toolStatus, setToolStatus] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -53,7 +83,11 @@ export default function ForgeChat() {
         for (const line of chunk.split("\n").filter(l => l.startsWith("data: "))) {
           try {
             const data = JSON.parse(line.slice(6));
+            if (data.status) {
+              setToolStatus(data.status);
+            }
             if (data.text) {
+              setToolStatus(null);
               assistantMsg += data.text;
               setMessages(prev => [...prev.slice(0, -1), { role: "assistant", content: assistantMsg }]);
             }
@@ -72,6 +106,7 @@ export default function ForgeChat() {
       ]);
     }
     setStreaming(false);
+    setToolStatus(null);
     inputRef.current?.focus();
   }
 
@@ -94,7 +129,7 @@ export default function ForgeChat() {
         {streaming && (
           <div className="ml-auto flex items-center gap-1.5 text-[10px]" style={{ color: "var(--gf-gold)" }}>
             <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
-            denkt nach...
+            {toolStatus || "denkt nach..."}
           </div>
         )}
       </div>
@@ -113,10 +148,14 @@ export default function ForgeChat() {
               {m.role === "assistant" && (
                 <div className="text-[9px] font-medium tracking-wide mb-1.5" style={{ color: "var(--gf-gold)" }}>FORGE MENTOR</div>
               )}
-              <div className="text-sm leading-relaxed whitespace-pre-wrap" style={{
+              <div className="text-sm leading-relaxed" style={{
                 color: m.role === "user" ? "var(--gf-text-bright)" : "var(--gf-text)",
               }}>
-                {m.content}
+                {m.role === "user" ? (
+                  <span style={{ whiteSpace: "pre-wrap" }}>{m.content}</span>
+                ) : (
+                  <span dangerouslySetInnerHTML={{ __html: formatChat(m.content) }} />
+                )}
                 {streaming && i === messages.length - 1 && m.role === "assistant" && (
                   <span className="inline-block w-2 h-4 ml-0.5 rounded-sm animate-pulse" style={{ background: "var(--gf-gold)" }} />
                 )}
