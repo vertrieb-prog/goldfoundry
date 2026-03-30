@@ -84,11 +84,8 @@ export async function GET(request: Request) {
     for (const account of accounts) {
       const accountId = account.metaapi_account_id;
       try {
-        let clientBase: string;
-        try {
-          const accInfo = await metaApiFetch(`${META_PROV_BASE}/users/current/accounts/${accountId}`, metaApiToken);
-          clientBase = getClientBase(accInfo.region);
-        } catch { clientBase = getClientBase(); }
+        // IMMER London Region (alle TagMarket Accounts sind dort)
+        const clientBase = "https://mt-client-api-v1.london.agiliumtrade.ai";
 
         const positions = await metaApiFetch(
           `${clientBase}/users/current/accounts/${accountId}/positions`, metaApiToken
