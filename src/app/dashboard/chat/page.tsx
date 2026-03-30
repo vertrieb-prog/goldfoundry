@@ -81,7 +81,7 @@ export default function ChatPage() {
   }
 
   return (
-    <FeatureGate minTier="analyzer" featureName="FORGE Mentor" landingPage="/forge-mentor">
+    <FeatureGate minTier="analyzer" featureName="FORGE Mentor" landingPage="/">
     <div className="flex flex-col" style={{ height: "calc(100vh - 8rem)" }}>
 
       {/* Features Bar */}

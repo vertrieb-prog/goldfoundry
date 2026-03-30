@@ -594,7 +594,7 @@ export async function sendPayoutReminder(
       Fordere jetzt deine Provisionen an.
     </p>
 
-    ${ctaButton("Jetzt auszahlen &rarr;", `${BASE_URL}/dashboard/partner/earnings`)}
+    ${ctaButton("Jetzt auszahlen &rarr;", `${BASE_URL}/dashboard`)}
   `;
 
   return sendEmail(
@@ -692,7 +692,7 @@ export async function sendPartnerWelcome(
       ${featureRow("&#128171;", "FORGE Points", "Verdiene FP f&uuml;r jede Aktivit&auml;t. 1 FP = 0,10 &euro;.")}
     </table>
 
-    ${ctaButton("Partner Dashboard &rarr;", `${BASE_URL}/dashboard/partner`)}
+    ${ctaButton("Partner Dashboard &rarr;", `${BASE_URL}/dashboard`)}
   `;
 
   return sendEmail(
@@ -722,7 +722,7 @@ export async function sendNewReferral(
       Weiter so, ${partnerName}! Jede Empfehlung z&auml;hlt f&uuml;r deinen Rang-Aufstieg.
     </p>
 
-    ${ctaButton("Earnings ansehen &rarr;", `${BASE_URL}/dashboard/partner/earnings`)}
+    ${ctaButton("Earnings ansehen &rarr;", `${BASE_URL}/dashboard`)}
   `;
 
   return sendEmail(

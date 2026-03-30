@@ -132,7 +132,7 @@ export default function AddAccountPage() {
   const canProceedStep2 = mtLogin && mtPassword;
 
   return (
-    <FeatureGate minTier="copier" featureName="Konto verbinden" landingPage="/smart-copier">
+    <FeatureGate minTier="copier" featureName="Konto verbinden" landingPage="/">
     <div className="max-w-2xl mx-auto">
       {/* Header */}
       <div className="mb-8">

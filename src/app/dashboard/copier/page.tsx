@@ -147,7 +147,7 @@ export default function CopierPage() {
   const riskColor = RISK_COLORS[intel?.risk_level] || "var(--gf-green)";
 
   return (
-    <FeatureGate minTier="copier" featureName="Smart Copier" landingPage="/smart-copier">
+    <FeatureGate minTier="copier" featureName="Smart Copier" landingPage="/">
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-4">
@@ -261,18 +261,6 @@ export default function CopierPage() {
           </div>
         </div>
       ))}
-
-      {/* Telegram Copier Link */}
-      <div className="gf-panel p-5 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl" style={{ background: "rgba(250,239,112,0.06)", border: "1px solid rgba(250,239,112,0.12)" }}>{"\ud83d\udce1"}</div>
-          <div>
-            <div className="text-sm font-semibold text-white">Telegram Copier</div>
-            <div className="text-xs text-zinc-500">Signale aus Telegram-Channels automatisch kopieren</div>
-          </div>
-        </div>
-        <Link href="/dashboard/telegram" className="gf-btn-outline gf-btn-sm">&Ouml;ffnen &rarr;</Link>
-      </div>
 
       {/* How Risk Shield Works */}
       <div className="gf-panel p-5">

@@ -34,7 +34,7 @@ function wrap(content: string): string {
 <div style="max-width:560px;margin:0 auto;">
 <div style="font-size:10px;letter-spacing:2px;color:#5a4f3a;margin-bottom:16px;">GOLD FOUNDRY · UPLINE ACTION REQUIRED</div>
 ${content}
-<div style="margin-top:28px;text-align:center;"><a href="https://goldfoundry.de/dashboard/affiliate" style="display:inline-block;padding:12px 28px;background:linear-gradient(135deg,#d4a537,#8a6a1a);color:#0a0908;font-weight:600;text-decoration:none;border-radius:2px;font-size:13px;">Zum Partner-Dashboard →</a></div>
+<div style="margin-top:28px;text-align:center;"><a href="https://goldfoundry.de/dashboard" style="display:inline-block;padding:12px 28px;background:linear-gradient(135deg,#d4a537,#8a6a1a);color:#0a0908;font-weight:600;text-decoration:none;border-radius:2px;font-size:13px;">Zum Partner-Dashboard →</a></div>
 <div style="margin-top:28px;padding-top:14px;border-top:1px solid rgba(212,165,55,0.08);font-size:10px;color:#3a3228;">Marcus Steiner · Head of Partnerships · Gold Foundry</div>
 </div></body></html>`;
 }

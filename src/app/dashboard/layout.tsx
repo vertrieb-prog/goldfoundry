@@ -33,23 +33,18 @@ const NAV: NavItem[] = [
   { href: "/dashboard", label: "Command Center", icon: "\u25c6", group: "main" },
   { href: "/dashboard/accounts", label: "Accounts", icon: "\ud83d\udcca", group: "trading" },
   { href: "/dashboard/copier", label: "Smart Copier", icon: "\u26a1", group: "trading", minTier: "copier" },
-  { href: "/dashboard/telegram", label: "Telegram Copier", icon: "\ud83d\udce1", group: "trading", minTier: "copier" },
   { href: "/dashboard/trades", label: "Trade Ledger", icon: "\ud83d\udccb", group: "trading" },
   { href: "/dashboard/chat", label: "FORGE Mentor", icon: "\ud83e\udde0", group: "ai", minTier: "analyzer" },
-  { href: "/dashboard/strategy", label: "Strategy Lab", icon: "\ud83d\udd2c", group: "ai", minTier: "pro" },
-  { href: "/dashboard/partner", label: "Partner", icon: "\ud83d\udcb0", group: "partner" },
-  { href: "/dashboard/profit", label: "Profit Share", icon: "\ud83d\udcc8", group: "partner" },
-  { href: "/dashboard/upgrade", label: "Upgrade", icon: "\ud83d\udc8e", group: "system" },
   { href: "/dashboard/settings", label: "Settings", icon: "\u2699", group: "system" },
 ];
 
 const MOBILE_NAV = NAV.filter(n => [
   "/dashboard", "/dashboard/copier", "/dashboard/chat",
-  "/dashboard/partner", "/dashboard/accounts",
+  "/dashboard/accounts",
 ].includes(n.href));
 
 const GROUP_LABELS: Record<string, string> = {
-  main: "", trading: "Trading", ai: "KI", partner: "Partner", system: "System",
+  main: "", trading: "Trading", ai: "KI", system: "System",
 };
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -267,8 +262,8 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
             </span>
           </div>
           <div className="flex items-center gap-3">
-            <Link href="/dashboard/upgrade" className="hidden sm:flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-colors hover:bg-white/[0.03]" style={{ color: "var(--gf-gold)", border: "1px solid rgba(250,239,112,0.15)" }}>
-              <span>\ud83d\udc8e</span> Upgrade
+            <Link href="/dashboard/settings" className="hidden sm:flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-colors hover:bg-white/[0.03]" style={{ color: "var(--gf-gold)", border: "1px solid rgba(250,239,112,0.15)" }}>
+              <span>\u2699</span> Settings
             </Link>
             {/* Mobile Avatar */}
             <div className="md:hidden w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-bold" style={{ background: `${tierColor}15`, border: `1px solid ${tierColor}30`, color: tierColor }}>

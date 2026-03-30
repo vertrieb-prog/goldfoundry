@@ -83,7 +83,7 @@ export default function SettingsPage() {
           {tier === "free" ? (
             <div>
               <p className="text-sm text-zinc-500 mb-4">Upgrade f&uuml;r Smart Copier, Risk Shield und mehr.</p>
-              <Link href="/dashboard/upgrade" className="gf-btn text-sm w-full text-center">Upgrade &rarr;</Link>
+              <a href="mailto:support@goldfoundry.de" className="gf-btn text-sm w-full text-center">Upgrade anfragen &rarr;</a>
             </div>
           ) : (
             <div>

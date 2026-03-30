@@ -40,14 +40,6 @@ const PAGE_CONTEXT: Record<string, { greeting: string; actions: { label: string;
       { label: "Demo möglich?", q: "Kann ich erstmal auf einem Demo-Konto testen?" },
     ],
   },
-  "/pricing": {
-    greeting: "Du schaust dir die Pläne an — gute Idee.\n\nKurz-Überblick:\n\n💡 Analyzer (€9/mo) — Dashboard + FORGE Mentor\n⚡ Copier (€29/mo) — Alles + Smart Copier\n🔥 Pro (€59/mo) — Alles + Strategy Lab + Priority\n👑 Provider (€99/mo) — Signale anbieten + Revenue Share\n\nAlle Pläne haben die 7-Faktor Risk Engine. Frag mich wenn du unsicher bist!",
-    actions: [
-      { label: "Was ist der Unterschied?", q: "Erkläre mir den Unterschied zwischen Copier und Pro Plan genau." },
-      { label: "Lohnt sich Pro?", q: "Lohnt sich der Pro Plan? Was bekomme ich extra?" },
-      { label: "Kann ich upgraden?", q: "Kann ich später upgraden wenn ich mit einem kleineren Plan starte?" },
-    ],
-  },
   "/dashboard": {
     greeting: "Welcome to the Command Center! ⚡\n\nHier siehst du alles auf einen Blick:\n\n📊 Oben: Deine KPIs (Equity, P/L, Drawdown)\n📈 Mitte: Live Equity Curve\n🛡️ Unten: Risk Engine Status\n\nIch analysiere deine Trades in Echtzeit. Frag mich jederzeit was passiert.",
     actions: [
@@ -79,14 +71,6 @@ const PAGE_CONTEXT: Record<string, { greeting: string; actions: { label: string;
       { label: "Aktuelles Regime?", q: "In welchem Markt-Regime befinden wir uns gerade?" },
       { label: "Risiken heute?", q: "Gibt es heute besondere Risiken oder Events die ich beachten muss?" },
       { label: "Wie nutzt der Copier das?", q: "Wie nutzt der Copier die Market Intel Daten für Entscheidungen?" },
-    ],
-  },
-  "/dashboard/affiliate": {
-    greeting: "Partner Program! 💰\n\nVerdiene passiv mit deinem Netzwerk:\n\n📊 30% auf Ebene 1\n📊 10% auf Ebene 2\n📊 5% auf Ebene 3\n\nDein Affiliate-Link ist oben. Teile ihn auf Social Media, in Trading-Gruppen oder mit Freunden.\n\nAuszahlung ab €50 — automatisch zum Monatsende.",
-    actions: [
-      { label: "Meinen Link teilen", q: "Wie kann ich meinen Affiliate-Link am besten verbreiten?" },
-      { label: "Auszahlung?", q: "Wann und wie bekomme ich meine Affiliate-Einnahmen ausgezahlt?" },
-      { label: "Wie viel kann ich verdienen?", q: "Rechne mir aus wie viel ich verdienen kann wenn ich 10 Leute werbe." },
     ],
   },
   "/dashboard/accounts": {
@@ -182,9 +166,8 @@ export default function ChatWidget() {
   function getPageLabel(path: string): string {
     const labels: Record<string, string> = {
       "/": "Startseite", "/auth/login": "Login", "/auth/register": "Registrierung",
-      "/pricing": "Pricing", "/dashboard": "Dashboard", "/dashboard/copier": "Copier",
+      "/dashboard": "Dashboard", "/dashboard/copier": "Copier",
       "/dashboard/strategy-lab": "Strategy Lab", "/dashboard/market-intel": "Market Intel",
-      "/dashboard/affiliate": "Partner Program", "/leaderboard": "Leaderboard",
     };
     return labels[path] ?? path.split("/").pop()?.replace(/-/g, " ") ?? "Seite";
   }
