@@ -331,10 +331,19 @@ function startFallback(pair) {
       );
       const knownIds = new Set(known.map(k => k.position_id));
 
-      for (const pos of positions) {
-        if (knownIds.has(String(pos.id))) continue;
+      // Gruppiere nach Symbol+Direction+Sekunde = EIN Signal (Trader setzt oft 4 Splits)
+      const newPositions = positions.filter(p => !knownIds.has(String(p.id)));
+      const signals = new Map();
+      for (const pos of newPositions) {
+        const dir = pos.type?.replace("POSITION_TYPE_", "") || "?";
+        const timeKey = pos.time ? pos.time.slice(0, 19) : "now";
+        const groupKey = `${pos.symbol}-${dir}-${timeKey}`;
+        if (!signals.has(groupKey)) signals.set(groupKey, pos);
+      }
+
+      for (const [, pos] of signals) {
         const ts = new Date().toLocaleTimeString("de-DE");
-        console.log(`\n[${ts}] FALLBACK SIGNAL: ${pos.symbol} ${pos.type?.replace("POSITION_TYPE_", "")} (${pair.name})`);
+        console.log(`\n[${ts}] FALLBACK SIGNAL: ${pos.symbol} ${pos.type?.replace("POSITION_TYPE_", "")} @${pos.openPrice} (${pair.name})`);
         await executeCopy(pos, pair);
       }
     } catch (e) {

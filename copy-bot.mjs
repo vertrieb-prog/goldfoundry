@@ -241,19 +241,61 @@ async function poll() {
     try {
       const positions = await apiFetch(`${CLIENT_BASE}/users/current/accounts/${pair.signal}/positions`);
       if (!Array.isArray(positions)) continue;
-      errorCount = 0; // Reset bei Erfolg
+      errorCount = 0;
 
-      for (const pos of positions) {
+      // Gruppiere Positionen nach Symbol+Direction (Phenex setzt 4 Splits = 1 Signal)
+      const newPositions = positions.filter(pos => {
         const key = `${pos.id}-${pos.type}-${pos.symbol}`;
-        if (known.has(key)) continue;
+        if (known.has(key)) return false;
         known.add(key);
+        return true;
+      });
 
+      // Gruppiere nach Symbol + Direction + gleiche Sekunde = EIN Signal
+      const signals = new Map();
+      for (const pos of newPositions) {
+        const dir = pos.type.replace("POSITION_TYPE_", "");
+        const timeKey = pos.time ? pos.time.slice(0, 19) : "now"; // Gleiche Sekunde
+        const groupKey = `${pos.symbol}-${dir}-${timeKey}`;
+        if (!signals.has(groupKey)) {
+          signals.set(groupKey, { ...pos, _groupKey: groupKey });
+        }
+        // Ignoriere weitere Splits vom gleichen Signal — wir berechnen unsere eigenen Lots
+      }
+
+      for (const [groupKey, pos] of signals) {
         const ts = new Date().toLocaleTimeString("de-DE");
+        const dir = pos.type.replace("POSITION_TYPE_", "");
         console.log(`\n[${ts}] SIGNAL: ${pair.name}`);
-        console.log(`  ${pos.type.replace("POSITION_TYPE_", "")} ${pos.symbol} ${pos.volume}L @${pos.openPrice}`);
+        console.log(`  ${dir} ${pos.symbol} @${pos.openPrice} (wir berechnen eigene Lots)`);
 
         await logCopyEvent(pair, pos, "DETECTED");
         await copyPosition(pos, pair.copy, pair);
+      }
+
+      // ── SL/TP Sync: Phenex setzt SL/TP nachtraeglich → auf unsere Positionen uebernehmen ──
+      for (const pos of positions) {
+        if (!pos.stopLoss && !pos.takeProfit) continue;
+        const slKey = `sltp-${pair.copy}-${pos.symbol}-${pos.type}`;
+        const slVal = `${pos.stopLoss || 0}-${pos.takeProfit || 0}`;
+        if (known.has(slKey) && known.get(slKey) === slVal) continue; // Schon synchronisiert
+        if (typeof known.get === 'undefined') continue; // knownPositions ist ein Set, brauche Map fuer SL/TP tracking
+        // SL/TP hat sich geaendert → unsere Copy-Positionen updaten
+        try {
+          const mappedSym = mapSymbol(pos.symbol);
+          const copyPositions = await apiFetch(`${CLIENT_BASE}/users/current/accounts/${pair.copy}/positions`);
+          if (!Array.isArray(copyPositions)) continue;
+          const matching = copyPositions.filter(cp => cp.symbol === mappedSym && cp.type === pos.type && cp.comment?.startsWith("COPY-"));
+          for (const cp of matching) {
+            const payload = { actionType: "POSITION_MODIFY", positionId: cp.id };
+            if (pos.stopLoss) payload.stopLoss = pos.stopLoss;
+            if (pos.takeProfit) payload.takeProfit = pos.takeProfit;
+            await apiFetch(`${CLIENT_BASE}/users/current/accounts/${pair.copy}/trade`, { method: "POST", body: JSON.stringify(payload) });
+          }
+          if (matching.length > 0) {
+            console.log(`  [SYNC] SL/TP von ${pos.symbol}: SL=${pos.stopLoss || "-"} TP=${pos.takeProfit || "-"} → ${matching.length} Positionen`);
+          }
+        } catch {}
       }
 
       // Track closed
