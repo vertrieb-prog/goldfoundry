@@ -180,6 +180,8 @@ async function managePosition(
   // Wenn Preis ueber TP hinaus (Runner) → SL eng nachziehen
   if (takeProfit && openPrice && currentPrice) {
     const tpDist = Math.abs(takeProfit - openPrice);
+    if (tpDist < pip) { /* TP zu nah an Entry, skip */ }
+    else {
     const progressToTp = isBuy
       ? (currentPrice - openPrice) / tpDist   // 0 = Entry, 1.0 = TP
       : (openPrice - currentPrice) / tpDist;
@@ -218,6 +220,7 @@ async function managePosition(
         } catch (e: any) { log("WARN", `TP-Trail fehlgeschlagen: ${e.message}`); }
       }
     }
+    } // end tpDist check
   }
 
   // CRITICAL — sofort schliessen
