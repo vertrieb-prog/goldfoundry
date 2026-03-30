@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import "./globals.css";
 import ChatWidget from "@/components/ChatWidget";
 import EmbedWrapper from "@/components/EmbedWrapper";
-import SalesFunnel from "@/components/funnel/sales-funnel";
 import CookieBanner from "@/components/CookieBanner";
 
 export const metadata: Metadata = {
@@ -25,7 +24,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <EmbedWrapper />
         {children}
-        <SalesFunnel />
         <ChatWidget />
         <CookieBanner />
       </body>
