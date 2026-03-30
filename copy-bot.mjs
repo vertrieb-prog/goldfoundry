@@ -26,18 +26,11 @@ const SIGNALS = [
   { id: "58934470-695b-404b-bcad-8c406fd7d04d", name: "RoboForex #2 (68297968)" },
   { id: "e19811f9-0dc4-4e47-8e99-183d2f266c57", name: "Phenex Live (50683542)" },
 ];
-// ── Copy-Konten (WRITE — hier werden Trades gesetzt + von Engine gemanaged) ──
-const COPY_ACCOUNTS = [
-  { id: "66d8fe15-368b-4e3c-8c6c-ed32bea5b56b", name: "Copy-Demo (50701689)" },
-  { id: "02f08a16-ae02-40f4-9195-2c62ec52e8eb", name: "Copy-Demo 2 (50701707)" },
+// ── Copy-Ziel: GLEICHER Account (542) — Phenex setzt Signal, wir toppen mit richtigen Lots auf ──
+// Phenex setzt 0.10L → wir berechnen 4% Risk Lots und setzen die DIFFERENZ dazu
+const COPY_PAIRS = [
+  { signal: "e19811f9-0dc4-4e47-8e99-183d2f266c57", copy: "e19811f9-0dc4-4e47-8e99-183d2f266c57", name: "Phenex Live → Phenex Live (Top-Up)" },
 ];
-// Jedes Signal → ALLE Copy-Konten
-const COPY_PAIRS = [];
-for (const sig of SIGNALS) {
-  for (const copy of COPY_ACCOUNTS) {
-    COPY_PAIRS.push({ signal: sig.id, copy: copy.id, name: `${sig.name} → ${copy.name}` });
-  }
-}
 const CLIENT_BASE = "https://mt-client-api-v1.london.agiliumtrade.ai";
 const POLL_INTERVAL = 3000;
 
@@ -194,8 +187,31 @@ async function copyPosition(pos, copyAccountId, pair) {
     balance = info.equity || info.balance || 10000;
   } catch {}
 
-  let totalLots = calcLots(symbol, sl, entry, balance);
-  totalLots = Math.max(0.01, Math.floor(totalLots * tiltMult * 100) / 100);
+  // Berechne UNSERE gewuenschten Lots (4% Risk)
+  let targetLots = calcLots(symbol, sl, entry, balance);
+  targetLots = Math.max(0.01, Math.floor(targetLots * tiltMult * 100) / 100);
+
+  // Wenn Signal und Copy GLEICHER Account → Phenex hat schon Lots gesetzt, wir toppen auf
+  let totalLots = targetLots;
+  if (pair.signal === pair.copy) {
+    // Berechne wie viel Phenex schon gesetzt hat (alle Positionen gleiche Richtung + Symbol)
+    try {
+      const existingPos = await apiFetch(`${CLIENT_BASE}/users/current/accounts/${copyAccountId}/positions`);
+      if (Array.isArray(existingPos)) {
+        const existingLots = existingPos
+          .filter(p => p.symbol === symbol && p.type === (action === "BUY" ? "POSITION_TYPE_BUY" : "POSITION_TYPE_SELL"))
+          .reduce((sum, p) => sum + p.volume, 0);
+        totalLots = Math.max(0.01, Math.floor((targetLots - existingLots) * 100) / 100);
+        console.log(`  Phenex: ${existingLots.toFixed(2)}L vorhanden | Ziel: ${targetLots.toFixed(2)}L | Top-Up: ${totalLots.toFixed(2)}L`);
+        if (totalLots <= 0.01 && existingLots >= targetLots * 0.8) {
+          console.log(`  [SKIP] Phenex Lots reichen aus (${existingLots.toFixed(2)}L >= ${(targetLots*0.8).toFixed(2)}L)`);
+          await logCopyEvent(pair, pos, "COPIED", { latency_ms: 0 }); // Markiere als kopiert
+          return 0;
+        }
+      }
+    } catch {}
+  }
+
   const splits = buildSplits(totalLots, [...tps], entry, sl, action, symbol);
   const actionType = action === "BUY" ? "ORDER_TYPE_BUY" : "ORDER_TYPE_SELL";
 

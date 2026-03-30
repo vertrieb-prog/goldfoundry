@@ -20,21 +20,9 @@ const SB_KEY = getEnv("SUPABASE_SERVICE_KEY") || getEnv("SUPABASE_SERVICE_ROLE_K
 if (!METAAPI_TOKEN) { console.error("[ERR] METAAPI_TOKEN fehlt!"); process.exit(1); }
 if (!SB_URL || !SB_KEY) { console.error("[ERR] Supabase credentials fehlen!"); process.exit(1); }
 
-const SIGNALS = [
-  { id: "707f3173-572e-4002-9e8a-21b864525d30", name: "RoboForex #1 (23651610)" },
-  { id: "58934470-695b-404b-bcad-8c406fd7d04d", name: "RoboForex #2 (68297968)" },
-  { id: "e19811f9-0dc4-4e47-8e99-183d2f266c57", name: "Phenex Live (50683542)" },
+const COPY_PAIRS = [
+  { signal: "e19811f9-0dc4-4e47-8e99-183d2f266c57", copy: "e19811f9-0dc4-4e47-8e99-183d2f266c57", name: "Phenex Live → Phenex Live (Top-Up)" },
 ];
-const COPY_ACCOUNTS = [
-  { id: "66d8fe15-368b-4e3c-8c6c-ed32bea5b56b", name: "Copy-Demo (50701689)" },
-  { id: "02f08a16-ae02-40f4-9195-2c62ec52e8eb", name: "Copy-Demo 2 (50701707)" },
-];
-const COPY_PAIRS = [];
-for (const sig of SIGNALS) {
-  for (const copy of COPY_ACCOUNTS) {
-    COPY_PAIRS.push({ signal: sig.id, copy: copy.id, name: `${sig.name} → ${copy.name}` });
-  }
-}
 const CLIENT_BASE = "https://mt-client-api-v1.london.agiliumtrade.ai";
 
 // ── Supabase Helpers ──
