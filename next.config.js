@@ -19,6 +19,7 @@ const nextConfig = {
   async redirects() {
     return [
       { source: '/risk-disclaimer', destination: '/risikohinweis', permanent: true },
+      { source: '/dashboard/copier', destination: '/dashboard/trader', permanent: true },
       // Public pages being removed
       { source: '/crypto/:path*', destination: '/', permanent: true },
       { source: '/exchange/:path*', destination: '/', permanent: true },

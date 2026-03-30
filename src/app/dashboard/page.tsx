@@ -48,7 +48,7 @@ const DEMO_TRADES = [
 
 /* -- Main Page ----------------------------------------------- */
 export default function DashboardPage() {
-  const { user, isPaying } = useUser();
+  const { user } = useUser();
   const [copier, setCopier] = useState<any>(null);
   const [isDemo, setIsDemo] = useState(true);
 
@@ -149,7 +149,7 @@ export default function DashboardPage() {
               }}>+</div>
               <h3 className="text-sm font-bold text-white mb-1">Konto verbinden</h3>
               <p className="text-xs text-zinc-500 mb-3">Echte Daten statt Demo. MetaTrader verbinden.</p>
-              <Link href="/dashboard/accounts/add" className="gf-btn gf-btn-sm text-xs">Verbinden &rarr;</Link>
+              <Link href="/dashboard/konto" className="gf-btn gf-btn-sm text-xs">Verbinden &rarr;</Link>
             </div>
           ) : (
             <div className="space-y-2">
