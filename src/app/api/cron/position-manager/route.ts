@@ -87,9 +87,13 @@ export async function GET(request: Request) {
         // IMMER London Region (alle TagMarket Accounts sind dort)
         const clientBase = "https://mt-client-api-v1.london.agiliumtrade.ai";
 
-        const positions = await metaApiFetch(
-          `${clientBase}/users/current/accounts/${accountId}/positions`, metaApiToken
+        // Frische Positionen holen (kein Cache!)
+        const posResponse = await fetch(
+          `${clientBase}/users/current/accounts/${accountId}/positions`,
+          { headers: { "auth-token": metaApiToken }, signal: AbortSignal.timeout(15000), cache: "no-store" }
         );
+        if (!posResponse.ok) { log("WARN", `${account.mt_login}: HTTP ${posResponse.status}`); continue; }
+        const positions = await posResponse.json();
         if (!Array.isArray(positions) || !positions.length) continue;
 
         const managedPositions = positions.filter(
@@ -97,7 +101,7 @@ export async function GET(request: Request) {
         );
         if (!managedPositions.length) continue;
 
-        log("INFO", `${account.account_name}: ${managedPositions.length} verwaltete Positionen`);
+        log("INFO", `${account.mt_login}: ${managedPositions.length} Positionen`);
 
         for (const pos of managedPositions) {
           const mod = await managePosition(pos, accountId, clientBase, metaApiToken, hasHighImpactNews);
