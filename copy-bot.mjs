@@ -29,8 +29,9 @@ const SIGNALS = [
 // ── COPY PAIRS ──
 // Phenex 542: Signal + Copy auf GLEICHEM Konto (Top-Up Modus)
 // RoboForex: Signal von RoboForex → Copy auf TagMarket Copy-Demos
+// 542 wird NICHT kopiert — bot.py (Telegram) setzt direkt mit 5% Risk Lots
+// Copy-Bot nur fuer RoboForex Signal-Konten → Copy-Demos
 const COPY_PAIRS = [
-  { signal: "e19811f9-0dc4-4e47-8e99-183d2f266c57", copy: "e19811f9-0dc4-4e47-8e99-183d2f266c57", name: "Phenex Live 542 (Top-Up)" },
   { signal: "707f3173-572e-4002-9e8a-21b864525d30", copy: "66d8fe15-368b-4e3c-8c6c-ed32bea5b56b", name: "RoboForex #1 → Copy-Demo" },
   { signal: "58934470-695b-404b-bcad-8c406fd7d04d", copy: "02f08a16-ae02-40f4-9195-2c62ec52e8eb", name: "RoboForex #2 → Copy-Demo 2" },
 ];
