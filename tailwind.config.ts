@@ -9,14 +9,15 @@ const config: Config = {
     extend: {
       colors: {
         gf: {
-          obsidian: "#09090b",
+          obsidian: "#040302",
           dark: "#0f0f11",
           panel: "#131316",
           "panel-hover": "#18181c",
           surface: "#1c1c21",
-          gold: "#FAEF70",
-          "gold-light": "#fdf8c4",
-          "gold-dim": "#b8a830",
+          gold: "#d4a537",
+          "gold-light": "#f0d060",
+          "gold-dim": "#9e7a1f",
+          warm: "#cec0a0",
           red: "#ef4444",
           green: "#22c55e",
           blue: "#3b82f6",
@@ -25,9 +26,9 @@ const config: Config = {
         brand: {
           50: "#fefce8",
           100: "#fef9c3",
-          500: "#FAEF70",
-          600: "#d4c84a",
-          700: "#b8a830",
+          500: "#d4a537",
+          600: "#b8922e",
+          700: "#9e7a1f",
           900: "#713f12",
         },
       },

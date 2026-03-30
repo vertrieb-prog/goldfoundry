@@ -3,12 +3,11 @@ import "./globals.css";
 import ChatWidget from "@/components/ChatWidget";
 import EmbedWrapper from "@/components/EmbedWrapper";
 import SalesFunnel from "@/components/funnel/sales-funnel";
-import ExitIntent from "@/components/ExitIntent";
 import CookieBanner from "@/components/CookieBanner";
 
 export const metadata: Metadata = {
   title: "Gold Foundry — Dein Trading. Automatisch. Geschützt.",
-  description: "Smart Copier + Telegram Signal Copier + FORGE Mentor. Automatisiertes Trading mit 7-Faktor Risk Shield. Ab €2/Monat.",
+  description: "Gold Foundry — KI-gesteuerte Trading-Technologie. 4 Profi-Trader. 100% kostenlos. Reguliert ueber Tegas FX.",
   keywords: "gold foundry, smart copier, telegram copier, prop firm, xauusd, forex trading, metatrader, trading bot, risk management",
 };
 
@@ -28,7 +27,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {children}
         <SalesFunnel />
         <ChatWidget />
-        <ExitIntent />
         <CookieBanner />
       </body>
     </html>
