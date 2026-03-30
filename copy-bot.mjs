@@ -26,10 +26,13 @@ const SIGNALS = [
   { id: "58934470-695b-404b-bcad-8c406fd7d04d", name: "RoboForex #2 (68297968)" },
   { id: "e19811f9-0dc4-4e47-8e99-183d2f266c57", name: "Phenex Live (50683542)" },
 ];
-// ── Copy-Ziel: GLEICHER Account (542) — Phenex setzt Signal, wir toppen mit richtigen Lots auf ──
-// Phenex setzt 0.10L → wir berechnen 4% Risk Lots und setzen die DIFFERENZ dazu
+// ── COPY PAIRS ──
+// Phenex 542: Signal + Copy auf GLEICHEM Konto (Top-Up Modus)
+// RoboForex: Signal von RoboForex → Copy auf TagMarket Copy-Demos
 const COPY_PAIRS = [
-  { signal: "e19811f9-0dc4-4e47-8e99-183d2f266c57", copy: "e19811f9-0dc4-4e47-8e99-183d2f266c57", name: "Phenex Live → Phenex Live (Top-Up)" },
+  { signal: "e19811f9-0dc4-4e47-8e99-183d2f266c57", copy: "e19811f9-0dc4-4e47-8e99-183d2f266c57", name: "Phenex Live 542 (Top-Up)" },
+  { signal: "707f3173-572e-4002-9e8a-21b864525d30", copy: "66d8fe15-368b-4e3c-8c6c-ed32bea5b56b", name: "RoboForex #1 → Copy-Demo" },
+  { signal: "58934470-695b-404b-bcad-8c406fd7d04d", copy: "02f08a16-ae02-40f4-9195-2c62ec52e8eb", name: "RoboForex #2 → Copy-Demo 2" },
 ];
 const CLIENT_BASE = "https://mt-client-api-v1.london.agiliumtrade.ai";
 const POLL_INTERVAL = 3000;
@@ -105,8 +108,8 @@ function getDefaultSlDist(symbol) {
   return 0.0015; // 15 Pips Forex → aggressive Lots
 }
 
-// ── Lot Calculator — 4% Risk TOTAL (4 Splits à 1% = 4% pro Signal) ──
-function calcLots(symbol, sl, entry, balance = 10000, riskPct = 4) {
+// ── Lot Calculator — 5% Risk TOTAL pro Signal ──
+function calcLots(symbol, sl, entry, balance = 10000, riskPct = 5) {
   if (!entry) return 0.01;
   // Wenn kein SL gesetzt → Default SL-Distanz pro Instrument verwenden
   const slDist = sl ? Math.abs(entry - sl) : getDefaultSlDist(symbol);

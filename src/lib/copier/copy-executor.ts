@@ -204,7 +204,7 @@ export async function executeCopy(
       position.stopLoss,
       position.openPrice,
       balance,
-      4 // 4% total (4 splits à 1% = 4% pro Signal)
+      5 // 5% total pro Signal
     );
     const adjustedLots = Math.max(0.01, Math.floor(baseLots * 100) / 100);
 

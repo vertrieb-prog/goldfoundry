@@ -111,26 +111,26 @@ export async function GET(request: Request) {
 
         if (!Array.isArray(positions) || !positions.length) continue;
 
-        // Filter to TG-Signal positions only
-        const tgPositions = positions.filter(
-          (p: any) => p.comment && p.comment.startsWith("TG-Signal")
+        // Filter: TG-Signal (Phenex) + COPY- (unsere kopierten) Positionen
+        const managedPositions = positions.filter(
+          (p: any) => p.comment && (p.comment.startsWith("TG-Signal") || p.comment.startsWith("COPY-"))
         );
-        if (!tgPositions.length) continue;
+        if (!managedPositions.length) continue;
 
         // ── MARKT-ANALYSE: Trend bestimmen ──
         // Berechne Gesamt-PnL pro Richtung → zeigt den Trend
-        const buyPnL = tgPositions.filter((p: any) => p.type === "POSITION_TYPE_BUY").reduce((s: number, p: any) => s + (p.profit || 0), 0);
-        const sellPnL = tgPositions.filter((p: any) => p.type === "POSITION_TYPE_SELL").reduce((s: number, p: any) => s + (p.profit || 0), 0);
-        const buyCount = tgPositions.filter((p: any) => p.type === "POSITION_TYPE_BUY").length;
-        const sellCount = tgPositions.filter((p: any) => p.type === "POSITION_TYPE_SELL").length;
+        const buyPnL = managedPositions.filter((p: any) => p.type === "POSITION_TYPE_BUY").reduce((s: number, p: any) => s + (p.profit || 0), 0);
+        const sellPnL = managedPositions.filter((p: any) => p.type === "POSITION_TYPE_SELL").reduce((s: number, p: any) => s + (p.profit || 0), 0);
+        const buyCount = managedPositions.filter((p: any) => p.type === "POSITION_TYPE_BUY").length;
+        const sellCount = managedPositions.filter((p: any) => p.type === "POSITION_TYPE_SELL").length;
 
         // Trend: wenn BUYs im Plus und SELLs im Minus → bullish, umgekehrt bearish
         const trend = buyPnL > 0 && sellPnL < 0 ? "BULLISH" : sellPnL > 0 && buyPnL < 0 ? "BEARISH" : "NEUTRAL";
-        log("INFO", `Account ${account.account_name}: ${tgPositions.length} pos | BUY P/L:$${buyPnL.toFixed(0)} (${buyCount}) | SELL P/L:$${sellPnL.toFixed(0)} (${sellCount}) | Trend: ${trend}`);
+        log("INFO", `Account ${account.account_name}: ${managedPositions.length} pos | BUY P/L:$${buyPnL.toFixed(0)} (${buyCount}) | SELL P/L:$${sellPnL.toFixed(0)} (${sellCount}) | Trend: ${trend}`);
 
         // ── ENGINE: Anti-Tilt — track consecutive losses per run ──
-        const closedLosses = tgPositions.filter((p: any) => p.profit < 0).length;
-        const closedWins = tgPositions.filter((p: any) => p.profit > 0).length;
+        const closedLosses = managedPositions.filter((p: any) => p.profit < 0).length;
+        const closedWins = managedPositions.filter((p: any) => p.profit > 0).length;
         if (closedLosses > closedWins) {
           antiTiltState.consecutiveLosses += (closedLosses - closedWins);
         } else {
@@ -144,7 +144,7 @@ export async function GET(request: Request) {
           log("WARN", `ANTI-TILT: ${antiTiltState.consecutiveLosses} consecutive losses → reducing lot sizes by 50%`);
         }
 
-        for (const pos of tgPositions) {
+        for (const pos of managedPositions) {
           const mod = await managePosition(pos, accountId, clientBase, metaApiToken, hasHighImpactNews, trend);
           if (mod) modifications.push(mod);
         }
@@ -261,6 +261,24 @@ async function managePosition(
       } catch (e: any) {
         log("WARN", `Partial close failed ${posId}: ${e.message}`);
       }
+    }
+  }
+
+  // ── BREAKEVEN: Ab 30% Profit-Ratio → SL auf Entry (+1 Pip Sicherheit) ──
+  if (profitRatio >= 0.3 && profitRatio < 1.0) {
+    const beSL = isBuy
+      ? Math.round((openPrice + pip) * 100) / 100   // Entry + 1 Pip
+      : Math.round((openPrice - pip) * 100) / 100;  // Entry - 1 Pip
+    const needsMove = isBuy ? (!stopLoss || stopLoss < beSL) : (!stopLoss || stopLoss > beSL);
+    if (needsMove) {
+      try {
+        await metaApiFetch(`${clientBase}/users/current/accounts/${accountId}/trade`, token, {
+          method: "POST",
+          body: JSON.stringify({ actionType: "POSITION_MODIFY", positionId: posId, stopLoss: beSL, takeProfit: takeProfit ?? undefined }),
+        });
+        log("INFO", `BREAKEVEN ${symbol} ${posId}: SL ${stopLoss}→${beSL} (${(profitRatio*100).toFixed(0)}% profit)`);
+        return { symbol, posId, action: "breakeven", oldSL: stopLoss, newSL: beSL, profitRatio: +profitRatio.toFixed(2) };
+      } catch (e: any) { log("WARN", `Breakeven failed ${posId}: ${e.message}`); }
     }
   }
 
