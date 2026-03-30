@@ -8,12 +8,7 @@ export const maxDuration = 300;
 import { NextResponse } from "next/server";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 
-const META_PROV_BASE = "https://mt-provisioning-api-v1.agiliumtrade.agiliumtrade.ai";
-
-function getClientBase(region?: string): string {
-  if (region && region !== "default") return `https://mt-client-api-v1.${region}.agiliumtrade.ai`;
-  return "https://mt-client-api-v1.london.agiliumtrade.ai"; // Default: London (TagMarket Server)
-}
+const CLIENT_BASE = "https://mt-client-api-v1.london.agiliumtrade.ai";
 
 const log = (level: string, msg: string) =>
   console.log(`[${new Date().toISOString()}] [POS-MGR] [${level}] ${msg}`);
@@ -84,8 +79,7 @@ export async function GET(request: Request) {
     for (const account of accounts) {
       const accountId = account.metaapi_account_id;
       try {
-        // IMMER London Region (alle TagMarket Accounts sind dort)
-        const clientBase = "https://mt-client-api-v1.london.agiliumtrade.ai";
+        const clientBase = CLIENT_BASE;
 
         // Frische Positionen holen (kein Cache!)
         const posResponse = await fetch(
@@ -180,48 +174,49 @@ async function managePosition(
 
   if (state === "FRESH") return null;
 
-  // === TP-LEVEL BASIERTES SL-NACHZIEHEN ===
-  // Phenex-Signale haben gestaffelte TPs (TP1/TP2/TP3/TP4)
-  // Wenn Preis ein TP-Level passiert → SL auf das vorherige Level nachziehen
-  // Beispiel: BUY @4545, TP1=4550, TP2=4559, TP3=4578
-  //   Preis bei 4551 (ueber TP1) → SL auf Entry (4545)
-  //   Preis bei 4560 (ueber TP2) → SL auf TP1 (4550)
-  //   Preis bei 4579 (ueber TP3) → SL auf TP2 (4559)
-  if (takeProfit && stopLoss && openPrice && currentPrice) {
+  // === TP-BASIERTES SL-NACHZIEHEN ===
+  // Nutzt das ECHTE TP der Position (nicht geschaetzt)
+  // Wenn Preis 80%+ zum TP gelaufen → SL auf Breakeven (mindestens)
+  // Wenn Preis ueber TP hinaus (Runner) → SL eng nachziehen
+  if (takeProfit && openPrice && currentPrice) {
     const tpDist = Math.abs(takeProfit - openPrice);
-    const slToEntry = Math.abs(openPrice - stopLoss);
+    const progressToTp = isBuy
+      ? (currentPrice - openPrice) / tpDist   // 0 = Entry, 1.0 = TP
+      : (openPrice - currentPrice) / tpDist;
 
-    // Schaetze die TP-Levels basierend auf dem Abstand Entry→TP
-    // Typisches Phenex Pattern: TP1 nah, TP2 mittel, TP3 weit, TP4 offen
-    // Wir nutzen die SL-Distanz als Basis fuer die Level
-    const tp1 = isBuy ? openPrice + slToEntry * 0.5 : openPrice - slToEntry * 0.5;   // 50% der SL-Dist
-    const tp2 = isBuy ? openPrice + slToEntry * 1.5 : openPrice - slToEntry * 1.5;   // 150% der SL-Dist
-    const tp3 = isBuy ? openPrice + slToEntry * 2.5 : openPrice - slToEntry * 2.5;   // 250% der SL-Dist
+    if (progressToTp > 0 && stopLoss) {
+      let targetSL = stopLoss;
 
-    let targetSL = stopLoss; // Default: original SL
+      if (progressToTp >= 1.0) {
+        // Preis UEBER TP (Runner laeuft) → SL knapp unter TP
+        targetSL = isBuy
+          ? Math.max(targetSL, takeProfit - Math.abs(tpDist * 0.1))  // SL = TP - 10%
+          : Math.min(targetSL, takeProfit + Math.abs(tpDist * 0.1));
+      } else if (progressToTp >= 0.8) {
+        // 80%+ zum TP → SL auf halben Weg (Entry + 50% Profit)
+        targetSL = isBuy
+          ? Math.max(targetSL, openPrice + tpDist * 0.5)
+          : Math.min(targetSL, openPrice - tpDist * 0.5);
+      } else if (progressToTp >= 0.5) {
+        // 50%+ zum TP → SL auf Breakeven
+        targetSL = isBuy
+          ? Math.max(targetSL, openPrice + pip)
+          : Math.min(targetSL, openPrice - pip);
+      }
 
-    if (isBuy) {
-      if (currentPrice >= tp3) targetSL = Math.max(targetSL, tp2);       // Ueber TP3 → SL auf TP2
-      else if (currentPrice >= tp2) targetSL = Math.max(targetSL, tp1);  // Ueber TP2 → SL auf TP1
-      else if (currentPrice >= tp1) targetSL = Math.max(targetSL, openPrice + pip); // Ueber TP1 → Breakeven
-    } else {
-      if (currentPrice <= tp3) targetSL = Math.min(targetSL, tp2);
-      else if (currentPrice <= tp2) targetSL = Math.min(targetSL, tp1);
-      else if (currentPrice <= tp1) targetSL = Math.min(targetSL, openPrice - pip);
-    }
+      const targetSLRounded = Math.round(targetSL * 100) / 100;
+      const needsMove = isBuy ? targetSLRounded > stopLoss + pip : targetSLRounded < stopLoss - pip;
 
-    const targetSLRounded = Math.round(targetSL * 100) / 100;
-    const needsMove = isBuy ? targetSLRounded > stopLoss + pip : targetSLRounded < stopLoss - pip;
-
-    if (needsMove && Math.abs(currentPrice - targetSLRounded) >= pip * 2) {
-      try {
-        await metaApiFetch(tradeUrl, token, {
-          method: "POST",
-          body: JSON.stringify({ actionType: "POSITION_MODIFY", positionId: posId, stopLoss: targetSLRounded, takeProfit: takeProfit ?? undefined }),
-        });
-        log("INFO", `TP-TRAIL ${symbol} ${posId}: SL ${stopLoss}→${targetSLRounded} (Preis bei TP-Level)`);
-        return { symbol, posId, action: "tp_trail", oldSL: stopLoss, newSL: targetSLRounded, state };
-      } catch (e: any) { log("WARN", `TP-Trail fehlgeschlagen: ${e.message}`); }
+      if (needsMove && Math.abs(currentPrice - targetSLRounded) >= pip * 2) {
+        try {
+          await metaApiFetch(tradeUrl, token, {
+            method: "POST",
+            body: JSON.stringify({ actionType: "POSITION_MODIFY", positionId: posId, stopLoss: targetSLRounded, takeProfit: takeProfit ?? undefined }),
+          });
+          log("INFO", `TP-TRAIL ${symbol} ${posId}: SL ${stopLoss}→${targetSLRounded} (${(progressToTp * 100).toFixed(0)}% zum TP)`);
+          return { symbol, posId, action: "tp_trail", oldSL: stopLoss, newSL: targetSLRounded, progress: +(progressToTp * 100).toFixed(0) };
+        } catch (e: any) { log("WARN", `TP-Trail fehlgeschlagen: ${e.message}`); }
+      }
     }
   }
 
