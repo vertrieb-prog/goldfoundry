@@ -333,7 +333,7 @@ export async function generateProactiveCheckIns(): Promise<{ userId: string; mes
   const threeDaysAgo = new Date(Date.now() - 3 * 86400000).toISOString();
   const { data: activeUsers } = await db.from("slave_accounts")
     .select("user_id, firm_profile, current_equity, dd_limit, copier_active")
-    .eq("copier_active", true);
+    .is("copier_active", true);
 
   if (!activeUsers?.length) return [];
 

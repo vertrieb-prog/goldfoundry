@@ -23,6 +23,7 @@ if (!METAAPI_TOKEN) { console.error("[ERR] METAAPI_TOKEN fehlt!"); process.exit(
 const COPY_PAIRS = [
   { signal: "707f3173-572e-4002-9e8a-21b864525d30", copy: "66d8fe15-368b-4e3c-8c6c-ed32bea5b56b", name: "RoboForex #1 → TagMarket Copy-Demo" },
   { signal: "58934470-695b-404b-bcad-8c406fd7d04d", copy: "02f08a16-ae02-40f4-9195-2c62ec52e8eb", name: "RoboForex #2 → TagMarket Copy-Demo 2" },
+  { signal: "e19811f9-0dc4-4e47-8e99-183d2f266c57", copy: "66d8fe15-368b-4e3c-8c6c-ed32bea5b56b", name: "Phenex Live → TagMarket Copy-Demo" },
 ];
 const CLIENT_BASE = "https://mt-client-api-v1.london.agiliumtrade.ai";
 const POLL_INTERVAL = 3000;

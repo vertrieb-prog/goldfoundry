@@ -143,7 +143,7 @@ export class MasterTradeListener {
     const { data: slaves } = await this.db
       .from("slave_accounts")
       .select("*")
-      .eq("copier_active", true);
+      .is("copier_active", true);
 
     if (!slaves?.length) {
       log("WARN", "Keine aktiven Slave-Accounts gefunden");
@@ -458,7 +458,7 @@ export class MasterTradeListener {
     const { data: slaves } = await this.db
       .from("slave_accounts")
       .select("*")
-      .eq("copier_active", true);
+      .is("copier_active", true);
 
     if (!slaves?.length) return;
 
@@ -502,7 +502,7 @@ export class MasterTradeListener {
     const { data: slaves } = await this.db
       .from("slave_accounts")
       .select("*")
-      .eq("copier_active", true);
+      .is("copier_active", true);
 
     if (!slaves?.length) return;
 

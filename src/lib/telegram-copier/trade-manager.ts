@@ -19,7 +19,7 @@ export async function checkOpenPositions(
     .from("slave_accounts")
     .select("metaapi_account_id, current_equity, initial_balance, firm_profile")
     .eq("user_id", userId)
-    .eq("copier_active", true);
+    .is("copier_active", true);
 
   if (!accounts?.length) return [];
 

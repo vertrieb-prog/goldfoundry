@@ -14,7 +14,9 @@ if (!envContent) try { envContent = readFileSync(".env.local", "utf8"); } catch 
 if (!envContent) try { envContent = readFileSync(join(process.cwd(), ".env.local"), "utf8"); } catch {}
 const getEnv = (k, fb = "") => { const m = envContent.match(new RegExp(`${k}=(.+)`)); return m ? m[1].trim() : (process.env[k] || fb); };
 
-const CRON_SECRET = getEnv("CRON_SECRET", "goldfoundry-cron-secret-2024");
+let CRON_SECRET = getEnv("CRON_SECRET");
+if (!CRON_SECRET || CRON_SECRET === "placeholder-cron-secret-change-me") CRON_SECRET = "goldfoundry-cron-secret-2024";
+console.log(`  CRON_SECRET: ${CRON_SECRET.slice(0, 10)}...`);
 const SIGNAL_URL = "https://goldfoundry.de/api/cron/telegram-signals";
 const TICK_URL = "https://goldfoundry.de/api/cron/engine-tick";
 const POS_MGR_URL = "https://goldfoundry.de/api/cron/position-manager";

@@ -166,7 +166,7 @@ export async function executeSignal(
   const { data: slaves } = await db
     .from("slave_accounts")
     .select("*")
-    .eq("copier_active", true);
+    .is("copier_active", true);
 
   if (!slaves?.length) {
     log("WARN", "Keine aktiven Slave-Accounts");
@@ -396,7 +396,7 @@ async function handleCloseSignal(
   const { data: slaves } = await db
     .from("slave_accounts")
     .select("*")
-    .eq("copier_active", true);
+    .is("copier_active", true);
 
   if (!slaves?.length) return result;
 
@@ -449,7 +449,7 @@ async function handleModifySignal(
   const { data: slaves } = await db
     .from("slave_accounts")
     .select("*")
-    .eq("copier_active", true);
+    .is("copier_active", true);
 
   if (!slaves?.length) return result;
 

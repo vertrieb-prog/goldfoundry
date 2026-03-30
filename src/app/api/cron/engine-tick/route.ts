@@ -31,8 +31,8 @@ export async function GET(request: Request) {
   try {
     const { data: accounts } = await db
       .from("slave_accounts")
-      .select("user_id, metaapi_account_id")
-      .eq("copier_active", true);
+      .select("*")
+      .is("copier_active", true);
 
     if (!accounts?.length) {
       return NextResponse.json({ message: "No active accounts", ticked: 0 });

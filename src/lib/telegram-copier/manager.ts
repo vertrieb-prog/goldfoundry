@@ -150,7 +150,7 @@ async function getUserSettings(
     .from("slave_accounts")
     .select("metaapi_account_id, current_equity")
     .eq("user_id", userId)
-    .eq("copier_active", true)
+    .is("copier_active", true)
     .limit(1)
     .single();
 

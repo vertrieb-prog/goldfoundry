@@ -293,7 +293,7 @@ export class AITradeManager {
       const db = createSupabaseAdmin();
       const { data: acc } = await db.from("slave_accounts")
         .select("dd_limit, dd_type, equity_high")
-        .eq("copier_active", true)
+        .is("copier_active", true)
         .limit(1)
         .single();
       if (acc) ddLimit = Number(acc.dd_limit);
