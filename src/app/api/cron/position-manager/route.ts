@@ -12,7 +12,7 @@ const META_PROV_BASE = "https://mt-provisioning-api-v1.agiliumtrade.agiliumtrade
 
 function getClientBase(region?: string): string {
   if (region && region !== "default") return `https://mt-client-api-v1.${region}.agiliumtrade.ai`;
-  return "https://mt-client-api-v1.agiliumtrade.agiliumtrade.ai";
+  return "https://mt-client-api-v1.london.agiliumtrade.ai"; // Default: London (TagMarket Server)
 }
 
 const log = (level: string, msg: string) =>
@@ -185,7 +185,10 @@ async function managePosition(
       await metaApiFetch(tradeUrl, token, { method: "POST", body: JSON.stringify({ actionType: "POSITION_CLOSE_ID", positionId: posId }) });
       log("INFO", `NOTFALL-CLOSE ${symbol} ${posId}: ${(profitRatio * 100).toFixed(0)}% zum SL, P&L: $${profit?.toFixed(2)}`);
       return { symbol, posId, action: "emergency_close", state, profitRatio: +profitRatio.toFixed(2), profit };
-    } catch (e: any) { log("WARN", `Notfall-Close fehlgeschlagen: ${e.message}`); }
+    } catch (e: any) {
+      log("WARN", `Notfall-Close fehlgeschlagen (Position evtl. schon weg): ${e.message}`);
+      return null; // Weiter zum naechsten — KEINE Endlosschleife
+    }
   }
 
   // REVERSING — Gewinn sichern oder Teilschluss
