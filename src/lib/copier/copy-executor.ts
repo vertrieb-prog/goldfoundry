@@ -97,13 +97,13 @@ export function calcLots(
   sl: number | undefined,
   entry: number | undefined,
   balance = 10000,
-  riskPct = 1
+  riskPct = 5
 ): number {
   if (!entry) return 0.01;
   // Wenn kein SL → Default SL-Distanz pro Instrument
   const slDist = sl ? Math.abs(entry - sl) : getDefaultSlDist(symbol);
   if (slDist === 0) return 0.01;
-  const riskAmount = balance * (riskPct / 100); // 1% Risk
+  const riskAmount = balance * (riskPct / 100); // 5% Risk
   const isGold = /xau|gold/i.test(symbol);
   const isJPY = /jpy/i.test(symbol);
   const isIndex = /us500|us30|nas|de40|uk100|jp225/i.test(symbol);

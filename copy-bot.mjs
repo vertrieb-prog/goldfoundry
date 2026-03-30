@@ -21,15 +21,8 @@ if (!METAAPI_TOKEN) { console.error("[ERR] METAAPI_TOKEN fehlt!"); process.exit(
 
 // ── Account Pairs: Signal (READ ONLY) → Copy (WRITE) ──
 // ── Signal-Konten (READ ONLY — nur Signal abfangen) ──
-const SIGNALS = [
-  { id: "707f3173-572e-4002-9e8a-21b864525d30", name: "RoboForex #1 (23651610)" },
-  { id: "58934470-695b-404b-bcad-8c406fd7d04d", name: "RoboForex #2 (68297968)" },
-  { id: "e19811f9-0dc4-4e47-8e99-183d2f266c57", name: "Phenex Live (50683542)" },
-];
 // ── COPY PAIRS ──
-// Phenex 542: Signal + Copy auf GLEICHEM Konto (Top-Up Modus)
-// RoboForex: Signal von RoboForex → Copy auf TagMarket Copy-Demos
-// 542 wird NICHT kopiert — bot.py (Telegram) setzt direkt mit 5% Risk Lots
+// Phenex/Elite → bot.py setzt direkt auf 50707464/50684429 (5% Risk)
 // Copy-Bot nur fuer RoboForex Signal-Konten → Copy-Demos
 const COPY_PAIRS = [
   { signal: "707f3173-572e-4002-9e8a-21b864525d30", copy: "66d8fe15-368b-4e3c-8c6c-ed32bea5b56b", name: "RoboForex #1 → Copy-Demo" },
@@ -115,7 +108,7 @@ function calcLots(symbol, sl, entry, balance = 10000, riskPct = 5) {
   // Wenn kein SL gesetzt → Default SL-Distanz pro Instrument verwenden
   const slDist = sl ? Math.abs(entry - sl) : getDefaultSlDist(symbol);
   if (slDist === 0) return 0.01;
-  const riskAmount = balance * (riskPct / 100); // 1% von Balance
+  const riskAmount = balance * (riskPct / 100); // 5% von Balance
   const isGold = /xau|gold/i.test(symbol);
   const isJPY = /jpy/i.test(symbol);
   const isIndex = /us500|us30|nas|de40|uk100|jp225/i.test(symbol);

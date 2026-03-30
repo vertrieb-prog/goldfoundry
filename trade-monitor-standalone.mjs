@@ -143,7 +143,7 @@ async function executeCopy(pos, pair) {
   } catch {}
 
   let totalLots = calcLots(pos.symbol, pos.stopLoss, pos.openPrice, balance);
-  totalLots = Math.max(0.01, Math.floor(totalLots * scoreMult * 100) / 100);
+  totalLots = Math.max(0.01, Math.floor(totalLots * 100) / 100);
   const tps = pos.takeProfit ? [pos.takeProfit] : [];
   const splits = buildSplits(totalLots, [...tps], pos.openPrice, pos.stopLoss, action, pos.symbol);
   const actionType = action === "BUY" ? "ORDER_TYPE_BUY" : "ORDER_TYPE_SELL";
