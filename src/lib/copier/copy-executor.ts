@@ -119,11 +119,13 @@ export function calcLots(
 
 export function getDefaultSlDist(symbol: string): number {
   const sym = symbol.toUpperCase();
-  if (/XAU|GOLD/.test(sym)) return 10;
-  if (/JPY/.test(sym)) return 0.30;
-  if (/BTC/.test(sym)) return 500;
-  if (/US500|NAS/.test(sym)) return 50;
-  return 0.003;
+  if (/XAU|GOLD/.test(sym)) return 5;       // $5 → 0.20L bei $10k
+  if (/XAG|SILVER/.test(sym)) return 0.15;
+  if (/JPY/.test(sym)) return 0.15;          // 15 Pips
+  if (/BTC/.test(sym)) return 200;
+  if (/US30|NAS|US500|DE40|UK100|JP225/.test(sym)) return 25;
+  if (/OIL/.test(sym)) return 0.50;
+  return 0.0015;                              // 15 Pips Forex
 }
 
 // ── Build 4-Split Orders ──────────────────────────────────────

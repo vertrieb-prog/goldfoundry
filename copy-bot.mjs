@@ -86,14 +86,16 @@ async function apiFetch(url, opts) {
   return r.json();
 }
 
-// ── FIX #3: SL-Distanz pro Instrument-Typ ──
+// ── Default SL-Distanz — AGGRESSIV für maximale Lots bei 1% Risk ──
 function getDefaultSlDist(symbol) {
   const sym = symbol.toUpperCase();
-  if (/XAU|GOLD/.test(sym)) return 10;
-  if (/JPY/.test(sym)) return 0.30;
-  if (/BTC/.test(sym)) return 500;
-  if (/US500|NAS/.test(sym)) return 50;
-  return 0.003; // Standard Forex
+  if (/XAU|GOLD/.test(sym)) return 5;      // $5 SL → 0.20L bei $10k (BALLERT)
+  if (/XAG|SILVER/.test(sym)) return 0.15;
+  if (/JPY/.test(sym)) return 0.15;         // 15 Pips
+  if (/BTC/.test(sym)) return 200;
+  if (/US30|NAS|US500|DE40|UK100|JP225/.test(sym)) return 25;
+  if (/OIL/.test(sym)) return 0.50;
+  return 0.0015; // 15 Pips Forex → aggressive Lots
 }
 
 // ── Lot Calculator — IMMER 1% Risk per Trade ──
