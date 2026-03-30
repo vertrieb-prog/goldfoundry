@@ -180,6 +180,51 @@ async function managePosition(
 
   if (state === "FRESH") return null;
 
+  // === TP-LEVEL BASIERTES SL-NACHZIEHEN ===
+  // Phenex-Signale haben gestaffelte TPs (TP1/TP2/TP3/TP4)
+  // Wenn Preis ein TP-Level passiert → SL auf das vorherige Level nachziehen
+  // Beispiel: BUY @4545, TP1=4550, TP2=4559, TP3=4578
+  //   Preis bei 4551 (ueber TP1) → SL auf Entry (4545)
+  //   Preis bei 4560 (ueber TP2) → SL auf TP1 (4550)
+  //   Preis bei 4579 (ueber TP3) → SL auf TP2 (4559)
+  if (takeProfit && stopLoss && openPrice && currentPrice) {
+    const tpDist = Math.abs(takeProfit - openPrice);
+    const slToEntry = Math.abs(openPrice - stopLoss);
+
+    // Schaetze die TP-Levels basierend auf dem Abstand Entry→TP
+    // Typisches Phenex Pattern: TP1 nah, TP2 mittel, TP3 weit, TP4 offen
+    // Wir nutzen die SL-Distanz als Basis fuer die Level
+    const tp1 = isBuy ? openPrice + slToEntry * 0.5 : openPrice - slToEntry * 0.5;   // 50% der SL-Dist
+    const tp2 = isBuy ? openPrice + slToEntry * 1.5 : openPrice - slToEntry * 1.5;   // 150% der SL-Dist
+    const tp3 = isBuy ? openPrice + slToEntry * 2.5 : openPrice - slToEntry * 2.5;   // 250% der SL-Dist
+
+    let targetSL = stopLoss; // Default: original SL
+
+    if (isBuy) {
+      if (currentPrice >= tp3) targetSL = Math.max(targetSL, tp2);       // Ueber TP3 → SL auf TP2
+      else if (currentPrice >= tp2) targetSL = Math.max(targetSL, tp1);  // Ueber TP2 → SL auf TP1
+      else if (currentPrice >= tp1) targetSL = Math.max(targetSL, openPrice + pip); // Ueber TP1 → Breakeven
+    } else {
+      if (currentPrice <= tp3) targetSL = Math.min(targetSL, tp2);
+      else if (currentPrice <= tp2) targetSL = Math.min(targetSL, tp1);
+      else if (currentPrice <= tp1) targetSL = Math.min(targetSL, openPrice - pip);
+    }
+
+    const targetSLRounded = Math.round(targetSL * 100) / 100;
+    const needsMove = isBuy ? targetSLRounded > stopLoss + pip : targetSLRounded < stopLoss - pip;
+
+    if (needsMove && Math.abs(currentPrice - targetSLRounded) >= pip * 2) {
+      try {
+        await fetch(tradeUrl, {
+          method: "POST", headers: { "auth-token": token, "Content-Type": "application/json" },
+          body: JSON.stringify({ actionType: "POSITION_MODIFY", positionId: posId, stopLoss: targetSLRounded, takeProfit }),
+        });
+        log("INFO", `TP-TRAIL ${symbol} ${posId}: SL ${stopLoss}→${targetSLRounded} (Preis bei TP-Level)`);
+        return { symbol, posId, action: "tp_trail", oldSL: stopLoss, newSL: targetSLRounded, state };
+      } catch (e: any) { log("WARN", `TP-Trail fehlgeschlagen: ${e.message}`); }
+    }
+  }
+
   // CRITICAL — sofort schliessen
   if (state === "CRITICAL") {
     try {
