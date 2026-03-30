@@ -16,6 +16,11 @@ const nextConfig = {
     }
     return config;
   },
+  async redirects() {
+    return [
+      { source: '/risk-disclaimer', destination: '/risikohinweis', permanent: true },
+    ];
+  },
   async headers() {
     return [
       {

@@ -1,5 +1,7 @@
 "use client";
 
+import HeroBackground from "./HeroBackground";
+
 const stats = [
   { value: "13", label: "Strategien" },
   { value: "9", label: "Safety" },
@@ -14,12 +16,8 @@ function scrollTo(e: React.MouseEvent<HTMLAnchorElement | HTMLButtonElement>, hr
 
 export default function HeroSection() {
   return (
-    <section className="relative min-h-screen flex flex-col items-center justify-center px-6 overflow-hidden">
-      {/* Background glow orbs */}
-      <div
-        className="gf-glow gf-glow-gold"
-        style={{ width: 600, height: 600, top: "-10%", left: "50%", transform: "translateX(-50%)" }}
-      />
+    <section id="hero" className="relative min-h-screen flex flex-col items-center justify-center px-6 overflow-hidden">
+      <HeroBackground />
 
       {/* Content */}
       <div className="relative z-10 flex flex-col items-center text-center max-w-4xl mx-auto">
