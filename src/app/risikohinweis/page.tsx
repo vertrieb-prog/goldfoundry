@@ -25,7 +25,7 @@ export default function Risikohinweis() {
           <ul className="space-y-2 text-sm leading-relaxed" style={{ color: "var(--gf-text)" }}>
             <li>Trading mit Hebelprodukten birgt ein hohes Risiko. Sie koennen Ihre gesamte Einlage verlieren.</li>
             <li>Gold Foundry ist ein Technologie-Anbieter und kein Finanzdienstleister.</li>
-            <li>Alle Trades werden durch Tegas FX (VFSC reguliert) ausgefuehrt.</li>
+            <li>Alle Trades werden durch Tegas FX (MISA lizenziert, BFX2024226) ausgefuehrt.</li>
             <li>Vergangene Performance ist keine Garantie fuer zukuenftige Ergebnisse.</li>
           </ul>
         </div>
@@ -67,8 +67,8 @@ export default function Risikohinweis() {
           </Section>
 
           <Section nr="6" title="Broker-Partner">
-            Alle Trades werden durch unseren Broker-Partner Tegas FX (Clover Markets Ltd., VFSC
-            reguliert, Vanuatu) ausgefuehrt. Kundengelder werden auf segregierten Konten bei DBS
+            Alle Trades werden durch unseren Broker-Partner Tegas FX (tegasFX Limited, MISA
+            lizenziert, License BFX2024226, Bonovo Road, Fomboni, Comoros) ausgefuehrt. Kundengelder werden auf segregierten Konten bei DBS
             Singapore verwahrt. Gold Foundry hat keinen direkten Zugriff auf Kundengelder.
           </Section>
 
@@ -99,8 +99,8 @@ export default function Risikohinweis() {
           <Section nr="10" title="Regulatorische Hinweise">
             Gold Foundry (PhoenixOne AI UG) unterliegt NICHT der Aufsicht der BaFin oder einer
             anderen Finanzaufsichtsbehoerde, da wir ausschliesslich als Technologie-Anbieter agieren.
-            Unser Broker-Partner Tegas FX ist durch die Vanuatu Financial Services Commission (VFSC)
-            reguliert.
+            Unser Broker-Partner Tegas FX ist durch die Mwali International Services Authority (MISA)
+            lizenziert (License BFX2024226).
           </Section>
 
           <p className="pt-4" style={{ color: "var(--gf-text-dim)" }}>

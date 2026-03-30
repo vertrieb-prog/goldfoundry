@@ -183,6 +183,7 @@ export async function executeCopy(
 
   // 3. Score-Filter DEAKTIVIERT — Signal-Trader setzen oft kein SL/TP, das ist deren Stil
   // Nur Anti-Tilt bleibt aktiv (oben geprueft)
+  const score = 100; // Scoring disabled — all signals pass
 
   try {
     // 4. Get account balance via REST

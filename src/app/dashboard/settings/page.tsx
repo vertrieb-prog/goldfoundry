@@ -74,7 +74,7 @@ export default function SettingsPage() {
           <div className="flex items-center gap-3 mb-4">
             <div className="w-2 h-2 rounded-full bg-emerald-400" />
             <span className="text-sm text-white font-semibold">Tegas FX</span>
-            <span className="text-[10px] text-zinc-500">(VFSC reguliert)</span>
+            <span className="text-[10px] text-zinc-500">(MISA lizenziert)</span>
           </div>
           <p className="text-xs text-zinc-500 mb-4">Dein Trading-Konto wird ueber Tegas FX verwaltet. Alle Ein- und Auszahlungen laufen direkt ueber deinen Broker.</p>
           <a href="https://tegasfx.com" target="_blank" rel="noopener noreferrer" className="gf-btn-outline text-sm w-full text-center block">

@@ -50,7 +50,7 @@ export default function AGB() {
               <li>Copy Trading Technologie (4 Forge Trader)</li>
               <li>FORGE Mentor KI-Assistent</li>
               <li>Hebel-Rechner und Analyse-Tools</li>
-              <li>100% kostenlos — 40% Performance Fee nur bei Gewinn</li>
+              <li>100% kostenlos — keine Gebuehren fuer Gold Foundry</li>
             </ul>
             <p className="mb-3">Gold Foundry bietet NICHT:</p>
             <ul className="list-disc pl-5 space-y-1">
@@ -65,8 +65,8 @@ export default function AGB() {
           <section>
             <H2>&sect;4 Broker-Partner (Tegas FX)</H2>
             <p>
-              Alle Trades werden durch unseren Broker-Partner Tegas FX (Clover Markets Ltd., VFSC)
-              ausgefuehrt. Die Nutzung von Gold Foundry setzt ein aktives Konto bei Tegas FX voraus.
+              Alle Trades werden durch unseren Broker-Partner Tegas FX (tegasFX Limited, MISA
+              lizenziert, License BFX2024226, Bonovo Road, Fomboni, Comoros) ausgefuehrt. Die Nutzung von Gold Foundry setzt ein aktives Konto bei Tegas FX voraus.
               Es gelten zusaetzlich die AGB von Tegas FX. Gold Foundry hat keinen Zugriff auf
               Kundengelder.
             </p>

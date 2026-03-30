@@ -146,7 +146,7 @@ export default function OnboardingPage() {
               </a>
 
               <div className="p-4 rounded-xl text-xs text-zinc-500 leading-relaxed" style={{ background: "rgba(250,239,112,0.03)", border: "1px solid rgba(250,239,112,0.08)" }}>
-                Tegas FX ist ein VFSC-regulierter ECN/STP Broker mit segregierten Kundengeldern.
+                Tegas FX ist ein MISA-lizenzierter ECN/STP Broker mit segregierten Kundengeldern.
               </div>
 
               <button onClick={() => goTo(2)} className="gf-btn w-full mt-6">

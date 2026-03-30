@@ -9,7 +9,7 @@ const faqs = [
   },
   {
     q: "Wer ist Tegas FX?",
-    a: "Tegas FX ist ein regulierter ECN/STP Broker mit Sitz in Vanuatu (VFSC). Ueber 30 Liquidity Provider, Equinix LD4 Datacenter in London, segregierte Kundengelder bei DBS Singapore.",
+    a: "Tegas FX ist ein MISA-lizenzierter ECN/STP Broker (tegasFX Limited, License BFX2024226, Bonovo Road, Fomboni, Comoros). Ueber 30 Liquidity Provider, Equinix LD4 Datacenter in London, segregierte Kundengelder bei DBS Singapore.",
   },
   {
     q: "Wie gut sind die Trader?",
@@ -17,11 +17,11 @@ const faqs = [
   },
   {
     q: "Brauche ich einen EA oder VPS?",
-    a: "Nein. Gold Foundry laeuft komplett in der Cloud ueber MetaApi. Kein Download, kein VPS, kein MT4 das 24/7 laufen muss. Du brauchst nur einen Browser.",
+    a: "Nein. Gold Foundry laeuft komplett in der Cloud ueber MetaApi. Kein Download, kein VPS, kein MetaTrader 5 das 24/7 laufen muss. Du brauchst nur einen Browser.",
   },
   {
     q: "Was kostet Gold Foundry?",
-    a: "Nichts. Gold Foundry ist 100% kostenlos. Du zahlst nur 40% deiner Gewinne als Performance Fee — und nur wenn du tatsaechlich im Plus bist. Keine monatlichen Gebuehren.",
+    a: "Nichts. Gold Foundry ist 100% kostenlos. Tegas FX zahlt uns eine Vermittlungsprovision. Du zahlst keinen Cent an Gold Foundry — kein Abo, keine Performance Fee, keine versteckten Kosten.",
   },
   {
     q: "Kann ich erst mit Demo testen?",

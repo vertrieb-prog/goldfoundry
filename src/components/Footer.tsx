@@ -15,7 +15,7 @@ export default function Footer() {
             Ein Produkt der PhoenixOne AI UG (haftungsbeschraenkt)
           </p>
           <p className="text-xs mt-1 leading-relaxed" style={{ color: "var(--gf-text-dim)" }}>
-            Alle Trades werden durch Tegas FX (VFSC reguliert) ausgefuehrt.
+            Alle Trades werden durch Tegas FX (MISA lizenziert) ausgefuehrt.
           </p>
         </div>
 

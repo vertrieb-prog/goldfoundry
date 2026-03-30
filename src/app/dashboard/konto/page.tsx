@@ -176,7 +176,7 @@ export default function KontoPage() {
 
       {/* Note */}
       <div className="gf-panel p-4">
-        <p className="text-xs text-zinc-500">Einzahlungen und Auszahlungen werden sicher ueber Tegas FX (VFSC reguliert) abgewickelt.</p>
+        <p className="text-xs text-zinc-500">Einzahlungen und Auszahlungen werden sicher ueber Tegas FX (MISA lizenziert) abgewickelt.</p>
       </div>
     </div>
   );

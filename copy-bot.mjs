@@ -50,6 +50,18 @@ async function logCopyEvent(pair, pos, status, extra = {}) {
   }).catch(() => {});
 }
 
+// ── Symbol Mapping: RoboForex → TagMarket ──
+// TagMarket uses .pro suffix for most symbols
+function mapSymbol(symbol) {
+  const sym = symbol.toUpperCase();
+  // If already has suffix, keep it
+  if (sym.endsWith(".pro") || sym.endsWith(".a") || sym.endsWith(".b")) return symbol;
+  // Map common symbols to TagMarket .pro variants
+  const proSymbols = ["XAUUSD", "XAGUSD", "EURUSD", "GBPUSD", "USDJPY", "GBPJPY", "AUDUSD", "NZDUSD", "USDCHF", "USDCAD", "EURJPY", "EURGBP"];
+  if (proSymbols.includes(sym)) return sym + ".pro";
+  return symbol;
+}
+
 // ── State ──
 const knownPositions = new Map();
 let errorCount = 0;
@@ -128,8 +140,9 @@ function scoreCopySignal(sl, tp, entry) {
 // ── Copy a single position ──
 async function copyPosition(pos, copyAccountId, pair) {
   const action = pos.type === "POSITION_TYPE_BUY" ? "BUY" : "SELL";
-  const symbol = pos.symbol;
+  const symbol = mapSymbol(pos.symbol);
   const entry = pos.openPrice;
+  if (symbol !== pos.symbol) console.log(`  [MAP] ${pos.symbol} → ${symbol}`);
   const sl = pos.stopLoss;
   const tps = pos.takeProfit ? [pos.takeProfit] : [];
 

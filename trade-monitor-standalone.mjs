@@ -53,6 +53,15 @@ async function apiFetch(accountId, path, opts) {
   return r.json();
 }
 
+// ── Symbol Mapping: RoboForex → TagMarket ──
+function mapSymbol(symbol) {
+  const sym = symbol.toUpperCase();
+  if (sym.endsWith(".pro") || sym.endsWith(".a") || sym.endsWith(".b")) return symbol;
+  const proSymbols = ["XAUUSD", "XAGUSD", "EURUSD", "GBPUSD", "USDJPY", "GBPJPY", "AUDUSD", "NZDUSD", "USDCHF", "USDCAD", "EURJPY", "EURGBP"];
+  if (proSymbols.includes(sym)) return sym + ".pro";
+  return symbol;
+}
+
 // ── Lot Calculator ──
 function calcLots(symbol, sl, entry, balance = 10000, riskPct = 1) {
   if (!sl || !entry) return 0.01;
@@ -93,6 +102,8 @@ function buildSplits(totalLots, tps, entry, sl, action, symbol) {
 // ── Copy Execution ──
 async function executeCopy(pos, pair) {
   const action = pos.type.includes("BUY") ? "BUY" : "SELL";
+  const mappedSymbol = mapSymbol(pos.symbol);
+  if (mappedSymbol !== pos.symbol) console.log(`  [MAP] ${pos.symbol} → ${mappedSymbol}`);
   const start = Date.now();
 
   // Duplicate check
@@ -127,7 +138,7 @@ async function executeCopy(pos, pair) {
   console.log(`  ${action} ${pos.symbol} | ${totalLots}L -> ${splits.length} splits`);
 
   const results = await Promise.allSettled(splits.map(async (split) => {
-    const payload = { actionType, symbol: pos.symbol, volume: split.lots, comment: `COPY-${split.label}` };
+    const payload = { actionType, symbol: mappedSymbol, volume: split.lots, comment: `COPY-${split.label}` };
     if (pos.stopLoss) payload.stopLoss = pos.stopLoss;
     if (split.tp) payload.takeProfit = split.tp;
     for (let attempt = 0; attempt < 2; attempt++) {

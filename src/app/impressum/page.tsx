@@ -77,8 +77,8 @@ export default function Impressum() {
               Technologie-Anbieter fuer automatisiertes Trade Management. Wir bieten KEINE
               Anlageberatung, Vermoegensverwaltung oder Finanzdienstleistungen an. Wir sind KEIN
               Broker und KEIN Finanzdienstleister im Sinne des KWG, WpHG oder der MiFID II. Alle
-              Trades werden durch unseren Broker-Partner Tegas FX (Clover Markets Ltd., VFSC
-              reguliert) ausgefuehrt. Gold Foundry hat keinen Zugriff auf Kundengelder.
+              Trades werden durch unseren Broker-Partner Tegas FX (tegasFX Limited, MISA
+              lizenziert, License BFX2024226, Bonovo Road, Fomboni, Comoros) ausgefuehrt. Gold Foundry hat keinen Zugriff auf Kundengelder.
             </p>
           </div>
 

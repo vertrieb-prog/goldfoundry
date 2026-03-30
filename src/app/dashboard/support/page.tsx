@@ -17,7 +17,7 @@ const FAQ = [
   },
   {
     q: "Ist mein Kapital sicher?",
-    a: "Dein Geld liegt auf deinem eigenen Tegas FX Konto (VFSC reguliert). Gold Foundry hat keinen Zugriff auf dein Kapital.",
+    a: "Dein Geld liegt auf deinem eigenen Tegas FX Konto (MISA lizenziert). Gold Foundry hat keinen Zugriff auf dein Kapital.",
   },
   {
     q: "Kann ich jederzeit aufhoeren?",
