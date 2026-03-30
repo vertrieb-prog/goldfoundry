@@ -11,13 +11,14 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { experience, goal, plan, completed } = body;
+    const { tegas_account, deposit_amount, selected_traders, onboarding_completed } = body;
 
     // Update profile with onboarding data
     const updateData: Record<string, unknown> = { updated_at: new Date().toISOString() };
-    if (experience) updateData.trading_experience = experience;
-    if (goal) updateData.trading_goal = goal;
-    if (completed) updateData.onboarding_completed = true;
+    if (tegas_account) updateData.tegas_account = tegas_account;
+    if (deposit_amount !== undefined) updateData.deposit_amount = deposit_amount;
+    if (selected_traders) updateData.selected_traders = selected_traders;
+    if (onboarding_completed) updateData.onboarding_completed = true;
 
     const { error } = await supabase
       .from("profiles")
@@ -29,7 +30,7 @@ export async function POST(request: Request) {
       console.log("[ONBOARDING] Profile update note:", error.message);
     }
 
-    return NextResponse.json({ success: true, plan });
+    return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }

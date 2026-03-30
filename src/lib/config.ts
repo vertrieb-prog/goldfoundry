@@ -12,13 +12,10 @@ export const MODELS = {
 // ── Pricing ─────────────────────────────────────────────────
 export const PRICING = {
   plans: {
-    starter: { name: "Starter", price: 9, firstMonth: 2, discount: 80 },
-    copier:  { name: "Smart Copier", price: 29, firstMonth: 6, discount: 80 },
-    pro:     { name: "Pro", price: 79, firstMonth: 16, discount: 80 },
+    free: { name: "Kostenlos", price: 0, profitShare: 40 },
   },
   currency: "€",
   profitSplit: { investor: 60, platform: 40 },
-  firstMonthDiscount: 80,
   affiliatePercent: 50,
 } as const;
 
@@ -30,6 +27,7 @@ export const COUPON_CODES: Record<string, { type: string; value: number; label: 
   PROPFIRM: { type: "trial", value: 30, label: "1 Monat Testphase" },
 };
 
+// MLM: Removed from UI, kept for backend crons
 // ── Partner/Affiliate Tiers ─────────────────────────────────
 export const PARTNER_TIERS = {
   bronze: { name: "Bronze", minPartners: 1, l1: 30, l2: 0, l3: 0 },
@@ -120,14 +118,14 @@ export const RISK_DISCLAIMER: Record<string, string> = {
 
 // ── NAMING RULES (no AI/Claude mentions) ────────────────────
 export const PRODUCT_NAMES = {
-  copier: "Smart Copier",
-  signals: "FORGE Signal Suite",
+  copier: "Trade Management Engine",
   shield: "Risk Shield",
   mentor: "FORGE Mentor",
   manager: "Trade Manager",
   riskEngine: "7-Faktor Risk Engine",
   platform: "Gold Foundry",
   agent: "FORGE Agent",
+  trader: "Forge Trader",
 } as const;
 
 // ── Exchanges ───────────────────────────────────────────────
@@ -152,6 +150,7 @@ export const ASSETS = {
   commodities: ["XAUUSD", "XAGUSD", "USOIL", "UKOIL", "NATGAS", "COPPER"],
 } as const;
 
+// MLM: Removed from UI, kept for backend crons
 // ── Rank Requirements (7 Ranks) ─────────────────────────────
 export const RANK_REQUIREMENTS = {
   starter: { name: "Starter", minRefs: 0, minVolume: 0, minTeamSize: 0, minActiveRefs: 0, bonus: 0 },
@@ -163,6 +162,7 @@ export const RANK_REQUIREMENTS = {
   legendary: { name: "Legendary", minRefs: 250, minVolume: 150000, minTeamSize: 2000, minActiveRefs: 150, bonus: 50000 },
 } as const;
 
+// MLM: Removed from UI, kept for backend crons
 // ── Builder Packs ───────────────────────────────────────────
 export const BUILDER_PACKS = {
   pack5: { name: "Starter Pack", quantity: 5, price: 99, pricePerCode: 19.80 },
@@ -171,6 +171,7 @@ export const BUILDER_PACKS = {
   pack50: { name: "Enterprise Pack", quantity: 50, price: 699, pricePerCode: 13.98 },
 } as const;
 
+// MLM: Removed from UI, kept for backend crons
 // ── Contest Config ──────────────────────────────────────────
 export const CONTEST_CONFIG = {
   weeklyChallenge: { minParticipants: 10, prizePool: 5000, currency: "FP" },
@@ -186,6 +187,7 @@ export const MOMENTUM_SCALING = {
   resetOnLoss: true,        // reset to base on loss
 } as const;
 
+// MLM: Removed from UI, kept for backend crons
 // ── FORGE Points Config ─────────────────────────────────────
 export const FORGE_POINTS = {
   valuePerFP: 0.10,         // 1 FP = €0.10

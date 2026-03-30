@@ -44,7 +44,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 }
 
 function DashboardShell({ children }: { children: React.ReactNode }) {
-  const { user, loading, isLoggedIn } = useUser();
+  const { user, loading, isLoggedIn, onboardingDone } = useUser();
   const path = usePathname();
   const router = useRouter();
   const [isAdmin, setIsAdmin] = useState(false);
@@ -55,6 +55,13 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
       router.push("/auth/login");
     }
   }, [loading, isLoggedIn, router]);
+
+  // Redirect to onboarding if not completed
+  useEffect(() => {
+    if (!loading && isLoggedIn && !onboardingDone && path !== "/dashboard/onboarding") {
+      router.push("/dashboard/onboarding");
+    }
+  }, [loading, isLoggedIn, onboardingDone, path, router]);
 
   useEffect(() => {
     fetch("/api/admin/overview").then(r => { if (r.ok) setIsAdmin(true); }).catch(() => {});

@@ -18,7 +18,7 @@ export default function AdminSystem() {
         <div className="bg-[#110f0a] border border-[#2a2218] rounded p-4">
           <h2 className="text-sm font-bold text-[#d4a537] mb-3">Pricing</h2>
           {Object.entries(PRICING.plans).map(([k, v]) => (
-            <p key={k} className="text-xs text-[#a09070]">{v.name}: €{v.price}/Mo (1. Monat: €{v.firstMonth})</p>
+            <p key={k} className="text-xs text-[#a09070]">{v.name}: €{v.price}/Mo{("profitShare" in v) ? ` (${v.profitShare}% Profit Share)` : ""}</p>
           ))}
         </div>
 
