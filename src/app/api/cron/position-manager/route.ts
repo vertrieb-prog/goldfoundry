@@ -215,9 +215,9 @@ async function managePosition(
 
     if (needsMove && Math.abs(currentPrice - targetSLRounded) >= pip * 2) {
       try {
-        await fetch(tradeUrl, {
-          method: "POST", headers: { "auth-token": token, "Content-Type": "application/json" },
-          body: JSON.stringify({ actionType: "POSITION_MODIFY", positionId: posId, stopLoss: targetSLRounded, takeProfit }),
+        await metaApiFetch(tradeUrl, token, {
+          method: "POST",
+          body: JSON.stringify({ actionType: "POSITION_MODIFY", positionId: posId, stopLoss: targetSLRounded, takeProfit: takeProfit ?? undefined }),
         });
         log("INFO", `TP-TRAIL ${symbol} ${posId}: SL ${stopLoss}→${targetSLRounded} (Preis bei TP-Level)`);
         return { symbol, posId, action: "tp_trail", oldSL: stopLoss, newSL: targetSLRounded, state };
