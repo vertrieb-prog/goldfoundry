@@ -56,12 +56,12 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
     }
   }, [loading, isLoggedIn, router]);
 
-  // Redirect to onboarding if not completed
+  // Redirect to onboarding if not completed (skip for admins)
   useEffect(() => {
-    if (!loading && isLoggedIn && !onboardingDone && path !== "/dashboard/onboarding") {
+    if (!loading && isLoggedIn && !onboardingDone && !isAdmin && path !== "/dashboard/onboarding") {
       router.push("/dashboard/onboarding");
     }
-  }, [loading, isLoggedIn, onboardingDone, path, router]);
+  }, [loading, isLoggedIn, onboardingDone, isAdmin, path, router]);
 
   useEffect(() => {
     fetch("/api/admin/overview").then(r => { if (r.ok) setIsAdmin(true); }).catch(() => {});
