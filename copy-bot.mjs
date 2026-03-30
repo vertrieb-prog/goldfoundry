@@ -133,11 +133,11 @@ async function copyPosition(pos, copyAccountId, pair) {
   const sl = pos.stopLoss;
   const tps = pos.takeProfit ? [pos.takeProfit] : [];
 
-  const score = scoreCopySignal(sl, tps[0], entry);
+  // Score-Filter DEAKTIVIERT — Signal-Trader setzen oft kein SL/TP, das ist normal
+  // Nur Anti-Tilt bleibt aktiv (bei 5+ Verlusten in Folge pausieren)
   const tiltMult = Date.now() < copyLossTracker.pauseUntil ? 0 : copyLossTracker.consecutive >= 5 ? 0 : copyLossTracker.consecutive >= 3 ? 0.5 : 1.0;
-  console.log(`  Score: ${score}/100 | Tilt: x${tiltMult}`);
+  console.log(`  Tilt: x${tiltMult}`);
   if (tiltMult === 0) { console.log("  [TILT] Paused"); await logCopyEvent(pair, pos, "BLOCKED", { block_reason: "Tilt pause" }); return 0; }
-  if (score < 30) { console.log(`  [SKIP] Score too low (${score}<30)`); await logCopyEvent(pair, pos, "BLOCKED", { block_reason: `Score too low (${score}<30)` }); return 0; }
 
   let balance = 10000;
   try {
@@ -145,9 +145,8 @@ async function copyPosition(pos, copyAccountId, pair) {
     balance = info.equity || info.balance || 10000;
   } catch {}
 
-  const lotMultiplier = (score / 100) * tiltMult;
   let totalLots = calcLots(symbol, sl, entry, balance);
-  totalLots = Math.max(0.01, Math.floor(totalLots * lotMultiplier * 100) / 100);
+  totalLots = Math.max(0.01, Math.floor(totalLots * tiltMult * 100) / 100);
   const splits = buildSplits(totalLots, [...tps], entry, sl, action, symbol);
   const actionType = action === "BUY" ? "ORDER_TYPE_BUY" : "ORDER_TYPE_SELL";
 

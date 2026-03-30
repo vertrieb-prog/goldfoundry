@@ -109,27 +109,7 @@ async function executeCopy(pos, pair) {
     volume: pos.volume, open_price: pos.openPrice, status: "DETECTED",
   });
 
-  // Score
-  let score = 0;
-  if (pos.stopLoss) score += 25;
-  if (pos.takeProfit) score += 25;
-  if (pos.openPrice) score += 15;
-  if (pos.stopLoss && pos.openPrice && pos.openPrice !== pos.stopLoss) score += 15;
-  if (pos.stopLoss && pos.openPrice && pos.takeProfit) {
-    const rr = Math.abs(pos.takeProfit - pos.openPrice) / Math.abs(pos.openPrice - pos.stopLoss);
-    if (rr >= 2) score += 20; else if (rr >= 1.5) score += 15; else if (rr >= 1) score += 10;
-  }
-
-  if (score < 25) {
-    console.log(`  [BLOCKED] Score ${score}/100 too low`);
-    await sbInsert("copy_events", {
-      pair_name: pair.name, signal_account_id: pair.signal, copy_account_id: pair.copy,
-      position_id: String(pos.id), symbol: pos.symbol, direction: action,
-      volume: pos.volume, open_price: pos.openPrice, status: "BLOCKED",
-      block_reason: `Score too low (${score}/100)`,
-    });
-    return;
-  }
+  // Score-Filter DEAKTIVIERT — Signal-Trader setzen oft kein SL/TP, das ist normal
 
   // Get balance + calc lots
   let balance = 10000;
@@ -138,7 +118,6 @@ async function executeCopy(pos, pair) {
     balance = info.equity || info.balance || 10000;
   } catch {}
 
-  const scoreMult = score >= 80 ? 1.0 : score >= 60 ? 0.75 : 0.5;
   let totalLots = calcLots(pos.symbol, pos.stopLoss, pos.openPrice, balance);
   totalLots = Math.max(0.01, Math.floor(totalLots * scoreMult * 100) / 100);
   const tps = pos.takeProfit ? [pos.takeProfit] : [];

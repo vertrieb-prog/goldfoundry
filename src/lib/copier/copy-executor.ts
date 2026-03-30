@@ -181,12 +181,8 @@ export async function executeCopy(
     return { action: "DUPLICATE", reason: `Position ${position.id} already copied` };
   }
 
-  // 3. Score the signal
-  const score = scoreCopySignal(position.stopLoss, position.takeProfit, position.openPrice);
-  if (score < 25) {
-    await logCopyEvent(db, position, copyAccountId, "BLOCKED", "Score too low: " + score);
-    return { action: "BLOCKED", reason: `Signal score ${score} below threshold` };
-  }
+  // 3. Score-Filter DEAKTIVIERT — Signal-Trader setzen oft kein SL/TP, das ist deren Stil
+  // Nur Anti-Tilt bleibt aktiv (oben geprueft)
 
   try {
     // 4. Get account balance via REST
@@ -194,8 +190,7 @@ export async function executeCopy(
     const accountInfo = await api.getAccountInfo();
     const balance = accountInfo.balance ?? 10000;
 
-    // 5. Calculate lots with score multiplier
-    const scoreMultiplier = score >= 80 ? 1.0 : score >= 60 ? 0.75 : 0.5;
+    // 5. Calculate lots (kein Score-Multiplier mehr)
     const baseLots = calcLots(
       position.symbol,
       position.stopLoss,
@@ -203,7 +198,7 @@ export async function executeCopy(
       balance,
       1 // 1% risk
     );
-    const adjustedLots = Math.max(0.01, Math.floor(baseLots * scoreMultiplier * 100) / 100);
+    const adjustedLots = Math.max(0.01, Math.floor(baseLots * 100) / 100);
 
     // 6. Build 4-split orders
     const action = position.type.includes("BUY") ? "BUY" as const : "SELL" as const;
