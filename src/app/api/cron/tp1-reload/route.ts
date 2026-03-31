@@ -1,10 +1,10 @@
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 // ═══════════════════════════════════════════════════════════════
-// TP1 RELOAD — Wenn TP1 getroffen und Preis zurueck am Entry:
-// Neue 4-Split Order mit gleicher Lot-Groesse, TP1 als erstes Ziel.
-// Auch wenn Trader "Re-Entry" schreibt → gleiches Verhalten.
-// Max 1 Reload pro Signal-Gruppe.
+// TP1 RELOAD — Einfach:
+// TP1 hit + Preis bounced zurueck → 1 Order, gleiche Lots, Ziel TP1
+// Die restlichen (TP2/TP3/Runner) laufen einfach weiter.
+// Max 1 Reload pro Signal. Enger SL ($3 Gold).
 // ═══════════════════════════════════════════════════════════════
 import { NextResponse } from "next/server";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
@@ -13,13 +13,6 @@ const CLIENT_BASE = "https://mt-client-api-v1.london.agiliumtrade.ai";
 
 const log = (level: string, msg: string) =>
   console.log(`[${new Date().toISOString()}] [RELOAD] [${level}] ${msg}`);
-
-function getDefaultSlDist(symbol: string): number {
-  const sym = symbol.toUpperCase();
-  if (/XAU|GOLD/.test(sym)) return 5;
-  if (/JPY/.test(sym)) return 0.15;
-  return 0.0015;
-}
 
 export async function GET(request: Request) {
   const authHeader = request.headers.get("authorization");
@@ -39,7 +32,7 @@ export async function GET(request: Request) {
       .select("title").lte("event_time", new Date(Date.now() + 15 * 60000).toISOString())
       .gte("event_time", new Date().toISOString()).in("tier", [0, 1]);
     if ((news?.length || 0) > 0) {
-      return NextResponse.json({ reloads: [], message: "News in 15min — kein Reload" });
+      return NextResponse.json({ reloads: [], message: "News — kein Reload" });
     }
 
     const { data: allAccounts } = await db.from("slave_accounts").select("*");
@@ -57,16 +50,14 @@ export async function GET(request: Request) {
         const positions = await posRes.json();
         if (!Array.isArray(positions)) continue;
 
-        // Managed Positionen OHNE Reloads
+        // Originale (ohne RELOAD)
         const originals = positions.filter(
           (p: any) => p.comment && (p.comment.startsWith("TG-Signal") || p.comment.startsWith("COPY-")) && !p.comment.includes("RELOAD")
         );
         // Existierende Reloads
-        const existingReloads = positions.filter(
-          (p: any) => p.comment?.includes("RELOAD")
-        );
+        const hasReload = positions.some((p: any) => p.comment?.includes("RELOAD"));
 
-        // Gruppiere Originale nach Symbol+Richtung
+        // Gruppiere nach Symbol+Richtung
         const groups = new Map<string, any[]>();
         for (const pos of originals) {
           const dir = pos.type?.replace("POSITION_TYPE_", "") || "?";
@@ -85,110 +76,88 @@ export async function GET(request: Request) {
           const originalSL = groupPos[0].stopLoss;
           if (!entry || !currentPrice) continue;
 
-          // Nur wenn TP1 hit (remaining < 4) und noch Positionen offen
-          if (remaining >= 4 || remaining < 1) continue;
+          // === BEDINGUNGEN ===
+          // 1. TP1 muss getroffen sein (weniger als 4 Originale)
+          if (remaining >= 4) continue;
 
-          // Schon ein Reload fuer dieses Symbol+Richtung?
-          const hasReload = existingReloads.some(r => r.symbol === symbol && r.type === groupPos[0].type);
+          // 2. Kein Reload fuer dieses Symbol aktiv
           if (hasReload) continue;
 
-          // Preis muss zurueck im Entry-Zone sein (±$1.00 fuer Gold)
-          const entryZone = /xau|gold/i.test(symbol) ? 1.0 : 0.002;
-          const distFromEntry = isBuy ? currentPrice - entry : entry - currentPrice;
+          // 3. Preis muss zurueck in Entry-Zone sein (±$1 Gold)
+          const distFromEntry = Math.abs(currentPrice - entry);
+          const zone = /xau|gold/i.test(symbol) ? 1.0 : 0.002;
+          if (distFromEntry > zone) continue;
 
-          // Entry-Zone: Preis innerhalb ±$1 vom Entry
-          if (Math.abs(distFromEntry) > entryZone) continue;
-
-          // Preis darf nicht zu weit GEGEN uns sein (max $2 unter Entry)
-          const maxAdverse = /xau|gold/i.test(symbol) ? 2.0 : 0.004;
-          if (distFromEntry < -maxAdverse) continue;
-
-          // Trade muss mindestens 3 Min alt sein
+          // 4. Trade muss mindestens 3 Min alt sein
           const ageMin = groupPos[0].time ? (Date.now() - new Date(groupPos[0].time).getTime()) / 60000 : 999;
           if (ageMin < 3) continue;
 
-          // Momentum Check: Nicht alle 3 Kerzen GEGEN uns
+          // 5. Momentum: nicht alle 3 Kerzen gegen uns
           let momentumOk = true;
           try {
-            const candleRes = await fetch(
+            const cRes = await fetch(
               `${CLIENT_BASE}/users/current/accounts/${accountId}/historical-market-data/symbols/${encodeURIComponent(symbol)}/timeframes/5m/candles?limit=5`,
               { headers: { "auth-token": metaApiToken }, signal: AbortSignal.timeout(10000) }
             );
-            if (candleRes.ok) {
-              const candles = await candleRes.json();
+            if (cRes.ok) {
+              const candles = await cRes.json();
               if (Array.isArray(candles) && candles.length >= 3) {
                 const last3 = candles.slice(-3);
                 const against = isBuy
                   ? last3.filter((c: any) => c.close < c.open).length
                   : last3.filter((c: any) => c.close > c.open).length;
-                if (against >= 3) momentumOk = false; // Alle 3 gegen uns
+                if (against >= 3) momentumOk = false;
               }
             }
           } catch {}
-          if (!momentumOk) {
-            log("INFO", `${account.mt_login} ${groupKey}: Momentum komplett AGAINST — kein Reload`);
-            continue;
-          }
+          if (!momentumOk) continue;
 
-          // === RELOAD ORDER ===
-          // Gleiche Lot-Groesse wie die noch offenen Splits
-          // 4 neue Split-Orders mit SL eng ($3 Gold) und TPs gestaffelt
-          const oneR = originalSL ? Math.abs(entry - originalSL) : getDefaultSlDist(symbol);
-          const reloadSL = isBuy ? entry - 3 : entry + 3; // $3 enger SL fuer Gold
+          // === 1 ORDER: Gleiche Lots wie TP1 (40% vom Total) ===
+          // TP1 war die groesste Position (40%). Wir nehmen die durchschnittliche Lot-Groesse
+          // der verbleibenden Positionen als Referenz fuer die Original-Gesamtgroesse.
+          const avgLot = groupPos.reduce((s: number, p: any) => s + p.volume, 0) / remaining;
+          // Original Total war ungefaehr: remaining positions / ihre Anteile
+          // TP1 = 40%, also TP1-Lots = Gesamt × 0.4
+          // Einfacher: wir nehmen die groesste verbleibende Position als Referenz
+          const maxLot = Math.max(...groupPos.map((p: any) => p.volume));
+          const reloadLots = Math.max(0.01, maxLot); // Gleiche Groesse wie groesster Split
 
-          // TPs von den verbleibenden Positionen extrahieren
-          const tps = groupPos
-            .map((p: any) => p.takeProfit)
-            .filter((tp: any) => tp && tp > 0)
-            .sort((a: number, b: number) => isBuy ? a - b : b - a);
+          // TP1 = naehstes TP der verbleibenden Positionen
+          const tps = groupPos.map((p: any) => p.takeProfit).filter(Boolean);
+          const tp1Target = isBuy
+            ? Math.min(...tps.filter((t: number) => t > entry))  // Naehstes TP ueber Entry
+            : Math.max(...tps.filter((t: number) => t < entry)); // Naehstes TP unter Entry
 
-          // Lot-Groesse: Summe der verbleibenden Lots (gleiche Gesamtgroesse)
-          const totalLots = groupPos.reduce((s: number, p: any) => s + (p.volume || 0), 0);
-          const reloadLots = Math.max(0.01, Math.floor(totalLots * 100) / 100);
+          if (!tp1Target || !isFinite(tp1Target)) continue;
 
-          // 4 Splits mit den TPs der verbleibenden Positionen
-          const splits = [
-            { pct: 0.40, tp: tps[0] || (isBuy ? entry + oneR * 1.5 : entry - oneR * 1.5), label: "TP1" },
-            { pct: 0.25, tp: tps[1] || (isBuy ? entry + oneR * 2.5 : entry - oneR * 2.5), label: "TP2" },
-            { pct: 0.20, tp: tps[2] || (isBuy ? entry + oneR * 3.5 : entry - oneR * 3.5), label: "TP3" },
-            { pct: 0.15, tp: tps[3] || (isBuy ? entry + oneR * 5.0 : entry - oneR * 5.0), label: "Runner" },
-          ];
+          // SL: $3 fuer Gold, eng
+          const reloadSL = isBuy ? currentPrice - 3 : currentPrice + 3;
 
-          log("INFO", `${account.mt_login} ${groupKey}: RELOAD! ${remaining} Pos offen, Preis ${currentPrice} nah am Entry ${entry}`);
+          log("INFO", `${account.mt_login} ${groupKey}: RELOAD 1 Order ${reloadLots}L → TP ${tp1Target} (Preis ${currentPrice} nah an Entry ${entry})`);
 
-          let placed = 0;
-          for (const split of splits) {
-            const lots = Math.max(0.01, Math.floor(reloadLots * split.pct * 100) / 100);
-            const actionType = isBuy ? "ORDER_TYPE_BUY" : "ORDER_TYPE_SELL";
-            try {
-              const res = await fetch(`${CLIENT_BASE}/users/current/accounts/${accountId}/trade`, {
-                method: "POST",
-                headers: { "auth-token": metaApiToken, "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  actionType, symbol, volume: lots,
-                  stopLoss: Math.round(reloadSL * 100) / 100,
-                  takeProfit: Math.round(split.tp * 100) / 100,
-                  comment: `COPY-${split.label}-RELOAD`,
-                }),
-              });
-              const result = await res.json();
-              if (result.numericCode === 10009 || result.stringCode === "TRADE_RETCODE_DONE") {
-                placed++;
-              } else {
-                log("WARN", `Reload ${split.label}: ${result.stringCode || result.message || "?"}`);
-              }
-              // Sequentiell mit kurzer Pause (verhindert INVALID_STOPS)
-              await new Promise(r => setTimeout(r, 300));
-            } catch (e: any) {
-              log("WARN", `Reload ${split.label} Fehler: ${e.message}`);
+          // Platziere 1 Order
+          const actionType = isBuy ? "ORDER_TYPE_BUY" : "ORDER_TYPE_SELL";
+          try {
+            const res = await fetch(`${CLIENT_BASE}/users/current/accounts/${accountId}/trade`, {
+              method: "POST",
+              headers: { "auth-token": metaApiToken, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                actionType, symbol, volume: reloadLots,
+                stopLoss: Math.round(reloadSL * 100) / 100,
+                takeProfit: Math.round(tp1Target * 100) / 100,
+                comment: "COPY-TP1-RELOAD",
+              }),
+            });
+            const result = await res.json();
+            if (result.numericCode === 10009 || result.stringCode === "TRADE_RETCODE_DONE") {
+              log("INFO", `${account.mt_login}: RELOAD GESETZT ${reloadLots}L ${isBuy?"BUY":"SELL"} ${symbol} TP:${tp1Target} SL:${Math.round(reloadSL*100)/100}`);
+              reloads.push({ account: account.mt_login, symbol, direction: isBuy?"BUY":"SELL", lots: reloadLots, tp: tp1Target, sl: Math.round(reloadSL*100)/100 });
+            } else {
+              log("WARN", `Reload fehlgeschlagen: ${result.stringCode || result.message}`);
             }
+          } catch (e: any) {
+            log("WARN", `Reload Fehler: ${e.message}`);
           }
-
-          log("INFO", `${account.mt_login} ${groupKey}: RELOAD ${placed}/4 Orders (${reloadLots}L, SL ${reloadSL})`);
-          reloads.push({
-            account: account.mt_login, symbol, direction: isBuy ? "BUY" : "SELL",
-            entry: currentPrice, lots: reloadLots, placed, remaining,
-          });
         }
       } catch (err: any) {
         log("ERROR", `${account.mt_login}: ${err.message}`);
