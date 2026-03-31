@@ -76,8 +76,9 @@ export async function GET(request: Request) {
         if (!Array.isArray(positions) || !positions.length) continue;
 
         const managed = positions.filter(
-          (p: any) => p.comment && (p.comment.startsWith("TG-Signal") || p.comment.startsWith("COPY-"))
+          (p: any) => p.comment && (p.comment.startsWith("TG-Signal") || p.comment.startsWith("COPY-")) && !p.comment.includes("RELOAD")
         );
+        // RELOAD Positionen werden separat gemanaged (eigener SL, nicht im Floor-System)
         if (!managed.length) continue;
 
         // === GRUPPIERE nach Symbol+Richtung ===

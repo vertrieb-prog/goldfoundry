@@ -21,6 +21,7 @@ const SIGNAL_URL = "https://goldfoundry.de/api/cron/telegram-signals";
 const TICK_URL = "https://goldfoundry.de/api/cron/engine-tick";
 const POS_MGR_URL = "https://goldfoundry.de/api/cron/position-manager";
 const RE_ENTRY_URL = "https://goldfoundry.de/api/cron/re-entry";
+const TP1_RELOAD_URL = "https://goldfoundry.de/api/cron/tp1-reload";
 const INTERVAL = 30_000;
 
 let tickCount = 0;
@@ -68,9 +69,14 @@ async function tick() {
     const mods = d2?.modifications?.length || 0;
     totalMods += mods;
 
-    // 4. Re-Entry DEAKTIVIERT — Deep Dive zeigte: automatisches Revenge-Trading
-    // Nur re-entry wenn Signal-Provider ein neues Signal sendet, nicht automatisch
-    // if (tickCount % 10 === 0) { ... }
+    // 4. TP1 Reload Check (jeden Tick — muss schnell reagieren wenn Preis zurueck am Entry)
+    const d3 = await safeFetch(TP1_RELOAD_URL, "RELOAD");
+    if (d3?.reloads?.length > 0) {
+      for (const re of d3.reloads) {
+        console.log(`\n[${ts}] RELOAD: ${re.direction} ${re.symbol} @ ${re.entry} (${re.placed}/4 Orders) | ${re.account}`);
+      }
+      totalMods += d3.reloads.length;
+    }
 
     // FIX #6: Immer loggen bei Aktionen, sonst alle 10 Min
     if (executed > 0) {
