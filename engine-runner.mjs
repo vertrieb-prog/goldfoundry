@@ -68,16 +68,9 @@ async function tick() {
     const mods = d2?.modifications?.length || 0;
     totalMods += mods;
 
-    // 4. Re-Entry Check (alle 5 Min, nicht jeden Tick)
-    if (tickCount % 10 === 0) {
-      const d3 = await safeFetch(RE_ENTRY_URL, "RE-ENTRY");
-      if (d3?.reEntries?.length > 0) {
-        for (const re of d3.reEntries) {
-          console.log(`\n[${ts}] RE-ENTRY: ${re.direction} ${re.symbol} @ ${re.entry} (${re.placed}/4 Orders) | ${re.account}`);
-        }
-        totalMods += d3.reEntries.length;
-      }
-    }
+    // 4. Re-Entry DEAKTIVIERT — Deep Dive zeigte: automatisches Revenge-Trading
+    // Nur re-entry wenn Signal-Provider ein neues Signal sendet, nicht automatisch
+    // if (tickCount % 10 === 0) { ... }
 
     // FIX #6: Immer loggen bei Aktionen, sonst alle 10 Min
     if (executed > 0) {

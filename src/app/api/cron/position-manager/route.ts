@@ -171,67 +171,14 @@ async function managePosition(
   log("INFO", `${symbol} ${posId.slice(-6)} | ${state} | Profit: ${(profitRatio * 100).toFixed(0)}% | Momentum: ${momentum} | Speed: ${speed.toFixed(1)}x | Alter: ${ageMin.toFixed(0)}min`);
 
   // === STEP 3: AKTIONEN ===
+  // REIHENFOLGE: Exit-Entscheidungen ZUERST, dann SL-Trail
   const tradeUrl = `${clientBase}/users/current/accounts/${accountId}/trade`;
+  // Minimum SL-Abstand: $1.00 fuer Gold (deckt Spread + Noise), skaliert fuer andere
+  const minSlBuffer = /xau|gold/i.test(symbol) ? 1.0 : /jpy/i.test(symbol) ? 0.10 : 0.0010;
 
   if (state === "FRESH") return null;
 
-  // === INTELLIGENTES SL-NACHZIEHEN ===
-  // Nicht zu eng (Trade Raum geben), aber bei Umkehr sofort raus
-  // Nutzt echtes TP + Momentum fuer Entscheidung
-  if (takeProfit && openPrice && currentPrice) {
-    const tpDist = Math.abs(takeProfit - openPrice);
-    if (tpDist >= pip) {
-      const progressToTp = isBuy
-        ? (currentPrice - openPrice) / tpDist
-        : (openPrice - currentPrice) / tpDist;
-
-      if (progressToTp > 0 && stopLoss) {
-        let targetSL = stopLoss;
-
-        if (progressToTp >= 1.0) {
-          // Preis UEBER TP → SL eng nachziehen, aber Raum lassen
-          // Bei Momentum WITH: SL = TP - 20% (Raum fuer Weiterfahrt)
-          // Bei Momentum AGAINST: SL = TP - 5% (eng, fast am TP)
-          const slack = momentum === "WITH" ? 0.2 : momentum === "NEUTRAL" ? 0.1 : 0.05;
-          targetSL = isBuy
-            ? Math.max(targetSL, takeProfit - tpDist * slack)
-            : Math.min(targetSL, takeProfit + tpDist * slack);
-        } else if (progressToTp >= 0.7) {
-          // 70%+ zum TP → SL auf 30% Profit (nicht BE — gibt Raum fuer Dip)
-          targetSL = isBuy
-            ? Math.max(targetSL, openPrice + tpDist * 0.3)
-            : Math.min(targetSL, openPrice - tpDist * 0.3);
-        } else if (progressToTp >= 0.4) {
-          // 40%+ zum TP → SL auf Breakeven + kleiner Puffer
-          targetSL = isBuy
-            ? Math.max(targetSL, openPrice + pip * 2) // +2 Pips ueber Entry
-            : Math.min(targetSL, openPrice - pip * 2);
-        }
-
-        // Bei Momentum AGAINST + im Profit → ENGER nachziehen
-        if (momentum === "AGAINST" && progressToTp >= 0.3) {
-          const tighterSL = isBuy
-            ? Math.max(targetSL, currentPrice - tpDist * 0.15) // Nur 15% Puffer
-            : Math.min(targetSL, currentPrice + tpDist * 0.15);
-          targetSL = isBuy ? Math.max(targetSL, tighterSL) : Math.min(targetSL, tighterSL);
-        }
-
-        const targetSLRounded = Math.round(targetSL * 100) / 100;
-        const needsMove = isBuy ? targetSLRounded > stopLoss + pip : targetSLRounded < stopLoss - pip;
-
-        if (needsMove && Math.abs(currentPrice - targetSLRounded) >= pip * 2) {
-          try {
-            await metaApiFetch(tradeUrl, token, {
-              method: "POST",
-              body: JSON.stringify({ actionType: "POSITION_MODIFY", positionId: posId, stopLoss: targetSLRounded, takeProfit: takeProfit ?? undefined }),
-            });
-            log("INFO", `TP-TRAIL ${symbol} ${posId}: SL ${stopLoss}→${targetSLRounded} (${(progressToTp * 100).toFixed(0)}% zum TP, ${momentum})`);
-            return { symbol, posId, action: "tp_trail", oldSL: stopLoss, newSL: targetSLRounded, progress: +(progressToTp * 100).toFixed(0), momentum };
-          } catch (e: any) { log("WARN", `TP-Trail fehlgeschlagen: ${e.message}`); }
-        }
-      }
-    }
-  }
+  // === EXIT-ENTSCHEIDUNGEN ZUERST (vor SL-Trail!) ===
 
   // CRITICAL — sofort schliessen
   if (state === "CRITICAL") {
@@ -240,12 +187,12 @@ async function managePosition(
       log("INFO", `NOTFALL-CLOSE ${symbol} ${posId}: ${(profitRatio * 100).toFixed(0)}% zum SL, P&L: $${profit?.toFixed(2)}`);
       return { symbol, posId, action: "emergency_close", state, profitRatio: +profitRatio.toFixed(2), profit };
     } catch (e: any) {
-      log("WARN", `Notfall-Close fehlgeschlagen (Position evtl. schon weg): ${e.message}`);
-      return null; // Weiter zum naechsten — KEINE Endlosschleife
+      log("WARN", `Notfall-Close fehlgeschlagen: ${e.message}`);
+      return null;
     }
   }
 
-  // REVERSING — Gewinn sichern oder Teilschluss
+  // REVERSING — im Profit + Markt dreht klar → Gewinn mitnehmen
   if (state === "REVERSING") {
     if (profitRatio > 0.5) {
       try {
@@ -253,87 +200,23 @@ async function managePosition(
         log("INFO", `UMKEHR-CLOSE ${symbol} ${posId}: Gewinn bei ${(profitRatio * 100).toFixed(0)}% gesichert, P&L: $${profit?.toFixed(2)}`);
         return { symbol, posId, action: "reversal_close", state, profitRatio: +profitRatio.toFixed(2), profit };
       } catch (e: any) { log("WARN", `Umkehr-Close fehlgeschlagen: ${e.message}`); }
-    } else if (profitRatio > 0 && volume > 0.02) {
-      const closeVol = Math.max(0.01, Math.floor(volume * 50) / 100);
-      if (closeVol >= 0.01) {
-        try {
-          await metaApiFetch(tradeUrl, token, { method: "POST", body: JSON.stringify({ actionType: "POSITION_PARTIAL", positionId: posId, volume: closeVol }) });
-          log("INFO", `UMKEHR-PARTIAL ${symbol} ${posId}: ${closeVol}L geschlossen, Momentum gegen uns`);
-          return { symbol, posId, action: "reversal_partial", state, volume: closeVol };
-        } catch (e: any) { log("WARN", `Umkehr-Partial fehlgeschlagen: ${e.message}`); }
-      }
     }
   }
 
-  // STALLING — Momentum stirbt, Gewinne schuetzen
-  if (state === "STALLING") {
-    if (momentum === "AGAINST" && volume > 0.02) {
-      const closeVol = Math.max(0.01, Math.floor(volume * 50) / 100);
-      if (closeVol >= 0.01) {
-        try {
-          await metaApiFetch(tradeUrl, token, { method: "POST", body: JSON.stringify({ actionType: "POSITION_PARTIAL", positionId: posId, volume: closeVol }) });
-          log("INFO", `STALL-PARTIAL ${symbol} ${posId}: ${closeVol}L geschlossen, Momentum stirbt`);
-          return { symbol, posId, action: "stall_partial", state, volume: closeVol };
-        } catch (e: any) { log("WARN", `Stall-Partial fehlgeschlagen: ${e.message}`); }
-      }
-    }
-    const tightSL = isBuy
-      ? Math.round((currentPrice - slDist * 0.3) * 100) / 100
-      : Math.round((currentPrice + slDist * 0.3) * 100) / 100;
-    const isBetter = isBuy ? (!stopLoss || tightSL > stopLoss) : (!stopLoss || tightSL < stopLoss);
-    if (isBetter && Math.abs(currentPrice - tightSL) >= pip * 2) {
-      try {
-        await metaApiFetch(tradeUrl, token, { method: "POST", body: JSON.stringify({ actionType: "POSITION_MODIFY", positionId: posId, stopLoss: tightSL, takeProfit: takeProfit ?? undefined }) });
-        log("INFO", `STALL-TIGHTEN ${symbol} ${posId}: SL → ${tightSL} (${momentum} momentum)`);
-        return { symbol, posId, action: "stall_tighten", state, newSL: tightSL, momentum };
-      } catch (e: any) { log("WARN", `Stall-Tighten fehlgeschlagen: ${e.message}`); }
-    }
-  }
-
-  // RUNNING — Trailing Stop je nach Momentum
-  if (state === "RUNNING") {
-    const mult = momentum === "WITH" ? 0.8 : momentum === "NEUTRAL" ? 0.5 : 0.3;
-    const newSL = isBuy
-      ? Math.round((currentPrice - slDist * mult) * 100) / 100
-      : Math.round((currentPrice + slDist * mult) * 100) / 100;
-    const isBetter = isBuy ? (!stopLoss || newSL > stopLoss + pip) : (!stopLoss || newSL < stopLoss - pip);
-    if (isBetter && Math.abs(currentPrice - newSL) >= pip * 2) {
-      try {
-        await metaApiFetch(tradeUrl, token, { method: "POST", body: JSON.stringify({ actionType: "POSITION_MODIFY", positionId: posId, stopLoss: newSL, takeProfit: takeProfit ?? undefined }) });
-        log("INFO", `TRAIL ${symbol} ${posId}: SL → ${newSL} (${momentum} momentum, ${mult}x trail)`);
-        return { symbol, posId, action: "trailing", state, newSL, momentum, trailMultiplier: mult };
-      } catch (e: any) { log("WARN", `Trail fehlgeschlagen: ${e.message}`); }
-    }
-    // RUNNING + momentum against + fast → close all
-    if (momentum === "AGAINST" && speed > 1.5) {
-      try {
-        await metaApiFetch(tradeUrl, token, { method: "POST", body: JSON.stringify({ actionType: "POSITION_CLOSE_ID", positionId: posId }) });
-        log("INFO", `SPEED-CLOSE ${symbol} ${posId}: Running + schnelle Umkehr (${speed.toFixed(1)}x), P&L: $${profit?.toFixed(2)}`);
-        return { symbol, posId, action: "speed_close", state, speed, profit };
-      } catch (e: any) { log("WARN", `Speed-Close fehlgeschlagen: ${e.message}`); }
-    }
-  }
-
-  // PROFITABLE — Breakeven setzen
-  if (state === "PROFITABLE") {
-    const beSL = isBuy
-      ? Math.round((openPrice + pip) * 100) / 100
-      : Math.round((openPrice - pip) * 100) / 100;
-    const needsMove = isBuy ? (!stopLoss || stopLoss < beSL) : (!stopLoss || stopLoss > beSL);
-    if (needsMove && Math.abs(currentPrice - beSL) >= pip * 2) {
-      try {
-        await metaApiFetch(tradeUrl, token, { method: "POST", body: JSON.stringify({ actionType: "POSITION_MODIFY", positionId: posId, stopLoss: beSL, takeProfit: takeProfit ?? undefined }) });
-        log("INFO", `BREAKEVEN ${symbol} ${posId}: SL → ${beSL} (${(profitRatio * 100).toFixed(0)}% Profit)`);
-        return { symbol, posId, action: "breakeven", state, newSL: beSL, profitRatio: +profitRatio.toFixed(2) };
-      } catch (e: any) { log("WARN", `Breakeven fehlgeschlagen: ${e.message}`); }
-    }
+  // RUNNING + schnelle Umkehr → sofort schliessen
+  if (state === "RUNNING" && momentum === "AGAINST" && speed > 1.5) {
+    try {
+      await metaApiFetch(tradeUrl, token, { method: "POST", body: JSON.stringify({ actionType: "POSITION_CLOSE_ID", positionId: posId }) });
+      log("INFO", `SPEED-CLOSE ${symbol} ${posId}: Schnelle Umkehr (${speed.toFixed(1)}x), P&L: $${profit?.toFixed(2)}`);
+      return { symbol, posId, action: "speed_close", state, speed, profit };
+    } catch (e: any) { log("WARN", `Speed-Close fehlgeschlagen: ${e.message}`); }
   }
 
   // LOSING + Momentum gegen uns → Cut bei >50% zum SL
   if (state === "LOSING" && momentum === "AGAINST" && profitRatio < -0.5) {
     try {
       await metaApiFetch(tradeUrl, token, { method: "POST", body: JSON.stringify({ actionType: "POSITION_CLOSE_ID", positionId: posId }) });
-      log("INFO", `VERLUST-CUT ${symbol} ${posId}: ${(profitRatio * 100).toFixed(0)}% Verlust + Momentum gegen uns, P&L: $${profit?.toFixed(2)}`);
+      log("INFO", `VERLUST-CUT ${symbol} ${posId}: ${(profitRatio * 100).toFixed(0)}% Verlust, P&L: $${profit?.toFixed(2)}`);
       return { symbol, posId, action: "cut_loss", state, profitRatio: +profitRatio.toFixed(2), profit };
     } catch (e: any) { log("WARN", `Verlust-Cut fehlgeschlagen: ${e.message}`); }
   }
@@ -343,11 +226,78 @@ async function managePosition(
     const closeVol = Math.max(0.01, Math.floor(volume * 50) / 100);
     if (closeVol >= 0.01) {
       try {
-        await metaApiFetch(tradeUrl, token, { method: "POST", body: JSON.stringify({ actionType: "POSITION_PARTIAL", positionId: posId, volume: closeVol }) });
-        log("INFO", `NEWS-SCHUTZ ${symbol} ${posId}: ${closeVol}L geschlossen vor High-Impact Event`);
+        await metaApiFetch(tradeUrl, token, { method: "POST", body: JSON.stringify({ actionType: "POSITION_CLOSE_ID", positionId: posId, volume: closeVol }) });
+        log("INFO", `NEWS-SCHUTZ ${symbol} ${posId}: ${closeVol}L geschlossen`);
         return { symbol, posId, action: "news_protect", state, volume: closeVol };
       } catch (e: any) { log("WARN", `News-Schutz fehlgeschlagen: ${e.message}`); }
     }
+  }
+
+  // === SL-TRAIL (nur wenn kein Exit getriggert) ===
+  // Optimale Regeln fuer Gold (XAUUSD):
+  // - BE erst bei 65% zum TP (Trade Raum geben, nicht bei jedem Dip rausfliegen)
+  // - BE-Puffer: min $1.00 (Gold-Spread + Noise)
+  // - 80% zum TP: 40% Profit locken
+  // - 100%+: Trailing mit ATR-Awareness
+  // - Momentum AGAINST: enger, aber nicht sofort schliessen (nur SL anpassen)
+
+  let targetSL = stopLoss || (isBuy ? openPrice - slDist : openPrice + slDist);
+
+  if (takeProfit && openPrice && currentPrice) {
+    const tpDist = Math.abs(takeProfit - openPrice);
+    if (tpDist >= minSlBuffer) {
+      const progressToTp = isBuy
+        ? (currentPrice - openPrice) / tpDist
+        : (openPrice - currentPrice) / tpDist;
+
+      if (progressToTp >= 1.0) {
+        // Runner: Preis UEBER TP → SL unter TP mit Momentum-Slack
+        const slack = momentum === "WITH" ? 0.25 : momentum === "NEUTRAL" ? 0.15 : 0.08;
+        targetSL = isBuy
+          ? Math.max(targetSL, takeProfit - tpDist * slack)
+          : Math.min(targetSL, takeProfit + tpDist * slack);
+      } else if (progressToTp >= 0.8) {
+        // 80%+ zum TP → Lock 40% Profit
+        targetSL = isBuy
+          ? Math.max(targetSL, openPrice + tpDist * 0.4)
+          : Math.min(targetSL, openPrice - tpDist * 0.4);
+      } else if (progressToTp >= 0.65) {
+        // 65%+ zum TP → Breakeven mit echtem Puffer ($1 Gold)
+        targetSL = isBuy
+          ? Math.max(targetSL, openPrice + minSlBuffer)
+          : Math.min(targetSL, openPrice - minSlBuffer);
+      }
+      // UNTER 65%: KEIN SL-TRAIL. Trade Raum geben.
+    }
+  } else if (profitRatio >= 1.0) {
+    // Kein TP gesetzt → Trailing basierend auf SL-Distanz + Momentum
+    const mult = momentum === "WITH" ? 0.7 : momentum === "NEUTRAL" ? 0.5 : 0.35;
+    const trailDist = Math.max(slDist * mult, minSlBuffer * 3); // Nie enger als 3x min Buffer
+    targetSL = isBuy
+      ? Math.max(targetSL, currentPrice - trailDist)
+      : Math.min(targetSL, currentPrice + trailDist);
+  } else if (profitRatio >= 0.5 && !takeProfit) {
+    // 50%+ Profit ohne TP → Breakeven
+    targetSL = isBuy
+      ? Math.max(targetSL, openPrice + minSlBuffer)
+      : Math.min(targetSL, openPrice - minSlBuffer);
+  }
+
+  // SL-Modifikation ausfuehren (wenn besser als aktuell)
+  const targetSLRounded = Math.round(targetSL * 100) / 100;
+  const currentSL = stopLoss || 0;
+  const needsMove = isBuy ? targetSLRounded > currentSL + pip : (currentSL > 0 && targetSLRounded < currentSL - pip);
+  const farEnough = Math.abs(currentPrice - targetSLRounded) >= minSlBuffer;
+
+  if (needsMove && farEnough && targetSLRounded !== currentSL) {
+    try {
+      await metaApiFetch(tradeUrl, token, {
+        method: "POST",
+        body: JSON.stringify({ actionType: "POSITION_MODIFY", positionId: posId, stopLoss: targetSLRounded, takeProfit: takeProfit ?? undefined }),
+      });
+      log("INFO", `SL-TRAIL ${symbol} ${posId}: SL ${currentSL}→${targetSLRounded} | ${state} | ${momentum} | ${(profitRatio * 100).toFixed(0)}%`);
+      return { symbol, posId, action: "sl_trail", oldSL: currentSL, newSL: targetSLRounded, state, momentum };
+    } catch (e: any) { log("WARN", `SL-Trail fehlgeschlagen: ${e.message}`); }
   }
 
   return null;
