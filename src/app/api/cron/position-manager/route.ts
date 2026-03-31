@@ -91,7 +91,8 @@ export async function GET(request: Request) {
         const groups = new Map<string, any[]>();
         for (const pos of managed) {
           const dir = pos.type?.replace("POSITION_TYPE_", "") || "?";
-          const key = `${pos.symbol}-${dir}-${Math.round(pos.openPrice)}`; // Gruppen nach gerundeter Entry (gleicher Dollar-Bereich = gleiches Signal)
+          // Gruppierung: 1 Dezimalstelle ($4553.1 = gleiche Gruppe wie $4553.4, aber $4554.1 = neue Gruppe)
+          const key = `${pos.symbol}-${dir}-${(Math.round(pos.openPrice * 10) / 10).toFixed(1)}`;
           if (!groups.has(key)) groups.set(key, []);
           groups.get(key)!.push(pos);
         }
@@ -107,8 +108,20 @@ export async function GET(request: Request) {
           if (!entry || !currentPrice) continue;
 
           // 1R = Original Risk (Entry bis SL)
-          let oneR = originalSL ? Math.abs(entry - originalSL) : 5; // Default $5 fuer Gold
+          let oneR = (originalSL != null && originalSL > 0) ? Math.abs(entry - originalSL) : 5;
           if (oneR < 0.5) { log("WARN", `${groupKey}: 1R zu klein (${oneR}), Default 5`); oneR = 5; }
+          // SL-Konsistenz pruefen: alle Positionen in Gruppe sollten aehnlichen SL haben
+          const sls = groupPos.map((p: any) => p.stopLoss).filter((s: any) => s != null && s > 0);
+          if (sls.length > 1) {
+            const slSpread = Math.max(...sls) - Math.min(...sls);
+            if (slSpread > oneR * 0.3) {
+              log("WARN", `${groupKey}: SL-Spread $${slSpread.toFixed(2)} in Gruppe (${sls.length} verschiedene SLs) — nutze Median`);
+              sls.sort((a: number, b: number) => a - b);
+              const medianSL = sls[Math.floor(sls.length / 2)];
+              oneR = Math.abs(entry - medianSL);
+              if (oneR < 0.5) oneR = 5;
+            }
+          }
           const profitDist = isBuy ? currentPrice - entry : entry - currentPrice;
           const rMultiple = oneR > 0 ? profitDist / oneR : 0;
 
@@ -136,7 +149,7 @@ export async function GET(request: Request) {
               const recent = candles.slice(-3).reduce((s: number, c: any) => s + Math.abs(c.high - c.low), 0) / 3;
               speed = avg > 0 ? recent / avg : 1.0;
             }
-          } catch {}
+          } catch { log("WARN", `${groupKey}: Candle-Fetch fehlgeschlagen, nutze ATR=$${oneR} (1R Fallback)`); }
 
           log("INFO", `${account.mt_login} ${groupKey}: ${remaining} Pos | ${rMultiple.toFixed(1)}R | ATR:$${atr.toFixed(2)} | ${momentum} | Speed:${speed.toFixed(1)}x`);
 
