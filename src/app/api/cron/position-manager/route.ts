@@ -75,17 +75,23 @@ export async function GET(request: Request) {
         const positions = await posRes.json();
         if (!Array.isArray(positions) || !positions.length) continue;
 
-        const managed = positions.filter(
+        // Originale fuer Floor-System (OHNE Reload)
+        const originals = positions.filter(
           (p: any) => p.comment && (p.comment.startsWith("TG-Signal") || p.comment.startsWith("COPY-")) && !p.comment.includes("RELOAD")
         );
-        // RELOAD Positionen werden separat gemanaged (eigener SL, nicht im Floor-System)
+        // RELOAD Positionen: werden AUCH getrailt aber nicht im Floor-Count
+        const reloadPositions = positions.filter(
+          (p: any) => p.comment?.includes("RELOAD")
+        );
+        // Alle managed = Originale (fuer Gruppierung) + Reloads (fuer separates Trail)
+        const managed = originals;
         if (!managed.length) continue;
 
         // === GRUPPIERE nach Symbol+Richtung ===
         const groups = new Map<string, any[]>();
         for (const pos of managed) {
           const dir = pos.type?.replace("POSITION_TYPE_", "") || "?";
-          const key = `${pos.symbol}-${dir}`;
+          const key = `${pos.symbol}-${dir}-${Math.round(pos.openPrice * 10)}`; // Gruppen nach Entry-Preis (verhindert Vermischung bei 2 Signalen auf gleichem Symbol)
           if (!groups.has(key)) groups.set(key, []);
           groups.get(key)!.push(pos);
         }
@@ -147,7 +153,7 @@ export async function GET(request: Request) {
             // PHASE 0: Alle offen — Trail TROTZDEM wenn im Profit!
             // Floor bleibt Original SL, aber ATR-Trail startet ab 0.5R Profit
             floorR = -1; // Original SL als Floor
-            atrMultPhase = rMultiple >= 0.5 ? 1.5 : 0; // Trail ab 0.5R Profit
+            atrMultPhase = rMultiple >= 0.3 ? 1.5 : 0; // Trail ab 0.3R Profit (war 0.5 — zu spaet)
             minDist = /xau|gold/i.test(symbol) ? 1.5 : 0.003;
           } else if (remaining === 3) {
             // PHASE 1: TP1 hit → Floor auf Entry, aggressiver Trail
@@ -264,7 +270,33 @@ export async function GET(request: Request) {
             continue;
           }
 
-          // SL-Trail ist oben im Phase-System integriert — kein separater Block noetig
+          // SL-Trail ist oben im Phase-System integriert
+        }
+
+        // === RELOAD POSITIONEN SEPARAT TRAILEN ===
+        for (const pos of reloadPositions) {
+          if (!pos.openPrice || !pos.currentPrice || !pos.stopLoss) continue;
+          const isBuyR = pos.type === "POSITION_TYPE_BUY";
+          const profitR = isBuyR ? pos.currentPrice - pos.openPrice : pos.openPrice - pos.currentPrice;
+          if (profitR <= 0) continue; // Nur im Profit trailen
+          // Einfacher Trail: 50% vom Profit locken
+          const lockSL = isBuyR
+            ? pos.openPrice + profitR * 0.5
+            : pos.openPrice - profitR * 0.5;
+          const newRL = Math.round(lockSL * 100) / 100;
+          const minD = /xau|gold/i.test(pos.symbol) ? 1.0 : 0.002;
+          const betterR = isBuyR ? newRL > pos.stopLoss + 0.1 : newRL < pos.stopLoss - 0.1;
+          const farR = Math.abs(pos.currentPrice - newRL) >= minD;
+          if (betterR && farR) {
+            try {
+              await metaApiFetch(`${CLIENT_BASE}/users/current/accounts/${accountId}/trade`, metaApiToken, {
+                method: "POST",
+                body: JSON.stringify({ actionType: "POSITION_MODIFY", positionId: pos.id, stopLoss: newRL, takeProfit: pos.takeProfit ?? undefined }),
+              });
+              log("INFO", `RELOAD-TRAIL ${pos.symbol} ${pos.id}: SL ${pos.stopLoss}→${newRL}`);
+              modifications.push({ symbol: pos.symbol, posId: pos.id, action: "reload_trail", oldSL: pos.stopLoss, newSL: newRL });
+            } catch (e: any) { log("WARN", `Reload-Trail fehlgeschlagen: ${e.message}`); }
+          }
         }
       } catch (err: any) {
         log("ERROR", `Account ${accountId}: ${err.message}`);

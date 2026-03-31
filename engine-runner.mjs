@@ -97,9 +97,9 @@ async function tick() {
     // FIX #6: ALLE Fehler loggen
     console.log(`[${ts}] [ERR] Tick #${tickCount}: ${(e.message || "").slice(0, 60)}`);
 
-    if (consecutiveErrors >= 10) {
-      console.log(`[${ts}] [ERR] 10+ Fehler in Folge, warte 60s...`);
-      await new Promise(r => setTimeout(r, 60000));
+    if (consecutiveErrors >= 5) {
+      console.log(`[${ts}] [ERR] 5 Fehler in Folge, warte 15s...`);
+      await new Promise(r => setTimeout(r, 15000)); // 15s statt 60s (Trades brauchen Management!)
       consecutiveErrors = 0;
     }
   }
