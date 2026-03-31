@@ -148,31 +148,32 @@ export async function GET(request: Request) {
           let minDist: number;   // Minimum-Abstand vom Preis (Broker-Schutz)
 
           if (remaining >= 4) {
-            // PHASE 0: Alle offen → KEIN Trail, Original SL
-            floorR = -1; // Unter Entry = original SL
-            atrMultPhase = 0; // Kein Trail
-            minDist = 0;
+            // PHASE 0: Alle offen — Trail TROTZDEM wenn im Profit!
+            // Floor bleibt Original SL, aber ATR-Trail startet ab 0.5R Profit
+            floorR = -1; // Original SL als Floor
+            atrMultPhase = rMultiple >= 0.5 ? 1.5 : 0; // Trail ab 0.5R Profit
+            minDist = /xau|gold/i.test(symbol) ? 1.5 : 0.003;
           } else if (remaining === 3) {
-            // PHASE 1: TP1 hit → Floor auf Entry (Breakeven), weiter ATR-Trail
-            floorR = 0; // Entry = 0R Profit
-            atrMultPhase = 2.0;
+            // PHASE 1: TP1 hit → Floor auf Entry, aggressiver Trail
+            floorR = 0;
+            atrMultPhase = 1.5; // 1.5x ATR (war 2.0 — enger fuer schnelleres Nachziehen)
             minDist = /xau|gold/i.test(symbol) ? 1.5 : 0.003;
           } else if (remaining === 2) {
-            // PHASE 2: TP2 hit → Floor auf +0.5R, engerer Trail
+            // PHASE 2: TP2 hit → Floor auf +0.5R, noch enger
             floorR = 0.5;
-            atrMultPhase = 1.5;
+            atrMultPhase = 1.2; // 1.2x ATR (war 1.5)
             minDist = /xau|gold/i.test(symbol) ? 1.0 : 0.002;
           } else {
-            // PHASE 3: TP3 hit, Runner → Floor auf +1R, engster Trail
+            // PHASE 3: Runner → Floor auf +1R, engster Trail
             floorR = 1.0;
-            atrMultPhase = 1.0;
+            atrMultPhase = 0.8; // 0.8x ATR (war 1.0 — Runner braucht engen Trail)
             minDist = /xau|gold/i.test(symbol) ? 0.8 : 0.001;
           }
 
           const ageMin = groupPos[0].time ? (Date.now() - new Date(groupPos[0].time).getTime()) / 60000 : 999;
 
-          // Phase 0 oder FRESH oder im Verlust → Original SL behalten
-          if (remaining >= 4 || rMultiple <= 0 || ageMin < 2) {
+          // FRESH oder im Verlust → Original SL behalten
+          if (rMultiple <= 0 || ageMin < 2 || atrMultPhase === 0) {
             // KEIN Trail — original SL behalten
             // Trotzdem Exits pruefen (weiter unten)
           } else {
