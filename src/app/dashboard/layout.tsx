@@ -15,7 +15,7 @@ interface NavItem {
 }
 
 const NAV: NavItem[] = [
-  { href: "/dashboard", label: "Übersicht", icon: "◆", group: "main" },
+  { href: "/dashboard", label: "Command Center", icon: "◆", group: "main" },
   { href: "/dashboard/trader", label: "Trader", icon: "📊", group: "trading" },
   { href: "/dashboard/engine", label: "KI-Engine", icon: "🛡️", group: "trading" },
   { href: "/dashboard/trades", label: "Trades", icon: "📋", group: "trading" },
