@@ -170,9 +170,22 @@ export async function GET(request: Request) {
           // Effektiver SL = das Bessere von Floor und Trail
           let effectiveSL: number;
           if (isBuy) {
-            effectiveSL = Math.max(floor, trail); // Hoeher = besser fuer BUY
+            effectiveSL = Math.max(floor, trail);
           } else {
-            effectiveSL = Math.min(floor, trail); // Niedriger = besser fuer SELL
+            effectiveSL = Math.min(floor, trail);
+          }
+
+          // KRITISCH: SL darf NIE ueber/unter dem aktuellen Preis liegen!
+          // BUY: SL muss UNTER currentPrice sein (mindestens $1 Abstand fuer Gold)
+          // SELL: SL muss UEBER currentPrice sein
+          const minBrokerDist = /xau|gold/i.test(symbol) ? 1.5 : 0.001; // Broker Minimum + Spread
+          if (isBuy && effectiveSL >= currentPrice - minBrokerDist) {
+            effectiveSL = currentPrice - minBrokerDist;
+            log("WARN", `${groupKey}: Floor/Trail ${Math.round(floor*100)/100}/${Math.round(trail*100)/100} UEBER Preis ${currentPrice} — capped auf ${effectiveSL.toFixed(2)}`);
+          }
+          if (!isBuy && effectiveSL <= currentPrice + minBrokerDist) {
+            effectiveSL = currentPrice + minBrokerDist;
+            log("WARN", `${groupKey}: Floor/Trail UNTER Preis — capped auf ${effectiveSL.toFixed(2)}`);
           }
 
           // Nur Trail wenn im Profit (rMultiple > 0) und nicht FRESH
