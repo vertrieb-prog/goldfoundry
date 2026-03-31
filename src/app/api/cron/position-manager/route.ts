@@ -103,31 +103,25 @@ export async function GET(request: Request) {
           const profitDist = isBuy ? currentPrice - entry : entry - currentPrice;
           const rMultiple = oneR > 0 ? profitDist / oneR : 0;
 
-          // ATR holen (5min Kerzen)
+          // ATR + Momentum aus EINEM API-Call (14 Candles, 5min)
           let atr = oneR; // Fallback: 1R als ATR
+          let momentum: "WITH" | "NEUTRAL" | "AGAINST" = "NEUTRAL";
+          let speed = 1.0;
           try {
             const candles = await metaApiFetch(
               `${CLIENT_BASE}/users/current/accounts/${accountId}/historical-market-data/symbols/${encodeURIComponent(symbol)}/timeframes/5m/candles?limit=14`,
               metaApiToken
             );
-            if (Array.isArray(candles) && candles.length >= 5) atr = calcATR(candles);
-          } catch {}
-
-          // Momentum aus Candles (letzte 3 geschlossene — nicht die aktuelle!)
-          let momentum: "WITH" | "NEUTRAL" | "AGAINST" = "NEUTRAL";
-          let speed = 1.0;
-          try {
-            const candles = await metaApiFetch(
-              `${CLIENT_BASE}/users/current/accounts/${accountId}/historical-market-data/symbols/${encodeURIComponent(symbol)}/timeframes/5m/candles?limit=10`,
-              metaApiToken
-            );
             if (Array.isArray(candles) && candles.length >= 5) {
-              // Nur GESCHLOSSENE Kerzen (letzte weglassen, die formt sich noch)
-              const closed = candles.slice(-4, -1); // 3 geschlossene Kerzen
+              // ATR aus allen 14 Kerzen
+              atr = calcATR(candles);
+              // Momentum: nur GESCHLOSSENE Kerzen (letzte weglassen — formt sich noch)
+              const closed = candles.slice(-4, -1);
               const bull = closed.filter((c: any) => c.close > c.open).length;
               const bear = closed.filter((c: any) => c.close < c.open).length;
               if (isBuy) momentum = bull >= 2 ? "WITH" : bear >= 2 ? "AGAINST" : "NEUTRAL";
               else momentum = bear >= 2 ? "WITH" : bull >= 2 ? "AGAINST" : "NEUTRAL";
+              // Speed: letzte 3 vs Durchschnitt
               const ranges = candles.map((c: any) => Math.abs(c.high - c.low));
               const avg = ranges.reduce((s: number, r: number) => s + r, 0) / ranges.length;
               const recent = candles.slice(-3).reduce((s: number, c: any) => s + Math.abs(c.high - c.low), 0) / 3;
