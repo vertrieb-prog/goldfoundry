@@ -227,7 +227,9 @@ export async function GET(request: Request) {
 
           for (const pos of groupPos) {
             const currentSL = pos.stopLoss || 0;
-            const isBetter = isBuy ? newSL > currentSL + 0.1 : (currentSL > 0 && newSL < currentSL - 0.1);
+            const isBetter = isBuy
+              ? newSL > currentSL + 0.1  // BUY: neuer SL hoeher als alter
+              : currentSL === 0 ? true : newSL < currentSL - 0.1; // SELL: neuer SL niedriger (oder kein SL gesetzt)
             const notTooClose = Math.abs(currentPrice - newSL) >= Math.max(atr * 0.3, 0.5); // Min 30% ATR oder $0.50
 
             if (isBetter && notTooClose) {
