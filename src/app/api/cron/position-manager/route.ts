@@ -90,6 +90,7 @@ export async function GET(request: Request) {
         }
 
         for (const [groupKey, groupPos] of groups) {
+          if (!groupPos?.length) continue; // Safety: leere Gruppe ueberspringen
           const remaining = groupPos.length;
           const isBuy = groupPos[0].type === "POSITION_TYPE_BUY";
           const symbol = groupPos[0].symbol;
@@ -99,7 +100,8 @@ export async function GET(request: Request) {
           if (!entry || !currentPrice) continue;
 
           // 1R = Original Risk (Entry bis SL)
-          const oneR = originalSL ? Math.abs(entry - originalSL) : 5; // Default $5 fuer Gold
+          let oneR = originalSL ? Math.abs(entry - originalSL) : 5; // Default $5 fuer Gold
+          if (oneR < 0.5) { log("WARN", `${groupKey}: 1R zu klein (${oneR}), Default 5`); oneR = 5; }
           const profitDist = isBuy ? currentPrice - entry : entry - currentPrice;
           const rMultiple = oneR > 0 ? profitDist / oneR : 0;
 

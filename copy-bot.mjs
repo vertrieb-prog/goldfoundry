@@ -286,30 +286,8 @@ async function poll() {
         await copyPosition(pos, pair.copy, pair);
       }
 
-      // ── SL/TP Sync: Phenex setzt SL/TP nachtraeglich → auf unsere Positionen uebernehmen ──
-      for (const pos of positions) {
-        if (!pos.stopLoss && !pos.takeProfit) continue;
-        const slKey = `sltp-${pair.copy}-${pos.symbol}-${pos.type}`;
-        const slVal = `${pos.stopLoss || 0}-${pos.takeProfit || 0}`;
-        if (known.has(slKey) && known.get(slKey) === slVal) continue; // Schon synchronisiert
-        if (typeof known.get === 'undefined') continue; // knownPositions ist ein Set, brauche Map fuer SL/TP tracking
-        // SL/TP hat sich geaendert → unsere Copy-Positionen updaten
-        try {
-          const mappedSym = mapSymbol(pos.symbol);
-          const copyPositions = await apiFetch(`${CLIENT_BASE}/users/current/accounts/${pair.copy}/positions`);
-          if (!Array.isArray(copyPositions)) continue;
-          const matching = copyPositions.filter(cp => cp.symbol === mappedSym && cp.type === pos.type && cp.comment?.startsWith("COPY-"));
-          for (const cp of matching) {
-            const payload = { actionType: "POSITION_MODIFY", positionId: cp.id };
-            if (pos.stopLoss) payload.stopLoss = pos.stopLoss;
-            if (pos.takeProfit) payload.takeProfit = pos.takeProfit;
-            await apiFetch(`${CLIENT_BASE}/users/current/accounts/${pair.copy}/trade`, { method: "POST", body: JSON.stringify(payload) });
-          }
-          if (matching.length > 0) {
-            console.log(`  [SYNC] SL/TP von ${pos.symbol}: SL=${pos.stopLoss || "-"} TP=${pos.takeProfit || "-"} → ${matching.length} Positionen`);
-          }
-        } catch {}
-      }
+      // SL/TP Management wird vom Position Manager gemacht (alle 30s auf Vercel)
+      // Kein SL/TP Sync hier noetig — Position Manager hat R-Multiple + ATR Trail
 
       // Track closed
       const currentIds = new Set(positions.map(p => `${p.id}-${p.type}-${p.symbol}`));
