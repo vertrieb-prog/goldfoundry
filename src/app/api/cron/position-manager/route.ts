@@ -83,15 +83,15 @@ export async function GET(request: Request) {
         const reloadPositions = positions.filter(
           (p: any) => p.comment?.includes("RELOAD")
         );
-        // Alle managed = Originale (fuer Gruppierung) + Reloads (fuer separates Trail)
         const managed = originals;
-        if (!managed.length) continue;
+        if (!managed.length && !reloadPositions.length) continue;
+        // Wenn nur Reloads aber keine Originale: trotzdem Reload-Trail ausfuehren (unten)
 
         // === GRUPPIERE nach Symbol+Richtung ===
         const groups = new Map<string, any[]>();
         for (const pos of managed) {
           const dir = pos.type?.replace("POSITION_TYPE_", "") || "?";
-          const key = `${pos.symbol}-${dir}-${Math.round(pos.openPrice * 10)}`; // Gruppen nach Entry-Preis (verhindert Vermischung bei 2 Signalen auf gleichem Symbol)
+          const key = `${pos.symbol}-${dir}-${Math.round(pos.openPrice)}`; // Gruppen nach gerundeter Entry (gleicher Dollar-Bereich = gleiches Signal)
           if (!groups.has(key)) groups.set(key, []);
           groups.get(key)!.push(pos);
         }
