@@ -18,7 +18,7 @@ export async function GET(request: Request) {
     // All users with active accounts
     const { data: users } = await db.from("slave_accounts")
       .select("user_id")
-      .is("copier_active", true);
+      ;
 
     const uniqueUsers = [...new Set((users || []).map(u => u.user_id as string))];
 

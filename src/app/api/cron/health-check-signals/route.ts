@@ -109,7 +109,7 @@ export async function GET(request: Request) {
           .from("slave_accounts")
           .select("id")
           .eq("user_id", userId)
-          .is("copier_active", true)
+          
           .limit(1)
           .single();
 
@@ -153,7 +153,7 @@ export async function GET(request: Request) {
           .from("slave_accounts")
           .select("id")
           .eq("user_id", userId)
-          .is("copier_active", true)
+          
           .limit(1)
           .single();
 
@@ -200,7 +200,7 @@ export async function GET(request: Request) {
       const { data: allAccounts } = await db
         .from("slave_accounts")
         .select("id, metaapi_account_id, user_id, label, login")
-        .is("copier_active", true);
+        ;
 
       if (allAccounts?.length) {
         report.accountsChecked = allAccounts.length;

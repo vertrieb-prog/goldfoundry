@@ -71,7 +71,8 @@ export async function GET(request: Request) {
     const hasHighImpactNews = (upcomingNews?.length || 0) > 0;
     if (hasHighImpactNews) log("WARN", `${upcomingNews!.length} High-Impact News in 30min — Schutz aktiv`);
 
-    const { data: accounts } = await db.from("slave_accounts").select("*").is("copier_active", true);
+    const { data: allAccounts } = await db.from("slave_accounts").select("*");
+    const accounts = (allAccounts || []).filter((a: any) => a.copier_active === true);
     if (!accounts?.length) return NextResponse.json({ message: "No active accounts", modifications: [] });
 
     log("INFO", `Pruefe ${accounts.length} aktive(s) Konto(en)`);

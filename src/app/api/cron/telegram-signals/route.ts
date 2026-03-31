@@ -77,7 +77,7 @@ async function selfHeal(db: any, channel: any, userId: string): Promise<string |
         .from("slave_accounts")
         .select("id")
         .eq("user_id", userId)
-        .is("copier_active", true)
+        
         .limit(1)
         .single();
 
@@ -402,7 +402,7 @@ async function processChannel(db: any, channel: any) {
     .from("slave_accounts")
     .select("*")
     .eq("user_id", userId)
-    .is("copier_active", true);
+    ;
 
   if (healedAccountId) {
     accountQuery = accountQuery.eq("id", healedAccountId);

@@ -19,7 +19,7 @@ export async function GET(request: Request) {
     const { data: accounts } = await db
       .from("slave_accounts")
       .select("*")
-      .is("copier_active", true);
+      ;
 
     if (!accounts?.length) {
       return NextResponse.json({ message: "No active accounts", results: [] });

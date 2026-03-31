@@ -15,7 +15,7 @@ export async function GET(request: Request) {
   const results: any[] = [];
 
   try {
-    const { data: accounts } = await db.from("slave_accounts").select("*").is("copier_active", true);
+    const { data: accounts } = await db.from("slave_accounts").select("*");
     if (!accounts?.length) return NextResponse.json({ results: [] });
 
     for (const acc of accounts) {

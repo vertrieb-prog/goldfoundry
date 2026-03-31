@@ -29,10 +29,11 @@ export async function GET(request: Request) {
   const db = createSupabaseAdmin();
 
   try {
-    const { data: accounts } = await db
+    // Hole ALLE Accounts und filtere in JS (Supabase boolean filter ist unzuverlaessig auf Vercel)
+    const { data: allAccounts } = await db
       .from("slave_accounts")
-      .select("*")
-      .is("copier_active", true);
+      .select("*");
+    const accounts = (allAccounts || []).filter((a: any) => a.copier_active === true);
 
     if (!accounts?.length) {
       return NextResponse.json({ message: "No active accounts", ticked: 0 });
