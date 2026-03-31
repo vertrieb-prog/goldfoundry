@@ -6,10 +6,10 @@ import { useRouter } from "next/navigation";
 const TOTAL_STEPS = 3;
 
 const TRADERS = [
-  { id: "goldforge", name: "GoldForge", asset: "XAUUSD", perf: "+1.0%/Tag", wr: "72%" },
-  { id: "techforge", name: "TechForge", asset: "US500", perf: "+0.7%/Tag", wr: "68%" },
-  { id: "indexforge", name: "IndexForge", asset: "DAX40", perf: "+0.8%/Tag", wr: "65%" },
-  { id: "forexforge", name: "ForexForge", asset: "EURUSD", perf: "+0.5%/Tag", wr: "74%" },
+  { id: "phantom", name: "PHANTOM", asset: "XAUUSD", perf: "+1.0%/Tag", wr: "72%" },
+  { id: "nexus", name: "NEXUS", asset: "US500", perf: "+0.7%/Tag", wr: "68%" },
+  { id: "sentinel", name: "SENTINEL", asset: "DAX40", perf: "+0.8%/Tag", wr: "65%" },
+  { id: "spectre", name: "SPECTRE", asset: "EURUSD", perf: "+0.5%/Tag", wr: "74%" },
 ];
 
 const AMOUNTS = [250, 500, 1000, 5000];

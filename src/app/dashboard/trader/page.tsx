@@ -4,10 +4,10 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 
 const TRADERS = [
-  { name: "GoldForge", asset: "XAUUSD", perf: "+1.0%/Tag", wr: "72%", dd: "4.5%", since: "2022", color: "#d4a537" },
-  { name: "TechForge", asset: "US500", perf: "+0.7%/Tag", wr: "68%", dd: "3.8%", since: "2023", color: "#3b82f6" },
-  { name: "IndexForge", asset: "DAX40", perf: "+0.8%/Tag", wr: "65%", dd: "5.2%", since: "2023", color: "#a855f7" },
-  { name: "ForexForge", asset: "EURUSD", perf: "+0.5%/Tag", wr: "74%", dd: "3.2%", since: "2022", color: "#22c55e" },
+  { name: "PHANTOM", asset: "XAUUSD", perf: "+1.0%/Tag", wr: "72%", dd: "4.5%", since: "2022", color: "#d4a537" },
+  { name: "NEXUS", asset: "US500", perf: "+0.7%/Tag", wr: "68%", dd: "3.8%", since: "2023", color: "#3b82f6" },
+  { name: "SENTINEL", asset: "DAX40", perf: "+0.8%/Tag", wr: "65%", dd: "5.2%", since: "2023", color: "#a855f7" },
+  { name: "SPECTRE", asset: "EURUSD", perf: "+0.5%/Tag", wr: "74%", dd: "3.2%", since: "2022", color: "#22c55e" },
 ];
 
 const LEVERAGE_OPTIONS = ["1x", "2x", "4x", "8x", "12x", "24x"];

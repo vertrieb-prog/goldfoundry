@@ -13,7 +13,7 @@ const faqs = [
   },
   {
     q: "Wie gut sind die Trader?",
-    a: "Unsere 4 Forge-Trader haben einen verifizierten Track Record. GoldForge zum Beispiel: +1% Durchschnittsgewinn pro Tag, 72% Win Rate, maximal 4.5% Drawdown — seit 2022.",
+    a: "Unsere 4 Forge-Trader haben einen verifizierten Track Record. PHANTOM zum Beispiel: +1% Durchschnittsgewinn pro Tag, 72% Win Rate, maximal 4.5% Drawdown — seit 2022.",
   },
   {
     q: "Brauche ich einen EA oder VPS?",

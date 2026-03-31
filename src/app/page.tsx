@@ -289,7 +289,7 @@ export default function HomePage() {
                     </>
                   );
                 })()}
-                <text x="8" y="16" fill={T.dim} fontSize="10" fontFamily={T.mono}>GOLDFORGE &middot; LIVE</text>
+                <text x="8" y="16" fill={T.dim} fontSize="10" fontFamily={T.mono}>PHANTOM &middot; LIVE</text>
                 <text x="392" y="16" fill={T.gold} fontSize="11" fontFamily={T.mono} textAnchor="end">+142%</text>
               </svg>
               <p style={{ fontSize: 10, color: T.dim, marginTop: 4, textAlign: "center" }}>
@@ -407,10 +407,10 @@ export default function HomePage() {
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 20, marginTop: 48 }}>
             {[
-              { name: "GoldForge", sub: "Der Gold-Spezialist", asset: "XAUUSD", perf: "+1.0%/Tag", wr: "72% WR", dd: "4.5% DD", since: "seit 2022", color: T.gold, data: [30, 28, 35, 32, 38, 36, 42, 39, 45, 43, 50, 47, 52, 49, 55, 53], gain: "+142%" },
-              { name: "TechForge", sub: "Der Index-Sniper", asset: "US500", perf: "+0.7%/Tag", wr: "68% WR", dd: "3.8% DD", since: "seit 2023", color: "#3b82f6", data: [20, 22, 21, 25, 24, 28, 27, 31, 29, 33, 32, 36, 34, 38, 37, 40], gain: "+98%" },
-              { name: "IndexForge", sub: "Der Europa-Trader", asset: "DAX40", perf: "+0.8%/Tag", wr: "65% WR", dd: "5.2% DD", since: "seit 2023", color: "#a855f7", data: [18, 20, 19, 23, 21, 26, 24, 28, 26, 30, 29, 33, 31, 35, 33, 37], gain: "+112%" },
-              { name: "ForexForge", sub: "Der Marathon-Läufer", asset: "EURUSD", perf: "+0.5%/Tag", wr: "74% WR", dd: "3.2% DD", since: "seit 2022", color: "#22c55e", data: [15, 16, 17, 18, 17, 19, 20, 21, 22, 23, 22, 24, 25, 26, 27, 28], gain: "+87%" },
+              { name: "PHANTOM", sub: "Der Gold-Spezialist", asset: "XAUUSD", perf: "+1.0%/Tag", wr: "72% WR", dd: "4.5% DD", since: "seit 2022", color: T.gold, data: [30, 28, 35, 32, 38, 36, 42, 39, 45, 43, 50, 47, 52, 49, 55, 53], gain: "+142%" },
+              { name: "NEXUS", sub: "Der Index-Sniper", asset: "US500", perf: "+0.7%/Tag", wr: "68% WR", dd: "3.8% DD", since: "seit 2023", color: "#3b82f6", data: [20, 22, 21, 25, 24, 28, 27, 31, 29, 33, 32, 36, 34, 38, 37, 40], gain: "+98%" },
+              { name: "SENTINEL", sub: "Der Europa-Trader", asset: "DAX40", perf: "+0.8%/Tag", wr: "65% WR", dd: "5.2% DD", since: "seit 2023", color: "#a855f7", data: [18, 20, 19, 23, 21, 26, 24, 28, 26, 30, 29, 33, 31, 35, 33, 37], gain: "+112%" },
+              { name: "SPECTRE", sub: "Der Marathon-Läufer", asset: "EURUSD", perf: "+0.5%/Tag", wr: "74% WR", dd: "3.2% DD", since: "seit 2022", color: "#22c55e", data: [15, 16, 17, 18, 17, 19, 20, 21, 22, 23, 22, 24, 25, 26, 27, 28], gain: "+87%" },
             ].map((t, i) => (
               <Reveal key={i} delay={i * 0.1}>
                 <div style={{ ...GLASS, padding: 24, transition: "box-shadow 0.3s" }} onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.boxShadow = `0 0 30px ${T.glow}`; }} onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.boxShadow = "none"; }}>

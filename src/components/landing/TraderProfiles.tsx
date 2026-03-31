@@ -3,10 +3,10 @@
 import { useEffect, useRef, useMemo } from "react";
 
 const traders = [
-  { name: "GoldForge", asset: "XAUUSD", perf: "+1.0%", wr: "72%", dd: "4.5%", since: "2022", color: "#d4a537" },
-  { name: "TechForge", asset: "US500", perf: "+0.7%", wr: "68%", dd: "3.8%", since: "2023", color: "#3b82f6" },
-  { name: "IndexForge", asset: "DAX40", perf: "+0.8%", wr: "65%", dd: "5.2%", since: "2023", color: "#a855f7" },
-  { name: "ForexForge", asset: "EURUSD", perf: "+0.5%", wr: "74%", dd: "3.2%", since: "2022", color: "#22c55e" },
+  { name: "PHANTOM", asset: "XAUUSD", perf: "+1.0%", wr: "72%", dd: "4.5%", since: "2022", color: "#d4a537" },
+  { name: "NEXUS", asset: "US500", perf: "+0.7%", wr: "68%", dd: "3.8%", since: "2023", color: "#3b82f6" },
+  { name: "SENTINEL", asset: "DAX40", perf: "+0.8%", wr: "65%", dd: "5.2%", since: "2023", color: "#a855f7" },
+  { name: "SPECTRE", asset: "EURUSD", perf: "+0.5%", wr: "74%", dd: "3.2%", since: "2022", color: "#22c55e" },
 ];
 
 function generateCurve(seed: number): number[] {

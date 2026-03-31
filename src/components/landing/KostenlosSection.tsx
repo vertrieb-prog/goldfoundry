@@ -62,7 +62,7 @@ export default function KostenlosSection() {
 
           {/* Description */}
           <p className="max-w-xl mx-auto mb-10 leading-relaxed" style={{ color: "var(--gf-text)" }}>
-            Du zahlst nur 40% deiner Gewinne — und nur wenn du im Plus bist. Kein Abo. Kein Kleingedrucktes.
+            100% kostenlos. Tegas FX vergütet uns als Technologie-Partner — du zahlst nichts.
           </p>
 
           {/* Features grid */}
