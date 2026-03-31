@@ -1,198 +1,148 @@
-// src/app/dashboard/page.tsx
 "use client";
+
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { useUser } from "@/contexts/UserContext";
-import ForgeChat from "@/components/ForgeChat";
+import { motion } from "framer-motion";
+import { KpiHeroBar } from "@/components/dashboard/KpiHeroBar";
+import { TraderGrid } from "@/components/dashboard/TraderGrid";
+import { RecentTrades } from "@/components/dashboard/RecentTrades";
+import { EquityCurve } from "@/components/dashboard/EquityCurve";
 
-/* -- KPI Card ------------------------------------------------ */
-function KPI({ label, value, sub, color }: { label: string; value: string; sub?: string; color?: string }) {
-  return (
-    <div className="gf-panel p-4 flex flex-col">
-      <span className="text-[10px] font-medium uppercase tracking-wide" style={{ color: "var(--gf-text-dim)" }}>{label}</span>
-      <span className="text-xl font-bold mt-1" style={{ color: color ?? "var(--gf-text-bright)" }}>{value}</span>
-      {sub && <span className="text-[10px] mt-0.5" style={{ color: sub.startsWith("+") ? "var(--gf-green)" : sub.startsWith("-") ? "var(--gf-red)" : "var(--gf-text-dim)" }}>{sub}</span>}
-    </div>
-  );
+interface DashboardData {
+  kpis: {
+    totalEquity: number;
+    totalBalance: number;
+    equityChange: number;
+    todayPnl: number;
+    todayTrades: number;
+    ddBuffer: number;
+    ddLimit: number;
+    equityHigh: number;
+  };
+  traders: {
+    codename: string;
+    asset: string;
+    assetLabel: string;
+    color: string;
+    active: boolean;
+    todayProfit: number;
+    equity: number;
+    balance: number;
+    ddUsed: number;
+    ddBuffer: number;
+  }[];
+  recentTrades: {
+    direction: "BUY" | "SELL";
+    symbol: string;
+    pnl: number;
+    trader: string;
+    traderColor: string;
+    time: string;
+    lots: number;
+  }[];
+  equityCurve: {
+    datapoints: { date: string; equity: number }[];
+    periodChange: number;
+    periodPnl: number;
+  };
+  lastUpdated: string;
 }
 
-/* -- Mini Chart ---------------------------------------------- */
-function MiniChart({ data }: { data: number[] }) {
-  if (!data.length) return null;
-  const min = Math.min(...data); const max = Math.max(...data); const range = max - min || 1;
-  const w = 200; const h = 50;
-  const points = data.map((v, i) => `${(i / Math.max(data.length - 1, 1)) * w},${h - ((v - min) / range) * h}`).join(" ");
-  return (
-    <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-12" preserveAspectRatio="none">
-      <defs><linearGradient id="gc" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="var(--gf-gold)" stopOpacity="0.3" /><stop offset="100%" stopColor="var(--gf-gold)" stopOpacity="0" /></linearGradient></defs>
-      <polygon points={`0,${h} ${points} ${w},${h}`} fill="url(#gc)" />
-      <polyline points={points} fill="none" stroke="var(--gf-gold)" strokeWidth="1.5" />
-    </svg>
-  );
-}
-
-const DEMO_EQUITY = [23200,23350,23180,23420,23600,23550,23780,23950,24100,24020,24280,24150,24400,24650,24580,24800,24720,24950,25100,25020,25280,25180,25400,25550,25480,25700,25620,25850,26000,25847];
-const DEMO_TRADES = [
-  { symbol: "XAUUSD", dir: "BUY", pnl: 85.20 },
-  { symbol: "US500", dir: "SELL", pnl: 42.10 },
-  { symbol: "EURUSD", dir: "BUY", pnl: -18.50 },
-  { symbol: "GBPJPY", dir: "SELL", pnl: 67.30 },
-  { symbol: "XAUUSD", dir: "BUY", pnl: 135.80 },
-];
-
-const FORGE_TRADERS = [
-  { name: "GoldForge", asset: "XAUUSD", color: "#d4a537" },
-  { name: "TechForge", asset: "US500", color: "#3b82f6" },
-  { name: "IndexForge", asset: "DAX40", color: "#a855f7" },
-  { name: "ForexForge", asset: "EURUSD", color: "#22c55e" },
-];
-
-/* -- Main Page ----------------------------------------------- */
 export default function DashboardPage() {
-  const { user } = useUser();
-  const [copier, setCopier] = useState<any>(null);
-  const [health, setHealth] = useState<any>(null);
-  const [isDemo, setIsDemo] = useState(true);
-  const [healthLoading, setHealthLoading] = useState(true);
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  async function fetchDashboard() {
+    try {
+      const res = await fetch("/api/dashboard/overview");
+      if (!res.ok) throw new Error(`API error: ${res.status}`);
+      const json = await res.json();
+      setData(json);
+      setError(null);
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
-    fetch("/api/copier/status")
-      .then(r => r.json())
-      .then(d => { if (d.accounts?.length) { setCopier(d); setIsDemo(false); } })
-      .catch(() => {});
-    fetch("/api/engine/health")
-      .then(r => r.json())
-      .then(d => setHealth(d))
-      .catch(() => {})
-      .finally(() => setHealthLoading(false));
+    fetchDashboard();
+    const interval = setInterval(fetchDashboard, 30000);
+    return () => clearInterval(interval);
   }, []);
 
-  const accounts = copier?.accounts ?? [];
-  const totalEquity = isDemo ? 26102.55 : accounts.reduce((s: number, a: any) => s + (a.equity ?? 0), 0);
-  const todayPnl = isDemo ? 312.40 : accounts.reduce((s: number, a: any) => s + (a.todayPnl ?? 0), 0);
-  const maxDd = isDemo ? "2,8%" : accounts.length ? `${Math.min(...accounts.map((a: any) => a.ddBuffer ?? 100)).toFixed(1)}%` : "\u2014";
-  const firstName = user?.full_name?.split(" ")[0] ?? user?.email?.split("@")[0] ?? "Trader";
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-2 border-[#d4a537]/30 border-t-[#d4a537] rounded-full animate-spin" />
+          <span className="text-xs text-zinc-500 font-mono">Lade Command Center...</span>
+        </div>
+      </div>
+    );
+  }
 
-  // Determine engine health color
-  const engineHealthy = health?.healthy ?? null;
-  const healthColor = engineHealthy === true ? "var(--gf-green)" : engineHealthy === false ? "var(--gf-red)" : "var(--gf-gold)";
-  const healthLabel = engineHealthy === true ? "Online" : engineHealthy === false ? "Warnung" : "Unbekannt";
+  if (error || !data) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="gf-panel p-8 text-center max-w-sm">
+          <div className="text-2xl mb-2">⚠</div>
+          <div className="text-sm text-zinc-400 mb-1">Daten konnten nicht geladen werden</div>
+          <div className="text-[10px] text-zinc-600 font-mono mb-4">{error}</div>
+          <button
+            onClick={() => { setLoading(true); fetchDashboard(); }}
+            className="text-xs px-4 py-2 rounded-lg bg-[#d4a537]/10 text-[#d4a537] hover:bg-[#d4a537]/20 transition-colors"
+          >
+            Erneut versuchen
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div>
-      <div className="mb-4">
-        <h1 className="text-lg font-bold text-white">Hey {firstName} <span className="text-zinc-500 font-normal text-sm">| Command Center</span></h1>
+    <div className="flex flex-col gap-4">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-lg font-bold text-[#fafafa]">Command Center</h1>
+          <p className="text-[10px] text-zinc-600 font-mono">
+            Zuletzt aktualisiert: {new Date(data.lastUpdated).toLocaleTimeString("de-DE")}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <div className="w-2 h-2 rounded-full bg-[#22c55e]" />
+            <div className="absolute inset-0 w-2 h-2 rounded-full bg-[#22c55e] animate-ping opacity-40" />
+          </div>
+          <span className="text-[10px] font-mono text-[#22c55e]">LIVE</span>
+        </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-4" style={{ height: "calc(100vh - 10rem)" }}>
-        {/* LEFT: FORGE Mentor Chat */}
-        <div className="w-full lg:w-[60%] min-h-[500px] lg:min-h-0">
-          <ForgeChat />
-        </div>
+      {/* Sektion 1: KPI Hero Bar */}
+      <KpiHeroBar
+        kpis={data.kpis}
+        traders={data.traders.map((t) => ({
+          codename: t.codename,
+          color: t.color,
+          ddUsed: t.ddUsed,
+          ddBuffer: t.ddBuffer,
+        }))}
+      />
 
-        {/* RIGHT: KPIs + Chart + Traders + Engine + Trades */}
-        <div className="w-full lg:w-[40%] flex flex-col gap-3 overflow-auto">
-          {/* KPIs */}
-          <div className="grid grid-cols-3 gap-2">
-            <KPI label="Equity" value={isDemo ? "\u20AC26.102" : `\u20AC${totalEquity.toLocaleString("de-DE", { maximumFractionDigits: 0 })}`} sub={isDemo ? "Demo" : undefined} />
-            <KPI label="Heute P&L" value={isDemo ? "+\u20AC312" : `${todayPnl >= 0 ? "+" : ""}\u20AC${todayPnl.toFixed(0)}`} color={isDemo ? "var(--gf-green)" : (todayPnl >= 0 ? "var(--gf-green)" : "var(--gf-red)")} sub={isDemo ? "Demo" : undefined} />
-            <KPI label="DD Buffer" value={maxDd} color="var(--gf-green)" sub={isDemo ? "max 5%" : undefined} />
-          </div>
+      {/* Sektion 2: Trader Grid */}
+      <TraderGrid traders={data.traders} ddLimit={data.kpis.ddLimit} />
 
-          {/* Engine Health + Active Traders Row */}
-          <div className="grid grid-cols-2 gap-2">
-            {/* KI-Engine Status */}
-            <div className="gf-panel p-3">
-              <div className="text-[10px] font-medium uppercase tracking-wide mb-2" style={{ color: "var(--gf-text-dim)" }}>KI-Engine</div>
-              {healthLoading ? (
-                <span className="text-xs text-zinc-500">Laden...</span>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full" style={{ background: healthColor }} />
-                  <span className="text-sm font-bold" style={{ color: healthColor }}>{healthLabel}</span>
-                  {health?.pairs?.length > 0 && <span className="text-[9px] text-zinc-500 ml-auto">{health.pairs.length} Paare</span>}
-                </div>
-              )}
-            </div>
-
-            {/* Active Traders */}
-            <div className="gf-panel p-3">
-              <div className="text-[10px] font-medium uppercase tracking-wide mb-2" style={{ color: "var(--gf-text-dim)" }}>Forge Trader</div>
-              <div className="flex gap-1.5">
-                {FORGE_TRADERS.map(t => (
-                  <div key={t.name} className="flex items-center justify-center w-7 h-7 rounded-lg text-[10px] font-bold" style={{ background: `${t.color}15`, color: t.color }} title={`${t.name} (${t.asset})`}>{t.name[0]}</div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Equity Curve */}
-          <div className="gf-panel p-4">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-medium uppercase tracking-wide" style={{ color: "var(--gf-text-dim)" }}>Equity Curve</span>
-                {isDemo && <span className="text-[8px] px-1.5 py-0.5 rounded-full font-mono" style={{ background: "rgba(250,239,112,0.08)", color: "var(--gf-gold)", border: "1px solid rgba(250,239,112,0.15)" }}>DEMO</span>}
-              </div>
-              <span className="text-sm font-bold gf-gold-text">{isDemo ? "\u20AC25.847" : `\u20AC${totalEquity.toLocaleString("de-DE", { maximumFractionDigits: 0 })}`}</span>
-            </div>
-            <MiniChart data={isDemo ? DEMO_EQUITY : Array.from({ length: 30 }, (_, i) => totalEquity * (0.95 + Math.random() * 0.1) + i * 50)} />
-          </div>
-
-          {/* Recent Trades */}
-          <div className="gf-panel p-4">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-[10px] font-medium uppercase tracking-wide" style={{ color: "var(--gf-text-dim)" }}>Letzte Trades</span>
-              {isDemo && <span className="text-[8px] px-1.5 py-0.5 rounded-full font-mono" style={{ background: "rgba(250,239,112,0.08)", color: "var(--gf-gold)" }}>DEMO</span>}
-            </div>
-            <div className="space-y-1.5">
-              {(isDemo ? DEMO_TRADES : []).map((t, i) => (
-                <div key={i} className="flex items-center justify-between py-1.5" style={{ borderBottom: i < 4 ? "1px solid var(--gf-border)" : "none" }}>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded font-mono" style={{ background: t.dir === "BUY" ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.1)", color: t.dir === "BUY" ? "var(--gf-green)" : "var(--gf-red)" }}>{t.dir}</span>
-                    <span className="text-xs font-semibold font-mono text-white">{t.symbol}</span>
-                  </div>
-                  <span className="text-xs font-bold font-mono" style={{ color: t.pnl >= 0 ? "var(--gf-green)" : "var(--gf-red)" }}>{t.pnl >= 0 ? "+" : ""}&euro;{Math.abs(t.pnl).toFixed(2)}</span>
-                </div>
-              ))}
-              {!isDemo && accounts.length === 0 && <p className="text-xs text-zinc-600 text-center py-3">Noch keine Trades.</p>}
-            </div>
-          </div>
-
-          {/* Account Cards / CTA */}
-          {isDemo ? (
-            <div className="gf-panel p-5 flex flex-col items-center text-center" style={{ background: "linear-gradient(135deg, var(--gf-panel), rgba(250,239,112,0.02))", border: "1px solid rgba(250,239,112,0.12)" }}>
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3 text-lg" style={{ background: "rgba(250,239,112,0.06)", border: "1px solid rgba(250,239,112,0.15)" }}>+</div>
-              <h3 className="text-sm font-bold text-white mb-1">Konto verbinden</h3>
-              <p className="text-xs text-zinc-500 mb-3">Echte Daten statt Demo. MetaTrader verbinden.</p>
-              <Link href="/dashboard/konto" className="gf-btn gf-btn-sm text-xs">Verbinden &rarr;</Link>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {accounts.map((acc: any) => (
-                <div key={acc.id} className="gf-panel p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-semibold text-xs text-white">{acc.firmProfile?.toUpperCase()}</span>
-                    <span className="text-[10px] font-mono" style={{ color: "var(--gf-text-dim)" }}>{acc.mtLogin}</span>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2 text-center">
-                    <div>
-                      <div className="text-sm font-bold text-white">&euro;{acc.equity?.toLocaleString("de-DE", { maximumFractionDigits: 0 })}</div>
-                      <div className="text-[9px] text-zinc-500">EQUITY</div>
-                    </div>
-                    <div>
-                      <div className="text-sm font-bold" style={{ color: acc.ddBuffer > 40 ? "var(--gf-green)" : acc.ddBuffer > 15 ? "var(--gf-gold)" : "var(--gf-red)" }}>{acc.ddBuffer}%</div>
-                      <div className="text-[9px] text-zinc-500">DD BUFFER</div>
-                    </div>
-                    <div>
-                      <div className="text-sm font-bold" style={{ color: "var(--gf-gold)" }}>{acc.lastMultiplier ?? "\u2014"}x</div>
-                      <div className="text-[9px] text-zinc-500">MULTI</div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+      {/* Sektion 3: Trades + Equity Curve */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <RecentTrades trades={data.recentTrades} />
+        <EquityCurve
+          datapoints={data.equityCurve.datapoints}
+          periodChange={data.equityCurve.periodChange}
+          periodPnl={data.equityCurve.periodPnl}
+          currentEquity={data.kpis.totalEquity}
+        />
       </div>
     </div>
   );
