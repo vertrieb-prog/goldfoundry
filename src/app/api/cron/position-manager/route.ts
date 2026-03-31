@@ -132,10 +132,6 @@ export async function GET(request: Request) {
             }
           } catch {}
 
-          // Trail-Distanz: ATR-basiert, mit News-Anpassung
-          const atrMult = hasNews ? 1.0 : 2.0; // Bei News: enger, sonst Standard
-          const trailDist = Math.max(atr * atrMult, oneR * 0.3); // Nie enger als 30% von 1R
-
           log("INFO", `${account.mt_login} ${groupKey}: ${remaining} Pos | ${rMultiple.toFixed(1)}R | ATR:$${atr.toFixed(2)} | ${momentum} | Speed:${speed.toFixed(1)}x`);
 
           // === HYBRID F: Floor + ATR Trail + Clamp + Ratchet ===
@@ -180,8 +176,9 @@ export async function GET(request: Request) {
             // === FLOOR berechnen ===
             const floor = isBuy ? entry + oneR * floorR : entry - oneR * floorR;
 
-            // === ATR TRAIL berechnen ===
-            const phaseTrailDist = Math.max(atr * atrMultPhase, oneR * 0.3);
+            // === ATR TRAIL berechnen (bei News 30% enger) ===
+            const newsAdjust = hasNews ? 0.7 : 1.0;
+            const phaseTrailDist = Math.max(atr * atrMultPhase * newsAdjust, oneR * 0.3);
             let trail: number;
             if (momentum === "AGAINST") {
               trail = isBuy ? currentPrice - phaseTrailDist * 0.6 : currentPrice + phaseTrailDist * 0.6;
