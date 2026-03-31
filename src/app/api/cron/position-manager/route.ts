@@ -137,61 +137,89 @@ export async function GET(request: Request) {
 
           log("INFO", `${account.mt_login} ${groupKey}: ${remaining} Pos | ${rMultiple.toFixed(1)}R | ATR:$${atr.toFixed(2)} | ${momentum} | Speed:${speed.toFixed(1)}x`);
 
-          // === R-MULTIPLE + TP-HIT FLOOR SYSTEM ===
-          // Floor = absolutes Minimum SL (geht nur in Profit-Richtung)
-          // Trail = dynamischer SL basierend auf ATR
-          // Effektiver SL = das BESSERE von Floor und Trail
+          // === HYBRID F: Floor + ATR Trail + Clamp + Ratchet ===
+          // Forschungsbasiert: Floor garantiert Minimum, ATR-Trail faengt Profit ein
+          // Clamp: SL NIE ueber/unter Preis. Ratchet: SL geht nur in Profit-Richtung.
 
-          let floor: number;
+          // Phase-spezifische Parameter
+          let floorR: number;    // Floor als R-Multiple von Entry
+          let atrMultPhase: number; // ATR Multiplikator fuer Trail
+          let minDist: number;   // Minimum-Abstand vom Preis (Broker-Schutz)
+
           if (remaining >= 4) {
-            // Alle 4 Splits offen — KEIN Floor, Original-SL
-            floor = originalSL || (isBuy ? entry - oneR : entry + oneR);
+            // PHASE 0: Alle offen → KEIN Trail, Original SL
+            floorR = -1; // Unter Entry = original SL
+            atrMultPhase = 0; // Kein Trail
+            minDist = 0;
           } else if (remaining === 3) {
-            // TP1 hit → Floor auf Entry (kein Puffer — Forschung zeigt BE-Puffer killt Trades)
-            floor = entry;
+            // PHASE 1: TP1 hit → Floor auf Entry (Breakeven), weiter ATR-Trail
+            floorR = 0; // Entry = 0R Profit
+            atrMultPhase = 2.0;
+            minDist = /xau|gold/i.test(symbol) ? 1.5 : 0.003;
           } else if (remaining === 2) {
-            // TP2 hit → Floor auf Entry + 1R (1x Risk als Profit gesichert)
-            floor = isBuy ? entry + oneR : entry - oneR;
+            // PHASE 2: TP2 hit → Floor auf +0.5R, engerer Trail
+            floorR = 0.5;
+            atrMultPhase = 1.5;
+            minDist = /xau|gold/i.test(symbol) ? 1.0 : 0.002;
           } else {
-            // TP3 hit, Runner → Floor auf Entry + 2R
-            floor = isBuy ? entry + oneR * 2 : entry - oneR * 2;
+            // PHASE 3: TP3 hit, Runner → Floor auf +1R, engster Trail
+            floorR = 1.0;
+            atrMultPhase = 1.0;
+            minDist = /xau|gold/i.test(symbol) ? 0.8 : 0.001;
           }
 
-          // Continuous ATR Trail (nur wenn im Profit)
-          let trail = isBuy ? currentPrice - trailDist : currentPrice + trailDist;
-
-          // Momentum-Anpassung: AGAINST → enger, WITH → lockerer
-          if (momentum === "AGAINST") {
-            trail = isBuy ? currentPrice - trailDist * 0.6 : currentPrice + trailDist * 0.6;
-          } else if (momentum === "WITH") {
-            trail = isBuy ? currentPrice - trailDist * 1.3 : currentPrice + trailDist * 1.3;
-          }
-
-          // Effektiver SL = das Bessere von Floor und Trail
-          let effectiveSL: number;
-          if (isBuy) {
-            effectiveSL = Math.max(floor, trail);
-          } else {
-            effectiveSL = Math.min(floor, trail);
-          }
-
-          // KRITISCH: SL darf NIE ueber/unter dem aktuellen Preis liegen!
-          // BUY: SL muss UNTER currentPrice sein (mindestens $1 Abstand fuer Gold)
-          // SELL: SL muss UEBER currentPrice sein
-          const minBrokerDist = /xau|gold/i.test(symbol) ? 1.5 : 0.001; // Broker Minimum + Spread
-          if (isBuy && effectiveSL >= currentPrice - minBrokerDist) {
-            effectiveSL = currentPrice - minBrokerDist;
-            log("WARN", `${groupKey}: Floor/Trail ${Math.round(floor*100)/100}/${Math.round(trail*100)/100} UEBER Preis ${currentPrice} — capped auf ${effectiveSL.toFixed(2)}`);
-          }
-          if (!isBuy && effectiveSL <= currentPrice + minBrokerDist) {
-            effectiveSL = currentPrice + minBrokerDist;
-            log("WARN", `${groupKey}: Floor/Trail UNTER Preis — capped auf ${effectiveSL.toFixed(2)}`);
-          }
-
-          // Nur Trail wenn im Profit (rMultiple > 0) und nicht FRESH
           const ageMin = groupPos[0].time ? (Date.now() - new Date(groupPos[0].time).getTime()) / 60000 : 999;
-          if (rMultiple <= 0 || ageMin < 2) {
-            effectiveSL = originalSL || (isBuy ? entry - oneR : entry + oneR);
+
+          // Phase 0 oder FRESH oder im Verlust → Original SL behalten
+          if (remaining >= 4 || rMultiple <= 0 || ageMin < 2) {
+            // KEIN Trail — original SL behalten
+            // Trotzdem Exits pruefen (weiter unten)
+          } else {
+            // === FLOOR berechnen ===
+            const floor = isBuy ? entry + oneR * floorR : entry - oneR * floorR;
+
+            // === ATR TRAIL berechnen ===
+            const phaseTrailDist = Math.max(atr * atrMultPhase, oneR * 0.3);
+            let trail: number;
+            if (momentum === "AGAINST") {
+              trail = isBuy ? currentPrice - phaseTrailDist * 0.6 : currentPrice + phaseTrailDist * 0.6;
+            } else if (momentum === "WITH") {
+              trail = isBuy ? currentPrice - phaseTrailDist * 1.3 : currentPrice + phaseTrailDist * 1.3;
+            } else {
+              trail = isBuy ? currentPrice - phaseTrailDist : currentPrice + phaseTrailDist;
+            }
+
+            // === EFFECTIVE SL = max(Floor, Trail) fuer BUY, min fuer SELL ===
+            let effectiveSL = isBuy ? Math.max(floor, trail) : Math.min(floor, trail);
+
+            // === CLAMP: SL darf NIE auf der falschen Seite vom Preis sein ===
+            if (isBuy) effectiveSL = Math.min(effectiveSL, currentPrice - minDist);
+            else effectiveSL = Math.max(effectiveSL, currentPrice + minDist);
+
+            // === ROUNDING ===
+            const newSL = Math.round(effectiveSL * 100) / 100;
+
+            // === RATCHET: SL geht nur in Profit-Richtung ===
+            for (const pos of groupPos) {
+              const currentSL = pos.stopLoss || 0;
+              const isBetter = isBuy
+                ? newSL > currentSL + 0.1
+                : currentSL === 0 ? true : newSL < currentSL - 0.1;
+              const notTooClose = Math.abs(currentPrice - newSL) >= Math.max(minDist, 0.5);
+
+              if (isBetter && notTooClose) {
+                try {
+                  await metaApiFetch(`${CLIENT_BASE}/users/current/accounts/${accountId}/trade`, metaApiToken, {
+                    method: "POST",
+                    body: JSON.stringify({ actionType: "POSITION_MODIFY", positionId: pos.id, stopLoss: newSL, takeProfit: pos.takeProfit ?? undefined }),
+                  });
+                  log("INFO", `SL-TRAIL ${symbol} ${pos.id}: ${currentSL}→${newSL} | Phase ${4-remaining} | Floor:${Math.round(floor*100)/100} Trail:${Math.round(trail*100)/100} | ${rMultiple.toFixed(1)}R ${momentum}`);
+                  modifications.push({ symbol, posId: pos.id, action: "sl_trail", oldSL: currentSL, newSL, rMultiple: +rMultiple.toFixed(2), phase: 4 - remaining, momentum });
+                } catch (e: any) {
+                  log("WARN", `SL-Trail FEHLER ${symbol} ${pos.id}: ${e.message} (versuchter SL: ${newSL}, Preis: ${currentPrice})`);
+                }
+              }
+            }
           }
 
           // === EXIT ENTSCHEIDUNGEN (vor SL-Trail) ===
@@ -237,27 +265,7 @@ export async function GET(request: Request) {
             continue;
           }
 
-          // === SL MODIFICATION (fuer alle Positionen der Gruppe) ===
-          const newSL = Math.round(effectiveSL * 100) / 100;
-
-          for (const pos of groupPos) {
-            const currentSL = pos.stopLoss || 0;
-            const isBetter = isBuy
-              ? newSL > currentSL + 0.1  // BUY: neuer SL hoeher als alter
-              : currentSL === 0 ? true : newSL < currentSL - 0.1; // SELL: neuer SL niedriger (oder kein SL gesetzt)
-            const notTooClose = Math.abs(currentPrice - newSL) >= Math.max(atr * 0.3, 0.5); // Min 30% ATR oder $0.50
-
-            if (isBetter && notTooClose) {
-              try {
-                await metaApiFetch(`${CLIENT_BASE}/users/current/accounts/${accountId}/trade`, metaApiToken, {
-                  method: "POST",
-                  body: JSON.stringify({ actionType: "POSITION_MODIFY", positionId: pos.id, stopLoss: newSL, takeProfit: pos.takeProfit ?? undefined }),
-                });
-                log("INFO", `SL-TRAIL ${symbol} ${pos.id}: ${currentSL}→${newSL} | ${rMultiple.toFixed(1)}R | Floor:${Math.round(floor*100)/100} | Trail:${Math.round(trail*100)/100} | ${remaining}pos | ${momentum}`);
-                modifications.push({ symbol, posId: pos.id, action: "sl_trail", oldSL: currentSL, newSL, rMultiple: +rMultiple.toFixed(2), remaining, momentum });
-              } catch (e: any) { log("WARN", `SL-Trail fehlgeschlagen: ${e.message}`); }
-            }
-          }
+          // SL-Trail ist oben im Phase-System integriert — kein separater Block noetig
         }
       } catch (err: any) {
         log("ERROR", `Account ${accountId}: ${err.message}`);
