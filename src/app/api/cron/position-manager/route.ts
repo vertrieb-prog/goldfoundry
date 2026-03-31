@@ -175,53 +175,62 @@ async function managePosition(
 
   if (state === "FRESH") return null;
 
-  // === TP-BASIERTES SL-NACHZIEHEN ===
-  // Nutzt das ECHTE TP der Position (nicht geschaetzt)
-  // Wenn Preis 80%+ zum TP gelaufen → SL auf Breakeven (mindestens)
-  // Wenn Preis ueber TP hinaus (Runner) → SL eng nachziehen
+  // === INTELLIGENTES SL-NACHZIEHEN ===
+  // Nicht zu eng (Trade Raum geben), aber bei Umkehr sofort raus
+  // Nutzt echtes TP + Momentum fuer Entscheidung
   if (takeProfit && openPrice && currentPrice) {
     const tpDist = Math.abs(takeProfit - openPrice);
-    if (tpDist < pip) { /* TP zu nah an Entry, skip */ }
-    else {
-    const progressToTp = isBuy
-      ? (currentPrice - openPrice) / tpDist   // 0 = Entry, 1.0 = TP
-      : (openPrice - currentPrice) / tpDist;
+    if (tpDist >= pip) {
+      const progressToTp = isBuy
+        ? (currentPrice - openPrice) / tpDist
+        : (openPrice - currentPrice) / tpDist;
 
-    if (progressToTp > 0 && stopLoss) {
-      let targetSL = stopLoss;
+      if (progressToTp > 0 && stopLoss) {
+        let targetSL = stopLoss;
 
-      if (progressToTp >= 1.0) {
-        // Preis UEBER TP (Runner laeuft) → SL knapp unter TP
-        targetSL = isBuy
-          ? Math.max(targetSL, takeProfit - Math.abs(tpDist * 0.1))  // SL = TP - 10%
-          : Math.min(targetSL, takeProfit + Math.abs(tpDist * 0.1));
-      } else if (progressToTp >= 0.8) {
-        // 80%+ zum TP → SL auf halben Weg (Entry + 50% Profit)
-        targetSL = isBuy
-          ? Math.max(targetSL, openPrice + tpDist * 0.5)
-          : Math.min(targetSL, openPrice - tpDist * 0.5);
-      } else if (progressToTp >= 0.5) {
-        // 50%+ zum TP → SL auf Breakeven
-        targetSL = isBuy
-          ? Math.max(targetSL, openPrice + pip)
-          : Math.min(targetSL, openPrice - pip);
-      }
+        if (progressToTp >= 1.0) {
+          // Preis UEBER TP → SL eng nachziehen, aber Raum lassen
+          // Bei Momentum WITH: SL = TP - 20% (Raum fuer Weiterfahrt)
+          // Bei Momentum AGAINST: SL = TP - 5% (eng, fast am TP)
+          const slack = momentum === "WITH" ? 0.2 : momentum === "NEUTRAL" ? 0.1 : 0.05;
+          targetSL = isBuy
+            ? Math.max(targetSL, takeProfit - tpDist * slack)
+            : Math.min(targetSL, takeProfit + tpDist * slack);
+        } else if (progressToTp >= 0.7) {
+          // 70%+ zum TP → SL auf 30% Profit (nicht BE — gibt Raum fuer Dip)
+          targetSL = isBuy
+            ? Math.max(targetSL, openPrice + tpDist * 0.3)
+            : Math.min(targetSL, openPrice - tpDist * 0.3);
+        } else if (progressToTp >= 0.4) {
+          // 40%+ zum TP → SL auf Breakeven + kleiner Puffer
+          targetSL = isBuy
+            ? Math.max(targetSL, openPrice + pip * 2) // +2 Pips ueber Entry
+            : Math.min(targetSL, openPrice - pip * 2);
+        }
 
-      const targetSLRounded = Math.round(targetSL * 100) / 100;
-      const needsMove = isBuy ? targetSLRounded > stopLoss + pip : targetSLRounded < stopLoss - pip;
+        // Bei Momentum AGAINST + im Profit → ENGER nachziehen
+        if (momentum === "AGAINST" && progressToTp >= 0.3) {
+          const tighterSL = isBuy
+            ? Math.max(targetSL, currentPrice - tpDist * 0.15) // Nur 15% Puffer
+            : Math.min(targetSL, currentPrice + tpDist * 0.15);
+          targetSL = isBuy ? Math.max(targetSL, tighterSL) : Math.min(targetSL, tighterSL);
+        }
 
-      if (needsMove && Math.abs(currentPrice - targetSLRounded) >= pip * 2) {
-        try {
-          await metaApiFetch(tradeUrl, token, {
-            method: "POST",
-            body: JSON.stringify({ actionType: "POSITION_MODIFY", positionId: posId, stopLoss: targetSLRounded, takeProfit: takeProfit ?? undefined }),
-          });
-          log("INFO", `TP-TRAIL ${symbol} ${posId}: SL ${stopLoss}→${targetSLRounded} (${(progressToTp * 100).toFixed(0)}% zum TP)`);
-          return { symbol, posId, action: "tp_trail", oldSL: stopLoss, newSL: targetSLRounded, progress: +(progressToTp * 100).toFixed(0) };
-        } catch (e: any) { log("WARN", `TP-Trail fehlgeschlagen: ${e.message}`); }
+        const targetSLRounded = Math.round(targetSL * 100) / 100;
+        const needsMove = isBuy ? targetSLRounded > stopLoss + pip : targetSLRounded < stopLoss - pip;
+
+        if (needsMove && Math.abs(currentPrice - targetSLRounded) >= pip * 2) {
+          try {
+            await metaApiFetch(tradeUrl, token, {
+              method: "POST",
+              body: JSON.stringify({ actionType: "POSITION_MODIFY", positionId: posId, stopLoss: targetSLRounded, takeProfit: takeProfit ?? undefined }),
+            });
+            log("INFO", `TP-TRAIL ${symbol} ${posId}: SL ${stopLoss}→${targetSLRounded} (${(progressToTp * 100).toFixed(0)}% zum TP, ${momentum})`);
+            return { symbol, posId, action: "tp_trail", oldSL: stopLoss, newSL: targetSLRounded, progress: +(progressToTp * 100).toFixed(0), momentum };
+          } catch (e: any) { log("WARN", `TP-Trail fehlgeschlagen: ${e.message}`); }
+        }
       }
     }
-    } // end tpDist check
   }
 
   // CRITICAL — sofort schliessen

@@ -20,6 +20,7 @@ console.log(`  CRON_SECRET: ${CRON_SECRET.slice(0, 10)}...`);
 const SIGNAL_URL = "https://goldfoundry.de/api/cron/telegram-signals";
 const TICK_URL = "https://goldfoundry.de/api/cron/engine-tick";
 const POS_MGR_URL = "https://goldfoundry.de/api/cron/position-manager";
+const RE_ENTRY_URL = "https://goldfoundry.de/api/cron/re-entry";
 const INTERVAL = 30_000;
 
 let tickCount = 0;
@@ -62,10 +63,21 @@ async function tick() {
     // 2. Engine Tick (13 Strategien)
     const d1 = await safeFetch(TICK_URL, "ENGINE");
 
-    // 3. Position Manager (DCA, Trailing, Pyramiding, Time Decay)
+    // 3. Position Manager (Breakeven, Trailing, Reversal)
     const d2 = await safeFetch(POS_MGR_URL, "POS-MGR");
     const mods = d2?.modifications?.length || 0;
     totalMods += mods;
+
+    // 4. Re-Entry Check (alle 5 Min, nicht jeden Tick)
+    if (tickCount % 10 === 0) {
+      const d3 = await safeFetch(RE_ENTRY_URL, "RE-ENTRY");
+      if (d3?.reEntries?.length > 0) {
+        for (const re of d3.reEntries) {
+          console.log(`\n[${ts}] RE-ENTRY: ${re.direction} ${re.symbol} @ ${re.entry} (${re.placed}/4 Orders) | ${re.account}`);
+        }
+        totalMods += d3.reEntries.length;
+      }
+    }
 
     // FIX #6: Immer loggen bei Aktionen, sonst alle 10 Min
     if (executed > 0) {
