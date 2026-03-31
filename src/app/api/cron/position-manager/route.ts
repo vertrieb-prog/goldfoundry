@@ -98,6 +98,75 @@ export async function GET(request: Request) {
 
         log("INFO", `${account.mt_login}: ${managedPositions.length} Positionen`);
 
+        // === TP-HIT ERKENNUNG ===
+        // Gruppiere nach Symbol+Richtung. Wenn eine Gruppe weniger als 4 Positionen hat,
+        // wurde mindestens ein TP getroffen → SL der verbleibenden nachziehen.
+        // TP1 hit (3 uebrig) → SL auf Entry
+        // TP2 hit (2 uebrig) → SL auf TP1 Level
+        // TP3 hit (1 uebrig, Runner) → SL auf TP2 Level
+        const groups = new Map<string, any[]>();
+        for (const pos of managedPositions) {
+          const dir = pos.type?.replace("POSITION_TYPE_", "") || "?";
+          const key = `${pos.symbol}-${dir}`;
+          if (!groups.has(key)) groups.set(key, []);
+          groups.get(key)!.push(pos);
+        }
+
+        for (const [groupKey, groupPositions] of groups) {
+          const remaining = groupPositions.length;
+          // Sortiere nach TP-Abstand (naehstes TP zuerst)
+          const isBuy = groupPositions[0].type === "POSITION_TYPE_BUY";
+          const sortedByTp = [...groupPositions].sort((a, b) => {
+            const aTp = a.takeProfit || (isBuy ? 999999 : 0);
+            const bTp = b.takeProfit || (isBuy ? 999999 : 0);
+            return isBuy ? aTp - bTp : bTp - aTp; // Naehstes TP zuerst
+          });
+
+          if (remaining < 4 && remaining > 0) {
+            // Mindestens 1 TP wurde getroffen — SL der verbleibenden nachziehen
+            const entry = groupPositions[0].openPrice;
+            const pip = pipSize(groupPositions[0].symbol);
+            const minBuf = /xau|gold/i.test(groupPositions[0].symbol) ? 1.0 : 0.001;
+
+            let newSL: number;
+            if (remaining === 3) {
+              // TP1 hit → SL auf Entry + Puffer (Breakeven)
+              newSL = isBuy ? entry + minBuf : entry - minBuf;
+              log("INFO", `${groupKey}: TP1 HIT → SL auf BE ${newSL} fuer ${remaining} verbleibende`);
+            } else if (remaining === 2) {
+              // TP2 hit → SL auf TP1 Level (das naehste verbleibende TP als Referenz)
+              // Nutze 30% des TP-Abstands der naehsten Position als SL
+              const nearestTpDist = sortedByTp[0].takeProfit ? Math.abs(sortedByTp[0].takeProfit - entry) : 0;
+              newSL = isBuy ? entry + nearestTpDist * 0.3 : entry - nearestTpDist * 0.3;
+              if (!nearestTpDist) newSL = isBuy ? entry + minBuf : entry - minBuf; // Fallback BE
+              log("INFO", `${groupKey}: TP2 HIT → SL auf ${newSL} fuer ${remaining} verbleibende`);
+            } else {
+              // TP3 hit → Runner laeuft, SL eng nachziehen
+              const nearestTpDist = sortedByTp[0].takeProfit ? Math.abs(sortedByTp[0].takeProfit - entry) : 0;
+              newSL = isBuy ? entry + nearestTpDist * 0.5 : entry - nearestTpDist * 0.5;
+              if (!nearestTpDist) newSL = isBuy ? entry + minBuf * 3 : entry - minBuf * 3;
+              log("INFO", `${groupKey}: TP3 HIT → Runner SL auf ${newSL}`);
+            }
+
+            const newSLRounded = Math.round(newSL * 100) / 100;
+            for (const pos of groupPositions) {
+              const currentSL = pos.stopLoss || 0;
+              const shouldMove = isBuy ? newSLRounded > currentSL + pip : (currentSL > 0 && newSLRounded < currentSL - pip);
+              if (shouldMove) {
+                try {
+                  await metaApiFetch(`${clientBase}/users/current/accounts/${accountId}/trade`, metaApiToken, {
+                    method: "POST",
+                    body: JSON.stringify({ actionType: "POSITION_MODIFY", positionId: pos.id, stopLoss: newSLRounded, takeProfit: pos.takeProfit ?? undefined }),
+                  });
+                  log("INFO", `TP-HIT TRAIL ${pos.symbol} ${pos.id}: SL ${currentSL}→${newSLRounded} (${remaining} verbleibend)`);
+                  modifications.push({ symbol: pos.symbol, posId: pos.id, action: "tp_hit_trail", oldSL: currentSL, newSL: newSLRounded, remaining });
+                } catch (e: any) { log("WARN", `TP-Hit Trail fehlgeschlagen: ${e.message}`); }
+              }
+            }
+          }
+        }
+
+        // Danach: Standard Position Management pro Position
         for (const pos of managedPositions) {
           const mod = await managePosition(pos, accountId, clientBase, metaApiToken, hasHighImpactNews);
           if (mod) modifications.push(mod);
