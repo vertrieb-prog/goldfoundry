@@ -352,7 +352,8 @@ export default function HomePage() {
   const openFunnel = () => setFunnelOpen(true);
   const mfx = stats?.myfxbook;
   const equity = mfx?.totalEquity ?? stats?.equity ?? 0;
-  const todayPnl = stats?.todayPnl ?? 0;
+  const pnl72h = stats?.todayPnl ?? 0;
+  const pct72h = mfx?.totalDaily ?? (stats?.balance ? Math.round(stats.todayPnl / stats.balance * 10000) / 100 : 0);
   const gain = mfx?.totalGain ?? stats?.gain ?? 0;
 
   return (
@@ -404,8 +405,8 @@ export default function HomePage() {
               style={{ display: "flex", gap: 20, justifyContent: "center", marginBottom: 40, flexWrap: "wrap" }}>
               {[
                 { label: "Equity", value: <><span>$</span><AnimCounter end={equity} /></>, color: "#d4a537" },
-                { label: "Heute", value: <><span>{todayPnl >= 0 ? "+" : "-"}$</span><AnimCounter end={Math.abs(todayPnl)} /></>, color: todayPnl >= 0 ? "#22c55e" : "#ef4444" },
-                { label: "Gain", value: <><span>+</span><AnimCounter end={Math.round(gain)} suffix="%" /></>, color: "#22c55e" },
+                { label: "72h Profit", value: <><span>{pnl72h >= 0 ? "+" : "-"}$</span><AnimCounter end={Math.abs(pnl72h)} /></>, color: pnl72h >= 0 ? "#22c55e" : "#ef4444" },
+                { label: "Gesamt-Gain", value: <><span>+</span><AnimCounter end={Math.round(gain)} suffix="%" /></>, color: "#22c55e" },
               ].map((stat) => (
                 <Card3D key={stat.label} intensity={10}>
                   <HoloPanel>
@@ -450,9 +451,10 @@ export default function HomePage() {
       {/* ═══ LIVE STATS BAR ═══ */}
       {stats && (
         <LiveStatsBar
-          equity={stats.myfxbook?.totalEquity ?? stats.equity}
-          todayPnl={stats.todayPnl}
+          pnl72h={stats.todayPnl}
+          pct72h={stats.myfxbook?.totalDaily ?? (stats.balance > 0 ? Math.round(stats.todayPnl / stats.balance * 10000) / 100 : 0)}
           winrate={stats.winrate}
+          dd72h={(stats.myfxbook as any)?.dd72h ?? 0}
           maxDd={stats.myfxbook?.totalDrawdown ?? stats.maxDd}
           activePositions={stats.activePositions}
         />
