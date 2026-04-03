@@ -32,7 +32,7 @@ export async function middleware(request: NextRequest) {
   if (process.env.NODE_ENV === "development" && !process.env.NEXT_PUBLIC_SUPABASE_URL) {
     if (niche) {
       const url = request.nextUrl.clone();
-      url.pathname = `/_subdomain${url.pathname}`;
+      url.pathname = `/subdomain-pages${url.pathname}`;
       const response = NextResponse.rewrite(url);
       response.headers.set("x-subdomain-niche", niche);
       return response;
@@ -66,10 +66,10 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // Subdomain-Seiten: Rewrite auf /_subdomain/ Route
+  // Subdomain-Seiten: Rewrite auf /subdomain-pages/ Route
   if (niche) {
     const url = request.nextUrl.clone();
-    url.pathname = `/_subdomain${url.pathname}`;
+    url.pathname = `/subdomain-pages${url.pathname}`;
     const response = NextResponse.rewrite(url);
     response.headers.set("x-subdomain-niche", niche);
     if (locale) response.headers.set("x-subdomain-locale", locale);
