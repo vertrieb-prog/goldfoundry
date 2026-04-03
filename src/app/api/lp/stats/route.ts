@@ -16,6 +16,8 @@ const CACHE_TTL = 30_000;
 let myfxCache: { data: any; ts: number } | null = null;
 const MYFX_CACHE_TTL = 5 * 60_000; // 5 min
 
+const STALE_THRESHOLD = 60 * 60 * 1000; // 1 hour — trigger update if older
+
 /** Fresh MyFXBook login + fetch accounts in one go (same IP) */
 async function fetchMyFXBook() {
   const email = process.env.MYFXBOOK_EMAIL ?? "";
@@ -39,6 +41,43 @@ async function fetchMyFXBook() {
   );
   const accData = await accRes.json();
   if (accData.error || !accData.accounts) return null;
+
+  // ── Check for stale accounts & trigger update ──────────────
+  const now = Date.now();
+  const staleIds: number[] = [];
+  for (const a of accData.accounts) {
+    const lastUpdate = a.lastUpdateDate ? new Date(a.lastUpdateDate).getTime() : 0;
+    if (isNaN(lastUpdate) || now - lastUpdate > STALE_THRESHOLD) {
+      staleIds.push(a.id);
+    }
+  }
+
+  if (staleIds.length > 0) {
+    console.log(`[MyFXBook] ${staleIds.length} stale account(s) detected, triggering update...`);
+    // Fire update requests for all stale accounts in parallel
+    await Promise.allSettled(
+      staleIds.map((id) =>
+        fetch(
+          `${MYFXBOOK_API}/update-account.json?session=${session}&id=${id}`,
+          { signal: AbortSignal.timeout(15000), cache: "no-store" }
+        ).then((r) => r.json()).then((d) => {
+          if (d.error) console.warn(`[MyFXBook] Update account ${id} failed: ${d.message}`);
+          else console.log(`[MyFXBook] Account ${id} update triggered`);
+        })
+      )
+    );
+
+    // Wait briefly for MyFXBook to process, then re-fetch accounts
+    await new Promise((r) => setTimeout(r, 3000));
+    const refreshRes = await fetch(
+      `${MYFXBOOK_API}/get-my-accounts.json?session=${session}`,
+      { signal: AbortSignal.timeout(10000), cache: "no-store" }
+    );
+    const refreshData = await refreshRes.json();
+    if (!refreshData.error && refreshData.accounts) {
+      accData.accounts = refreshData.accounts;
+    }
+  }
 
   const accounts = accData.accounts.map((a: any) => ({
     id: a.id ?? 0,
@@ -104,9 +143,8 @@ async function fetchMyFXBook() {
   ]);
 
   const totalDeposits = accounts.reduce((s: number, a: any) => s + a.deposits, 0);
-  const totalGain = totalDeposits > 0
-    ? accounts.reduce((s: number, a: any) => s + a.gain * (a.deposits / totalDeposits), 0)
-    : 0;
+  const totalProfit = accounts.reduce((s: number, a: any) => s + a.profit, 0);
+  const totalGain = totalDeposits > 0 ? (totalProfit / totalDeposits) * 100 : 0;
 
   return {
     accounts,
@@ -261,7 +299,7 @@ async function fetchStats() {
     equity: Math.round(mfxEquity * 100) / 100,
     balance: Math.round(mfxBalance * 100) / 100,
     todayPnl: mfxTodayPnl,
-    todayTrades: todayTrades.length,
+    todayTrades: allTodayTrades.length,
     winrate,
     maxDd: Math.round(mfxMaxDd * 10) / 10,
     gain: mfxGain,

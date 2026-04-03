@@ -7,6 +7,64 @@ import { NextResponse } from "next/server";
 const METAAPI_BASE = "https://mt-client-api-v1.london.agiliumtrade.ai";
 const METAAPI_TOKEN = process.env.METAAPI_TOKEN ?? "";
 const DD_LIMIT = 5.0;
+const MYFXBOOK_API = "https://www.myfxbook.com/api";
+
+// ---------- MyFXBook ----------
+
+let myfxCache: { data: any; ts: number } | null = null;
+const MYFX_CACHE_TTL = 5 * 60_000;
+
+async function fetchMyFXBook() {
+  const email = process.env.MYFXBOOK_EMAIL ?? "";
+  const password = process.env.MYFXBOOK_PASSWORD ?? "";
+  if (!email || !password) return null;
+
+  const loginRes = await fetch(
+    `${MYFXBOOK_API}/login.json?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`,
+    { signal: AbortSignal.timeout(10000), cache: "no-store" }
+  );
+  const loginData = await loginRes.json();
+  if (loginData.error) return null;
+
+  const session = loginData.session;
+  const accRes = await fetch(
+    `${MYFXBOOK_API}/get-my-accounts.json?session=${session}`,
+    { signal: AbortSignal.timeout(10000), cache: "no-store" }
+  );
+  const accData = await accRes.json();
+  if (accData.error || !accData.accounts) return null;
+
+  const accounts = accData.accounts.map((a: any) => ({
+    id: a.id, name: a.name, gain: a.gain ?? 0, absGain: a.absGain ?? 0,
+    daily: a.daily ?? 0, monthly: a.monthly ?? 0, drawdown: a.drawdown ?? 0,
+    balance: a.balance ?? 0, equity: a.equity ?? 0, profit: a.profit ?? 0,
+    pips: a.pips ?? 0, deposits: a.deposits ?? 0,
+  }));
+
+  const totalDeposits = accounts.reduce((s: number, a: any) => s + a.deposits, 0);
+  const totalProfit = accounts.reduce((s: number, a: any) => s + a.profit, 0);
+  return {
+    accounts,
+    totalGain: totalDeposits > 0 ? Math.round((totalProfit / totalDeposits) * 10000) / 100 : 0,
+    totalBalance: Math.round(accounts.reduce((s: number, a: any) => s + a.balance, 0) * 100) / 100,
+    totalEquity: Math.round(accounts.reduce((s: number, a: any) => s + a.equity, 0) * 100) / 100,
+    totalProfit: Math.round(totalProfit * 100) / 100,
+    totalDrawdown: Math.round(Math.max(...accounts.map((a: any) => a.drawdown)) * 100) / 100,
+    totalDaily: Math.round((totalDeposits > 0 ? accounts.reduce((s: number, a: any) => s + a.daily * (a.deposits / totalDeposits), 0) : 0) * 100) / 100,
+    totalMonthly: Math.round((totalDeposits > 0 ? accounts.reduce((s: number, a: any) => s + a.monthly * (a.deposits / totalDeposits), 0) : 0) * 100) / 100,
+  };
+}
+
+async function getMyfxData() {
+  try {
+    if (myfxCache && Date.now() - myfxCache.ts < MYFX_CACHE_TTL) return myfxCache.data;
+    const data = await fetchMyFXBook();
+    if (data) myfxCache = { data, ts: Date.now() };
+    return data;
+  } catch { return myfxCache?.data ?? null; }
+}
+
+// ---------- MetaApi ----------
 
 interface AccountInfo {
   equity: number;
@@ -267,10 +325,11 @@ export async function GET() {
       process.env.NODE_ENV === "development" &&
       !process.env.NEXT_PUBLIC_SUPABASE_URL
     ) {
-      const tradersData = await Promise.all(
-        TRADER_CONFIG.map(fetchTraderData)
-      );
-      return NextResponse.json(buildResponse(tradersData));
+      const [tradersData, myfx] = await Promise.all([
+        Promise.all(TRADER_CONFIG.map(fetchTraderData)),
+        getMyfxData(),
+      ]);
+      return NextResponse.json({ ...buildResponse(tradersData), myfxbook: myfx });
     }
 
     const supabase = createSupabaseServer();
@@ -282,12 +341,12 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Fetch all trader data in parallel
-    const tradersData = await Promise.all(
-      TRADER_CONFIG.map(fetchTraderData)
-    );
+    const [tradersData, myfx] = await Promise.all([
+      Promise.all(TRADER_CONFIG.map(fetchTraderData)),
+      getMyfxData(),
+    ]);
 
-    return NextResponse.json(buildResponse(tradersData));
+    return NextResponse.json({ ...buildResponse(tradersData), myfxbook: myfx });
   } catch (err) {
     console.error("[dashboard/overview] Error:", err);
     return NextResponse.json(
