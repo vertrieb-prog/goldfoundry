@@ -29,7 +29,7 @@ export async function generateDailyContent(): Promise<{
     return { ...result, skipped: ["Global article limit reached"] };
   }
 
-  // 2. Aktive Sites laden
+  // 2. Aktive Sites laden mit Artikel-Counts
   const { data: sites } = await db
     .from("subdomain_sites")
     .select("*")
@@ -39,19 +39,25 @@ export async function generateDailyContent(): Promise<{
     return { ...result, skipped: ["No active sites"] };
   }
 
-  // 3. Für jede Site: prüfen ob unter Limit, dann generieren
-  let dailyGenerated = 0;
-
+  // Artikel-Counts pro Site laden und nach wenigsten Artikeln sortieren
+  const sitesWithCounts: Array<SubdomainSite & { articleCount: number }> = [];
   for (const site of sites as SubdomainSite[]) {
-    if (dailyGenerated >= SUBDOMAIN_CONFIG.dailyArticleLimit) break;
-
-    const { count: siteArticles } = await db
+    const { count } = await db
       .from("subdomain_articles")
       .select("id", { count: "exact", head: true })
       .eq("site_id", site.id)
       .eq("status", "published");
+    sitesWithCounts.push({ ...site, articleCount: count || 0 });
+  }
+  sitesWithCounts.sort((a, b) => a.articleCount - b.articleCount);
 
-    if ((siteArticles || 0) >= site.article_limit) {
+  // 3. Für jede Site: prüfen ob unter Limit, dann generieren
+  let dailyGenerated = 0;
+
+  for (const site of sitesWithCounts) {
+    if (dailyGenerated >= SUBDOMAIN_CONFIG.dailyArticleLimit) break;
+
+    if (site.articleCount >= site.article_limit) {
       result.skipped.push(`${site.slug} (site limit reached)`);
       continue;
     }
