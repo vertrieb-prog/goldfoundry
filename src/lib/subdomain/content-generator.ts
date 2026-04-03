@@ -111,7 +111,7 @@ async function generateArticle(
     slug: string;
     excerpt: string;
     content: string;
-    seo_data: { meta_title: string; meta_description: string; keywords: string[] };
+    seo_data: { meta_title: string; meta_description: string; keywords: string[]; schema_org?: Record<string, unknown> };
     geo_data: { sources: string[]; statistics: string[]; qa_pairs: Array<{ question: string; answer: string }> };
   }>({
     prompt: SUBDOMAIN_PROMPTS.contentGeneration,
@@ -143,7 +143,12 @@ Erstelle einen ${contentType}-Artikel für die Subdomain ${site.slug}.goldfoundr
     content: enrichedContent,
     excerpt: generated.excerpt || "",
     content_type: contentType as SubdomainArticle["content_type"],
-    seo_data: generated.seo_data || { meta_title: generated.title, meta_description: "", keywords: [] },
+    seo_data: {
+      meta_title: generated.seo_data?.meta_title || generated.title,
+      meta_description: generated.seo_data?.meta_description || "",
+      keywords: generated.seo_data?.keywords || [],
+      schema_org: generated.seo_data?.schema_org || {},
+    },
     geo_data: generated.geo_data || { sources: [], statistics: [], qa_pairs: [] },
     internal_links: [],
   };
