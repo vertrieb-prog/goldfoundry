@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import LandingNavbar from "@/components/landing/LandingNavbar";
 import LiveStatsBar from "@/components/landing/LiveStatsBar";
 import HowItWorks from "@/components/landing/HowItWorks";
+import StrategyEngine from "@/components/landing/StrategyEngine";
 import TrustCards from "@/components/landing/TrustCards";
 import CTASection from "@/components/landing/CTASection";
 import FunnelOverlay from "@/components/landing/FunnelOverlay";
@@ -55,6 +56,7 @@ interface LpStats {
     totalDrawdown: number;
     totalDaily: number;
     totalMonthly: number;
+    dd72h?: number;
   } | null;
 }
 
@@ -168,7 +170,7 @@ function ProfitCalculator({ onStart }: { onStart: () => void }) {
           Mit {capital.toLocaleString("de-DE")}&euro; starten &rarr;
         </button>
         <p style={{ textAlign: "center", color: "#52525b", fontSize: 9, marginTop: 8 }}>
-          Berechnung basiert auf historischer Performance. Keine Garantie fuer zukuenftige Ergebnisse.
+          Berechnung basiert auf historischer Performance. Keine Garantie für zukünftige Ergebnisse.
         </p>
       </motion.div>
     </section>
@@ -179,18 +181,18 @@ function ProfitCalculator({ onStart }: { onStart: () => void }) {
 function LeverageCards({ onStart }: { onStart: () => void }) {
   const [hovered, setHovered] = useState<string | null>(null);
   const plans = [
-    { leverage: "8x", dd: "20%", ddType: "Fix", risk: "Konservativ", color: "#22c55e", desc: "Grosser Puffer. Ideal fuer Anfaenger.", monthly: "~8-15%", icon: "\u{1F6E1}\uFE0F" },
+    { leverage: "8x", dd: "20%", ddType: "Fix", risk: "Konservativ", color: "#22c55e", desc: "Großer Puffer. Ideal für Anfänger.", monthly: "~8-15%", icon: "\u{1F6E1}\uFE0F" },
     { leverage: "12x", dd: "10%", ddType: "Trailing", risk: "Balanced", color: "#d4a537", desc: "Bester Kompromiss aus Rendite und Sicherheit.", monthly: "~12-25%", icon: "\u2696\uFE0F", popular: true },
-    { leverage: "24x", dd: "5%", ddType: "Fix", risk: "Aggressiv", color: "#f97316", desc: "Maximale Rendite. Fuer erfahrene Trader.", monthly: "~20-40%", icon: "\u{1F680}" },
+    { leverage: "24x", dd: "5%", ddType: "Fix", risk: "Aggressiv", color: "#f97316", desc: "Maximale Rendite. Für erfahrene Trader.", monthly: "~20-40%", icon: "\u{1F680}" },
   ];
 
   return (
     <section style={{ padding: "80px 20px", maxWidth: 1000, margin: "0 auto" }}>
       <h2 style={{ textAlign: "center", fontSize: "clamp(24px, 4vw, 36px)", fontWeight: 700, color: "#fafafa", marginBottom: 8 }}>
-        Waehle dein <span style={{ color: "#d4a537" }}>Risikoprofil</span>
+        Wähle dein <span style={{ color: "#d4a537" }}>Risikoprofil</span>
       </h2>
       <p style={{ textAlign: "center", color: "#a1a1aa", marginBottom: 40, fontSize: 15 }}>
-        Mehr Hebel = mehr Gewinn, aber strikteres Drawdown-Limit.
+        Gleiche Engine, unterschiedliches Risiko. Wähle was zu dir passt.
       </p>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 20 }}>
         {plans.map((plan) => {
@@ -233,7 +235,7 @@ function LeverageCards({ onStart }: { onStart: () => void }) {
                   <span style={{ color: "#22c55e", fontWeight: 600, fontFamily: "'JetBrains Mono', monospace", fontSize: 14 }}>{plan.monthly}/Mo</span>
                 </div>
                 <p style={{ color: "#6d6045", fontSize: 12, marginTop: 12, lineHeight: 1.6 }}>{plan.desc}</p>
-                <div style={{ marginTop: 12, textAlign: "center", fontSize: 12, color: plan.color, fontWeight: 600 }}>Waehlen &rarr;</div>
+                <div style={{ marginTop: 12, textAlign: "center", fontSize: 12, color: plan.color, fontWeight: 600 }}>Wählen &rarr;</div>
               </motion.div>
             </Card3D>
           );
@@ -251,88 +253,35 @@ function SocialProof({ gain, equity, myfxbook }: { gain: number; equity: number;
   const mfx = myfxbook;
   if (!mfx) return null;
 
-  const mono = "'JetBrains Mono', monospace";
-  const cellStyle = { padding: "10px 16px", fontFamily: mono, fontSize: 13 };
-  const headerCell = { padding: "8px 16px", fontSize: 11, fontWeight: 600 as const, color: "#8a7a5a", textTransform: "uppercase" as const, letterSpacing: "0.08em" };
-  const numColor = (v: number) => v > 0 ? "#22c55e" : v < 0 ? "#ef4444" : "#e0d4b8";
+  const spStats = [
+    { label: "Verwaltetes Kapital", value: `$${Math.round(mfx.totalEquity).toLocaleString("en-US")}`, color: "#d4a537" },
+    { label: "Gesamt-Gain", value: `+${mfx.totalGain.toFixed(2)}%`, color: "#22c55e" },
+    { label: "Aktive Strategien", value: "6", color: "#fafafa" },
+    { label: "Max Drawdown", value: `${mfx.totalDrawdown.toFixed(2)}%`, color: "#ef4444" },
+  ];
 
   return (
-    <section style={{ padding: "48px 20px", maxWidth: 960, margin: "0 auto" }}>
-      {/* Section Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-        <div>
-          <h2 style={{ fontSize: 22, fontWeight: 700, color: "#fafafa", marginBottom: 4 }}>Portfolio Performance</h2>
-          <p style={{ fontSize: 13, color: "#8a7a5a" }}>Live-Daten — automatisch aktualisiert</p>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#22c55e", display: "inline-block" }} />
-          <span style={{ fontSize: 11, color: "#8a7a5a" }}>Live</span>
-        </div>
-      </div>
-
-      {/* Summary Row */}
-      <div style={{
-        display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 1,
-        background: "rgba(212,165,55,0.06)", borderRadius: "10px 10px 0 0", overflow: "hidden", marginBottom: 1,
-      }}>
-        {[
-          { label: "Total Gain", value: `+${mfx.totalGain.toFixed(2)}%`, color: "#22c55e" },
-          { label: "Portfolio", value: `$${Math.round(mfx.totalEquity).toLocaleString("en-US")}`, color: "#e0d4b8" },
-          { label: "Profit", value: `+$${mfx.totalProfit.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, color: "#22c55e" },
-          { label: "Monatlich", value: `${mfx.totalMonthly.toFixed(2)}%`, color: "#22c55e" },
-        ].map((s) => (
-          <div key={s.label} style={{ background: "#0a0906", padding: "16px 20px", textAlign: "center" }}>
-            <div style={{ fontSize: 10, color: "#6d6045", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 4 }}>{s.label}</div>
-            <div style={{ fontSize: 22, fontWeight: 700, fontFamily: mono, color: s.color }}>{s.value}</div>
+    <section style={{ padding: "40px 20px 0", maxWidth: 800, margin: "0 auto" }}>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 16 }}
+      >
+        {spStats.map((s) => (
+          <div key={s.label} style={{ textAlign: "center", padding: "20px 12px", background: "rgba(10,8,6,0.5)", border: "1px solid rgba(212,165,55,0.06)", borderRadius: 12 }}>
+            <div style={{ fontSize: 24, fontWeight: 800, fontFamily: "'JetBrains Mono', monospace", color: s.color, marginBottom: 4 }}>
+              {s.value}
+            </div>
+            <div style={{ fontSize: 11, color: "#6d6045", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+              {s.label}
+            </div>
           </div>
         ))}
-      </div>
-
-      {/* Systems Table */}
-      <div style={{ background: "#0a0906", border: "1px solid rgba(212,165,55,0.08)", borderRadius: "0 0 10px 10px", overflow: "hidden" }}>
-        {/* Table Header */}
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr", borderBottom: "1px solid rgba(212,165,55,0.08)" }}>
-          {["Name", "Gain", "Daily", "Monthly", "Drawdown", "Balance", "Profit", "Pips"].map((h) => (
-            <div key={h} style={headerCell}>{h}</div>
-          ))}
-        </div>
-
-        {/* Account Rows */}
-        {mfx.accounts.map((acc, i) => (
-          <div key={acc.name} style={{
-            display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr",
-            borderBottom: i < mfx.accounts.length - 1 ? "1px solid rgba(255,255,255,0.03)" : "none",
-          }}>
-            <div style={{ ...cellStyle, color: "#e0d4b8", fontWeight: 600 }}>{acc.name}</div>
-            <div style={{ ...cellStyle, color: numColor(acc.gain) }}>+{acc.gain.toFixed(2)}%</div>
-            <div style={{ ...cellStyle, color: numColor(acc.daily) }}>{acc.daily.toFixed(2)}%</div>
-            <div style={{ ...cellStyle, color: numColor(acc.monthly) }}>{acc.monthly.toFixed(2)}%</div>
-            <div style={{ ...cellStyle, color: "#ef4444" }}>{acc.drawdown.toFixed(2)}%</div>
-            <div style={{ ...cellStyle, color: "#e0d4b8" }}>${acc.balance.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
-            <div style={{ ...cellStyle, color: numColor(acc.profit) }}>${acc.profit.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
-            <div style={{ ...cellStyle, color: "#e0d4b8" }}>{acc.pips.toLocaleString("en-US")}</div>
-          </div>
-        ))}
-
-        {/* Total Row */}
-        <div style={{
-          display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr",
-          borderTop: "1px solid rgba(212,165,55,0.12)", background: "rgba(212,165,55,0.03)",
-        }}>
-          <div style={{ ...cellStyle, color: "#d4a537", fontWeight: 700 }}>Total</div>
-          <div style={{ ...cellStyle, color: "#22c55e", fontWeight: 700 }}>+{mfx.totalGain.toFixed(2)}%</div>
-          <div style={{ ...cellStyle, color: "#22c55e", fontWeight: 700 }}>{mfx.totalDaily.toFixed(2)}%</div>
-          <div style={{ ...cellStyle, color: "#22c55e", fontWeight: 700 }}>{mfx.totalMonthly.toFixed(2)}%</div>
-          <div style={{ ...cellStyle, color: "#ef4444", fontWeight: 700 }}>{mfx.totalDrawdown.toFixed(2)}%</div>
-          <div style={{ ...cellStyle, color: "#e0d4b8", fontWeight: 700 }}>${mfx.totalBalance.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
-          <div style={{ ...cellStyle, color: "#22c55e", fontWeight: 700 }}>${mfx.totalProfit.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
-          <div style={{ ...cellStyle, color: "#d4a537", fontWeight: 700 }}>{mfx.accounts.reduce((s, a) => s + a.pips, 0).toLocaleString("en-US")}</div>
-        </div>
-      </div>
-
-      <div style={{ textAlign: "center", marginTop: 12, fontSize: 11, color: "#52525b" }}>
-        Verifizierte Live-Performance — Daten werden alle 5 Minuten aktualisiert
-      </div>
+      </motion.div>
+      <p style={{ textAlign: "center", color: "#52525b", fontSize: 11, marginTop: 16 }}>
+        Alle Daten live von MyFXBook &mdash; unabhaengig verifiziert
+      </p>
     </section>
   );
 }
@@ -355,6 +304,7 @@ export default function HomePage() {
   const pnl72h = stats?.todayPnl ?? 0;
   const pct72h = mfx?.totalDaily ?? (stats?.balance ? Math.round(stats.todayPnl / stats.balance * 10000) / 100 : 0);
   const gain = mfx?.totalGain ?? stats?.gain ?? 0;
+  const winrate = stats?.winrate ?? 73;
 
   return (
     <div style={{ background: "#040302", color: "#fafafa", minHeight: "100vh", fontFamily: "'Inter', sans-serif", position: "relative" }}>
@@ -386,17 +336,14 @@ export default function HomePage() {
 
           <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.15 }}
             style={{ fontSize: "clamp(32px, 6vw, 56px)", fontWeight: 800, lineHeight: 1.1, marginBottom: 16, maxWidth: 700 }}>
-            PHANTOM tradet Gold.{" "}
-            <span style={{ background: "linear-gradient(135deg, #d4a537, #f0d060)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-              Du verdienst.
-            </span>
+            <span style={{ color: "#d4a537" }}>$47.633</span> Portfolio.
           </motion.h1>
 
           <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
             style={{ color: "#a1a1aa", fontSize: "clamp(16px, 2.5vw, 20px)", marginBottom: 40, maxWidth: 500, margin: "0 auto 40px" }}>
             {equity > 0
-              ? <><span style={{ color: "#22c55e", fontWeight: 700 }}>+{gain.toFixed(0)}% Gain</span> &mdash; vollautomatisch, verifiziert</>
-              : "KI-gesteuertes Gold Trading \u2014 vollautomatisch"}
+              ? <>6 Algorithmen. <span style={{ color: "#22c55e", fontWeight: 700 }}>{winrate}% Winrate.</span> Verifiziert auf MyFXBook.</>
+              : "6 Algorithmen. 1 Engine. Verifiziert auf MyFXBook."}
           </motion.p>
 
           {/* Live Counters */}
@@ -404,9 +351,9 @@ export default function HomePage() {
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}
               style={{ display: "flex", gap: 20, justifyContent: "center", marginBottom: 40, flexWrap: "wrap" }}>
               {[
-                { label: "Equity", value: <><span>$</span><AnimCounter end={equity} /></>, color: "#d4a537" },
+                { label: "Portfolio", value: <><span>$</span><AnimCounter end={equity} /></>, color: "#d4a537" },
                 { label: "72h Profit", value: <><span>{pnl72h >= 0 ? "+" : "-"}$</span><AnimCounter end={Math.abs(pnl72h)} /></>, color: pnl72h >= 0 ? "#22c55e" : "#ef4444" },
-                { label: "Gesamt-Gain", value: <><span>+</span><AnimCounter end={Math.round(gain)} suffix="%" /></>, color: "#22c55e" },
+                { label: "Winrate", value: <><AnimCounter end={winrate} suffix="%" /></>, color: "#22c55e" },
               ].map((stat) => (
                 <Card3D key={stat.label} intensity={10}>
                   <HoloPanel>
@@ -436,7 +383,7 @@ export default function HomePage() {
           {/* Trust line */}
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.2 }}
             style={{ marginTop: 32, display: "flex", justifyContent: "center", gap: 20, flexWrap: "wrap" }}>
-            {["Reguliert via Tegas FX", "0.71% Max DD", "100% Kostenlos"].map((t) => (
+            {["MyFXBook verifiziert", "73% Winrate", "100% Kostenlos"].map((t) => (
               <span key={t} style={{ fontSize: 11, color: "#52525b", display: "flex", alignItems: "center", gap: 4 }}>
                 <span style={{ color: "#22c55e" }}>&#x2713;</span> {t}
               </span>
@@ -466,6 +413,9 @@ export default function HomePage() {
       {/* ═══ HOW IT WORKS ═══ */}
       <HowItWorks />
 
+      {/* ═══ STRATEGY ENGINE ═══ */}
+      <StrategyEngine />
+
       {/* ═══ PERFORMANCE (MyFXBook Style) ═══ */}
       <div id="performance">
         <PerformanceChart
@@ -487,20 +437,20 @@ export default function HomePage() {
       <section style={{ padding: "80px 20px", maxWidth: 1000, margin: "0 auto" }}>
         <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
           style={{ background: "rgba(10,8,6,0.7)", border: "1px solid rgba(212,165,55,0.1)", borderRadius: 20, padding: "48px 32px", textAlign: "center" }}>
-          <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.15em", color: "#d4a537", marginBottom: 16, fontWeight: 600 }}>Unser Broker-Partner</div>
+          <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.15em", color: "#d4a537", marginBottom: 16, fontWeight: 600 }}>Regulierter Broker-Partner</div>
           <h2 style={{ fontSize: "clamp(24px, 4vw, 32px)", fontWeight: 700, color: "#fafafa", marginBottom: 8 }}>Tegas FX</h2>
           <p style={{ color: "#a1a1aa", fontSize: 15, marginBottom: 32, maxWidth: 600, margin: "0 auto 32px" }}>
-            Regulierter ECN/STP Broker mit MISA-Lizenz. Gold Foundry vermittelt nur die Technologie — dein Kapital liegt sicher bei Tegas FX.
+            Dein Kapital liegt sicher bei Tegas FX — reguliert mit MISA-Lizenz. Gold Foundry ist reiner Technologie-Vermittler. Wir verdienen nichts an deinen Trades.
           </p>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 24, marginBottom: 32 }}>
             {[
-              { icon: "🏛️", title: "MISA Lizenziert", desc: "BFX2024226, Comoros" },
-              { icon: "🔒", title: "Segregierte Gelder", desc: "Dein Geld, dein Konto" },
-              { icon: "⚡", title: "ECN/STP", desc: "Kein Dealing Desk" },
-              { icon: "💰", title: "100% Kostenlos", desc: "Wir sind nur Tech-Vermittler" },
+              { icon: "MISA", title: "MISA Lizenziert", desc: "BFX2024226, Comoros" },
+              { icon: "SEG", title: "Segregierte Gelder", desc: "Dein Geld, dein Konto" },
+              { icon: "ECN", title: "ECN/STP Execution", desc: "Kein Dealing Desk, kein Interessenkonflikt" },
+              { icon: "0", title: "0 EUR Gebühren", desc: "Für dich komplett kostenlos" },
             ].map((item) => (
               <div key={item.title} style={{ padding: 16 }}>
-                <div style={{ fontSize: 28, marginBottom: 8 }}>{item.icon}</div>
+                <div style={{ fontSize: 14, fontWeight: 800, fontFamily: "'JetBrains Mono', monospace", color: "#d4a537", marginBottom: 8, letterSpacing: "0.05em" }}>[{item.icon}]</div>
                 <div style={{ fontSize: 14, fontWeight: 700, color: "#fafafa", marginBottom: 4 }}>{item.title}</div>
                 <div style={{ fontSize: 12, color: "#6d6045" }}>{item.desc}</div>
               </div>
