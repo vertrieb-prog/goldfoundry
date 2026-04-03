@@ -106,28 +106,38 @@ async function generateArticle(
   const locale = site.locale || "de";
   const disclaimer = SUBDOMAIN_PROMPTS.riskDisclaimer[locale] || SUBDOMAIN_PROMPTS.riskDisclaimer.de;
 
-  const generated = await jsonCall<{
+  let generated: {
     title: string;
     slug: string;
     excerpt: string;
     content: string;
     seo_data: { meta_title: string; meta_description: string; keywords: string[]; schema_org?: Record<string, unknown> };
     geo_data: { sources: string[]; statistics: string[]; qa_pairs: Array<{ question: string; answer: string }> };
-  }>({
-    prompt: SUBDOMAIN_PROMPTS.contentGeneration,
-    message: `NISCHE: ${site.niche_topic}
+  } | null = null;
+
+  try {
+    generated = await jsonCall({
+      prompt: SUBDOMAIN_PROMPTS.contentGeneration,
+      message: `NISCHE: ${site.niche_topic}
 KEYWORDS: ${site.niche_keywords.join(", ")}
 CONTENT-TYP: ${contentType}
 SPRACHE: ${locale === "de" ? "Deutsch" : "English"}
 BEREITS EXISTIERENDE SLUGS (nicht wiederholen): ${existingSlugs.join(", ") || "keine"}
 
 Erstelle einen ${contentType}-Artikel für die Subdomain ${site.slug}.goldfoundry.de.
-800-1200 Wörter. HTML mit H2/H3 Struktur.`,
-    model: MODELS.fast,
-    maxTokens: 2500,
-  });
+400-600 Wörter. HTML mit H2/H3 Struktur. Kompakt aber informativ.`,
+      model: MODELS.fast,
+      maxTokens: 4000,
+    });
+  } catch (err) {
+    console.error("[SUBDOMAIN-CONTENT] AI call failed:", err instanceof Error ? err.message : err);
+    return null;
+  }
 
-  if (!generated || !generated.title || !generated.content) return null;
+  if (!generated || !generated.title || !generated.content) {
+    console.error("[SUBDOMAIN-CONTENT] Invalid AI response for", site.slug, contentType);
+    return null;
+  }
 
   const linkedContent = autoLink(generated.content, `/${generated.slug}`);
 
