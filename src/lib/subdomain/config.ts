@@ -7,7 +7,7 @@ export const SUBDOMAIN_CONFIG = {
   maxTotalArticles: 50,
   maxSites: 10,
   defaultArticleLimit: 5,
-  dailyArticleLimit: 2,
+  dailyArticleLimit: 6,
   defaultLocale: "de",
   supportedLocales: ["de", "en"],
   mainDomain: "goldfoundry.de",
