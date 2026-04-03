@@ -21,8 +21,8 @@ export async function discoverNiches(): Promise<{
     .select("slug, status")
     .order("created_at");
 
-  const existingSlugs = (existingSites || []).map((s: SubdomainSite) => s.slug);
-  const activeSites = (existingSites || []).filter((s: SubdomainSite) => s.status !== "paused");
+  const existingSlugs = (existingSites || []).map((s: any) => s.slug);
+  const activeSites = (existingSites || []).filter((s: any) => s.status !== "paused");
 
   // Max Sites erreicht?
   if (activeSites.length >= SUBDOMAIN_CONFIG.maxSites) {
