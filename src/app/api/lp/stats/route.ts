@@ -30,7 +30,10 @@ async function fetchMyFXBook() {
     { signal: AbortSignal.timeout(10000), cache: "no-store" }
   );
   const loginData = await loginRes.json();
-  if (loginData.error) return null;
+  if (loginData.error) {
+    console.error(`[MyFXBook] Login failed: ${loginData.message} (email: ${email.slice(0, 3)}***)`);
+    return null;
+  }
 
   const session = loginData.session;
 
