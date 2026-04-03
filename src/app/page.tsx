@@ -1,808 +1,520 @@
 "use client";
 
-import { useState, useEffect, useRef, FormEvent } from "react";
+import React, { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
-import GoldFoundryLogo from "@/components/GoldFoundryLogo";
+import { motion } from "framer-motion";
+import LandingNavbar from "@/components/landing/LandingNavbar";
+import LiveStatsBar from "@/components/landing/LiveStatsBar";
+import HowItWorks from "@/components/landing/HowItWorks";
+import TrustCards from "@/components/landing/TrustCards";
+import CTASection from "@/components/landing/CTASection";
+import FunnelOverlay from "@/components/landing/FunnelOverlay";
+import Card3D from "@/components/ui/Card3D";
+import HoloPanel from "@/components/ui/HoloPanel";
 
-/* ─── DESIGN SYSTEM ─── */
-const T = {
-  bg: "#040302", bg2: "#0a0806", bg3: "#110e09",
-  gold: "#d4a537", goldDk: "#9e7a1f", goldLt: "#f0d060",
-  text: "#cec0a0", dim: "#6d6045", bright: "#fff6e4",
-  red: "#ff5045",
-  border: "rgba(212,165,55,0.08)",
-  glow: "rgba(212,165,55,0.15)",
-  glass: "rgba(10,8,6,0.7)",
-  mono: "'JetBrains Mono', monospace",
-  sans: "'Outfit', sans-serif",
-  grad: "linear-gradient(135deg, #d4a537, #f0d060)",
-};
+const HeroBackground3D = dynamic(() => import("@/components/landing/HeroBackground3D"), { ssr: false });
+const PerformanceChart = dynamic(() => import("@/components/landing/PerformanceChart"), { ssr: false });
 
-const SECTION_PAD: React.CSSProperties = { padding: "80px 20px", maxWidth: 1100, margin: "0 auto" };
-const GLASS: React.CSSProperties = { background: T.glass, backdropFilter: "blur(12px)", border: `1px solid rgba(212,165,55,0.1)`, borderRadius: 16 };
+interface MyfxAccount {
+  id?: number;
+  name: string;
+  gain: number;
+  absGain: number;
+  daily: number;
+  monthly: number;
+  drawdown: number;
+  balance: number;
+  equity: number;
+  profit: number;
+  pips: number;
+  deposits: number;
+}
 
-/* ─── HELPER: Counter ─── */
-function Counter({ end, suffix = "", prefix = "" }: { end: number; suffix?: string; prefix?: string }) {
-  const ref = useRef<HTMLSpanElement>(null);
+interface LpStats {
+  equity: number;
+  balance: number;
+  todayPnl: number;
+  todayTrades: number;
+  winrate: number;
+  maxDd: number;
+  gain: number;
+  activePositions: number;
+  equityCurve: { date: string; equity: number }[];
+  growthCurve: { date: string; growth: number; equity: number }[];
+  drawdownCurve: { date: string; dd: number }[];
+  recentTrades: { direction: string; symbol: string; lots: number; pnl: number; time: string }[];
+  myfxbook?: {
+    accounts: MyfxAccount[];
+    dailyGains?: any[];
+    dailyDatas?: any[];
+    totalGain: number;
+    totalBalance: number;
+    totalEquity: number;
+    totalProfit: number;
+    totalDrawdown: number;
+    totalDaily: number;
+    totalMonthly: number;
+  } | null;
+}
+
+/* ─── Animated Counter ─── */
+function AnimCounter({ end, prefix = "", suffix = "", duration = 2000 }: { end: number; prefix?: string; suffix?: string; duration?: number }) {
   const [val, setVal] = useState(0);
   useEffect(() => {
-    const obs = new IntersectionObserver(([e]) => {
-      if (e.isIntersecting) {
-        let start = 0;
-        const step = end / 40;
-        const id = setInterval(() => {
-          start += step;
-          if (start >= end) { setVal(end); clearInterval(id); }
-          else setVal(Math.floor(start));
-        }, 30);
-        obs.disconnect();
-      }
-    }, { threshold: 0.5 });
-    if (ref.current) obs.observe(ref.current);
-    return () => obs.disconnect();
-  }, [end]);
-  return <span ref={ref} style={{ fontFamily: T.mono, fontWeight: 700, color: T.gold }}>{prefix}{val.toLocaleString("de-DE")}{suffix}</span>;
+    if (end <= 0) return;
+    let start = 0;
+    const step = end / (duration / 16);
+    const timer = setInterval(() => {
+      start += step;
+      if (start >= end) { setVal(end); clearInterval(timer); }
+      else setVal(Math.round(start));
+    }, 16);
+    return () => clearInterval(timer);
+  }, [end, duration]);
+  return <>{prefix}{val.toLocaleString("en-US")}{suffix}</>;
 }
 
-/* ─── HELPER: Reveal ─── */
-function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [vis, setVis] = useState(false);
-  useEffect(() => {
-    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setVis(true); obs.disconnect(); } }, { threshold: 0.1 });
-    if (ref.current) obs.observe(ref.current);
-    return () => obs.disconnect();
-  }, []);
-  return (
-    <div ref={ref} style={{ opacity: vis ? 1 : 0, transform: vis ? "translateY(0)" : "translateY(30px)", transition: `all 0.7s ease ${delay}s` }}>
-      {children}
-    </div>
-  );
-}
-
-/* ─── HELPER: FloatingCTA ─── */
-function FloatingCTA() {
+/* ─── Floating Funnel CTA ─── */
+function FloatingCTA({ onOpen }: { onOpen: () => void }) {
   const [show, setShow] = useState(false);
   useEffect(() => {
-    const onScroll = () => setShow(window.scrollY > window.innerHeight * 0.25);
+    const onScroll = () => setShow(window.scrollY > window.innerHeight * 0.4);
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
   if (!show) return null;
   return (
-    <div style={{ position: "fixed", bottom: 24, right: 24, zIndex: 100 }}>
-      <a href="#register" style={{ background: T.grad, color: T.bg, padding: "12px 24px", borderRadius: 99, fontWeight: 700, textDecoration: "none", boxShadow: `0 4px 20px ${T.glow}`, fontFamily: T.sans, fontSize: 14 }}>
-        Kostenlos starten
-      </a>
-    </div>
+    <motion.div
+      initial={{ y: 80, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      style={{ position: "fixed", bottom: 24, right: 24, zIndex: 100 }}
+    >
+      <button onClick={onOpen} className="gf-btn gf-btn-sm" style={{ boxShadow: "0 4px 24px rgba(212,165,55,0.25)", padding: "12px 24px", fontSize: 13, cursor: "pointer" }}>
+        Jetzt starten &rarr;
+      </button>
+    </motion.div>
   );
 }
 
-/* ─── HELPER: FAQ Accordion ─── */
-function FAQ({ items }: { items: { q: string; a: string }[] }) {
-  const [open, setOpen] = useState(-1);
+/* ─── Profit Calculator ─── */
+function ProfitCalculator({ onStart }: { onStart: () => void }) {
+  const [capital, setCapital] = useState(1000);
+  const [leverage, setLeverage] = useState("12x");
+  const monthlyReturn = leverage === "8x" ? 0.12 : leverage === "12x" ? 0.18 : 0.30;
+  const monthly = Math.round(capital * monthlyReturn);
+  const yearly = Math.round(capital * Math.pow(1 + monthlyReturn, 12) - capital);
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-      {items.map((item, i) => (
-        <div key={i} onClick={() => setOpen(open === i ? -1 : i)} style={{ background: T.bg2, border: `1px solid ${T.border}`, borderRadius: 12, padding: "16px 20px", cursor: "pointer" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ color: T.bright, fontWeight: 600, fontSize: 15 }}>{item.q}</span>
-            <span style={{ color: T.gold, transform: open === i ? "rotate(45deg)" : "none", transition: "0.3s", fontSize: 22, lineHeight: 1 }}>+</span>
+    <section style={{ padding: "80px 20px", maxWidth: 700, margin: "0 auto" }}>
+      <h2 style={{ textAlign: "center", fontSize: "clamp(24px, 4vw, 36px)", fontWeight: 700, color: "#fafafa", marginBottom: 8 }}>
+        Was waere <span style={{ color: "#d4a537" }}>moeglich</span>?
+      </h2>
+      <p style={{ textAlign: "center", color: "#a1a1aa", marginBottom: 32, fontSize: 15 }}>
+        Basierend auf PHANTOMs historischer Performance
+      </p>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        className="gf-glass-strong"
+        style={{ borderRadius: 20, padding: 32 }}
+      >
+        {/* Capital Slider */}
+        <div style={{ marginBottom: 24 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+            <span style={{ color: "#a1a1aa", fontSize: 13 }}>Startkapital</span>
+            <span style={{ color: "#d4a537", fontSize: 20, fontWeight: 800, fontFamily: "'JetBrains Mono', monospace" }}>{capital.toLocaleString("de-DE")}&euro;</span>
           </div>
-          {open === i && <p style={{ color: T.text, marginTop: 12, lineHeight: 1.7, fontSize: 14 }}>{item.a}</p>}
+          <input
+            type="range" min={250} max={10000} step={250} value={capital}
+            onChange={(e) => setCapital(+e.target.value)}
+            style={{ width: "100%", accentColor: "#d4a537" }}
+          />
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "#52525b" }}><span>250&euro;</span><span>10.000&euro;</span></div>
         </div>
-      ))}
-    </div>
+
+        {/* Leverage Toggle */}
+        <div style={{ display: "flex", gap: 8, justifyContent: "center", marginBottom: 28 }}>
+          {["8x", "12x", "24x"].map((l) => (
+            <button
+              key={l}
+              onClick={() => setLeverage(l)}
+              style={{
+                padding: "8px 20px", borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: "pointer",
+                background: leverage === l ? "rgba(212,165,55,0.12)" : "rgba(255,255,255,0.03)",
+                border: `2px solid ${leverage === l ? "#d4a537" : "rgba(255,255,255,0.06)"}`,
+                color: leverage === l ? "#d4a537" : "#6d6045",
+                transition: "all 0.2s",
+              }}
+            >{l}</button>
+          ))}
+        </div>
+
+        {/* Results */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+          <div style={{ background: "rgba(34,197,94,0.04)", border: "1px solid rgba(34,197,94,0.1)", borderRadius: 14, padding: 20, textAlign: "center" }}>
+            <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.1em", color: "#6d6045", marginBottom: 4 }}>Pro Monat</div>
+            <div style={{ fontSize: 28, fontWeight: 800, color: "#22c55e", fontFamily: "'JetBrains Mono', monospace" }}>+{monthly.toLocaleString("de-DE")}&euro;</div>
+          </div>
+          <div style={{ background: "rgba(212,165,55,0.04)", border: "1px solid rgba(212,165,55,0.1)", borderRadius: 14, padding: 20, textAlign: "center" }}>
+            <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.1em", color: "#6d6045", marginBottom: 4 }}>Pro Jahr (Zinseszins)</div>
+            <div style={{ fontSize: 28, fontWeight: 800, color: "#d4a537", fontFamily: "'JetBrains Mono', monospace" }}>+{yearly.toLocaleString("de-DE")}&euro;</div>
+          </div>
+        </div>
+
+        <button onClick={onStart} className="gf-btn gf-btn-shimmer" style={{ display: "block", textAlign: "center", padding: "14px 24px", fontSize: 15, width: "100%", marginTop: 20, cursor: "pointer" }}>
+          Mit {capital.toLocaleString("de-DE")}&euro; starten &rarr;
+        </button>
+        <p style={{ textAlign: "center", color: "#52525b", fontSize: 9, marginTop: 8 }}>
+          Berechnung basiert auf historischer Performance. Keine Garantie fuer zukuenftige Ergebnisse.
+        </p>
+      </motion.div>
+    </section>
   );
 }
 
-/* ─── MINI SVG EQUITY CURVE ─── */
-function MiniCurve({ data, color, label, gain }: { data: number[]; color: string; label: string; gain: string }) {
-  const w = 320, h = 80;
-  const min = Math.min(...data), max = Math.max(...data);
-  const pts = data.map((v, i) => `${(i / (data.length - 1)) * w},${h - ((v - min) / (max - min)) * (h - 10) - 5}`).join(" ");
+/* ─── Leverage Cards with 3D ─── */
+function LeverageCards({ onStart }: { onStart: () => void }) {
+  const [hovered, setHovered] = useState<string | null>(null);
+  const plans = [
+    { leverage: "8x", dd: "20%", ddType: "Fix", risk: "Konservativ", color: "#22c55e", desc: "Grosser Puffer. Ideal fuer Anfaenger.", monthly: "~8-15%", icon: "\u{1F6E1}\uFE0F" },
+    { leverage: "12x", dd: "10%", ddType: "Trailing", risk: "Balanced", color: "#d4a537", desc: "Bester Kompromiss aus Rendite und Sicherheit.", monthly: "~12-25%", icon: "\u2696\uFE0F", popular: true },
+    { leverage: "24x", dd: "5%", ddType: "Fix", risk: "Aggressiv", color: "#f97316", desc: "Maximale Rendite. Fuer erfahrene Trader.", monthly: "~20-40%", icon: "\u{1F680}" },
+  ];
+
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} style={{ width: "100%", height: 80 }}>
-      <defs>
-        <linearGradient id={`g-${label}`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity="0.3" />
-          <stop offset="100%" stopColor={color} stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <polygon points={`0,${h} ${pts} ${w},${h}`} fill={`url(#g-${label})`} />
-      <polyline points={pts} fill="none" stroke={color} strokeWidth="2" />
-      <text x="6" y="14" fill={T.dim} fontSize="9" fontFamily={T.mono}>{label}</text>
-      <text x={w - 6} y="14" fill={color} fontSize="10" fontFamily={T.mono} textAnchor="end">{gain}</text>
-    </svg>
+    <section style={{ padding: "80px 20px", maxWidth: 1000, margin: "0 auto" }}>
+      <h2 style={{ textAlign: "center", fontSize: "clamp(24px, 4vw, 36px)", fontWeight: 700, color: "#fafafa", marginBottom: 8 }}>
+        Waehle dein <span style={{ color: "#d4a537" }}>Risikoprofil</span>
+      </h2>
+      <p style={{ textAlign: "center", color: "#a1a1aa", marginBottom: 40, fontSize: 15 }}>
+        Mehr Hebel = mehr Gewinn, aber strikteres Drawdown-Limit.
+      </p>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 20 }}>
+        {plans.map((plan) => {
+          const isHovered = hovered === plan.leverage;
+          const otherHovered = hovered !== null && !isHovered;
+          return (
+            <Card3D key={plan.leverage} intensity={12}>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                onMouseEnter={() => setHovered(plan.leverage)}
+                onMouseLeave={() => setHovered(null)}
+                style={{
+                  background: plan.popular ? "rgba(212,165,55,0.04)" : "rgba(10,8,6,0.7)",
+                  border: `${plan.popular ? "2px" : "1px"} solid ${plan.popular ? "rgba(212,165,55,0.3)" : "rgba(212,165,55,0.1)"}`,
+                  borderRadius: 16, padding: 28, position: "relative", cursor: "pointer",
+                  transition: "all 0.35s cubic-bezier(0.4, 0, 0.2, 1)",
+                  transform: isHovered ? "scale(1.04) translateZ(20px)" : otherHovered ? "scale(0.97)" : "scale(1)",
+                  filter: otherHovered ? "blur(1px) brightness(0.7)" : "none",
+                  boxShadow: isHovered ? `0 12px 40px ${plan.color}20` : "none",
+                }}
+                onClick={onStart}
+              >
+                {plan.popular && (
+                  <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", background: "#d4a537", color: "#040302", fontSize: 10, fontWeight: 700, padding: "4px 14px", borderRadius: 99, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                    Empfohlen
+                  </div>
+                )}
+                <div style={{ fontSize: 32, marginBottom: 12 }}>{plan.icon}</div>
+                <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: plan.color, fontWeight: 600, marginBottom: 4 }}>{plan.risk}</div>
+                <div style={{ fontSize: 36, fontWeight: 800, color: "#fafafa", fontFamily: "'JetBrains Mono', monospace", marginBottom: 4 }}>{plan.leverage}</div>
+                <div style={{ fontSize: 13, color: "#a1a1aa", marginBottom: 16 }}>Hebel</div>
+                <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                  <span style={{ color: "#6d6045", fontSize: 12 }}>Max Drawdown</span>
+                  <span style={{ color: "#fafafa", fontWeight: 700, fontFamily: "'JetBrains Mono', monospace", fontSize: 14 }}>{plan.dd} {plan.ddType}</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                  <span style={{ color: "#6d6045", fontSize: 12 }}>Erwartete Rendite</span>
+                  <span style={{ color: "#22c55e", fontWeight: 600, fontFamily: "'JetBrains Mono', monospace", fontSize: 14 }}>{plan.monthly}/Mo</span>
+                </div>
+                <p style={{ color: "#6d6045", fontSize: 12, marginTop: 12, lineHeight: 1.6 }}>{plan.desc}</p>
+                <div style={{ marginTop: 12, textAlign: "center", fontSize: 12, color: plan.color, fontWeight: 600 }}>Waehlen &rarr;</div>
+              </motion.div>
+            </Card3D>
+          );
+        })}
+      </div>
+      <p style={{ textAlign: "center", color: "#52525b", fontSize: 10, marginTop: 24, lineHeight: 1.6 }}>
+        Rendite-Angaben basieren auf historischer Performance und sind keine Garantie.
+      </p>
+    </section>
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   MAIN PAGE COMPONENT
-   ═══════════════════════════════════════════════════════════════════════════ */
-export default function HomePage() {
-  const [scrollPct, setScrollPct] = useState(0);
+/* ─── Portfolio Overview (Clean, Professional) ─── */
+function SocialProof({ gain, equity, myfxbook }: { gain: number; equity: number; myfxbook?: LpStats["myfxbook"] }) {
+  const mfx = myfxbook;
+  if (!mfx) return null;
 
-  /* ─ Scroll progress ─ */
+  const mono = "'JetBrains Mono', monospace";
+  const cellStyle = { padding: "10px 16px", fontFamily: mono, fontSize: 13 };
+  const headerCell = { padding: "8px 16px", fontSize: 11, fontWeight: 600 as const, color: "#8a7a5a", textTransform: "uppercase" as const, letterSpacing: "0.08em" };
+  const numColor = (v: number) => v > 0 ? "#22c55e" : v < 0 ? "#ef4444" : "#e0d4b8";
+
+  return (
+    <section style={{ padding: "48px 20px", maxWidth: 960, margin: "0 auto" }}>
+      {/* Section Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+        <div>
+          <h2 style={{ fontSize: 22, fontWeight: 700, color: "#fafafa", marginBottom: 4 }}>Portfolio Performance</h2>
+          <p style={{ fontSize: 13, color: "#8a7a5a" }}>Live-Daten — automatisch aktualisiert</p>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#22c55e", display: "inline-block" }} />
+          <span style={{ fontSize: 11, color: "#8a7a5a" }}>Live</span>
+        </div>
+      </div>
+
+      {/* Summary Row */}
+      <div style={{
+        display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 1,
+        background: "rgba(212,165,55,0.06)", borderRadius: "10px 10px 0 0", overflow: "hidden", marginBottom: 1,
+      }}>
+        {[
+          { label: "Total Gain", value: `+${mfx.totalGain.toFixed(2)}%`, color: "#22c55e" },
+          { label: "Portfolio", value: `$${Math.round(mfx.totalEquity).toLocaleString("en-US")}`, color: "#e0d4b8" },
+          { label: "Profit", value: `+$${mfx.totalProfit.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, color: "#22c55e" },
+          { label: "Monatlich", value: `${mfx.totalMonthly.toFixed(2)}%`, color: "#22c55e" },
+        ].map((s) => (
+          <div key={s.label} style={{ background: "#0a0906", padding: "16px 20px", textAlign: "center" }}>
+            <div style={{ fontSize: 10, color: "#6d6045", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 4 }}>{s.label}</div>
+            <div style={{ fontSize: 22, fontWeight: 700, fontFamily: mono, color: s.color }}>{s.value}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Systems Table */}
+      <div style={{ background: "#0a0906", border: "1px solid rgba(212,165,55,0.08)", borderRadius: "0 0 10px 10px", overflow: "hidden" }}>
+        {/* Table Header */}
+        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr", borderBottom: "1px solid rgba(212,165,55,0.08)" }}>
+          {["Name", "Gain", "Daily", "Monthly", "Drawdown", "Balance", "Profit", "Pips"].map((h) => (
+            <div key={h} style={headerCell}>{h}</div>
+          ))}
+        </div>
+
+        {/* Account Rows */}
+        {mfx.accounts.map((acc, i) => (
+          <div key={acc.name} style={{
+            display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr",
+            borderBottom: i < mfx.accounts.length - 1 ? "1px solid rgba(255,255,255,0.03)" : "none",
+          }}>
+            <div style={{ ...cellStyle, color: "#e0d4b8", fontWeight: 600 }}>{acc.name}</div>
+            <div style={{ ...cellStyle, color: numColor(acc.gain) }}>+{acc.gain.toFixed(2)}%</div>
+            <div style={{ ...cellStyle, color: numColor(acc.daily) }}>{acc.daily.toFixed(2)}%</div>
+            <div style={{ ...cellStyle, color: numColor(acc.monthly) }}>{acc.monthly.toFixed(2)}%</div>
+            <div style={{ ...cellStyle, color: "#ef4444" }}>{acc.drawdown.toFixed(2)}%</div>
+            <div style={{ ...cellStyle, color: "#e0d4b8" }}>${acc.balance.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+            <div style={{ ...cellStyle, color: numColor(acc.profit) }}>${acc.profit.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+            <div style={{ ...cellStyle, color: "#e0d4b8" }}>{acc.pips.toLocaleString("en-US")}</div>
+          </div>
+        ))}
+
+        {/* Total Row */}
+        <div style={{
+          display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr",
+          borderTop: "1px solid rgba(212,165,55,0.12)", background: "rgba(212,165,55,0.03)",
+        }}>
+          <div style={{ ...cellStyle, color: "#d4a537", fontWeight: 700 }}>Total</div>
+          <div style={{ ...cellStyle, color: "#22c55e", fontWeight: 700 }}>+{mfx.totalGain.toFixed(2)}%</div>
+          <div style={{ ...cellStyle, color: "#22c55e", fontWeight: 700 }}>{mfx.totalDaily.toFixed(2)}%</div>
+          <div style={{ ...cellStyle, color: "#22c55e", fontWeight: 700 }}>{mfx.totalMonthly.toFixed(2)}%</div>
+          <div style={{ ...cellStyle, color: "#ef4444", fontWeight: 700 }}>{mfx.totalDrawdown.toFixed(2)}%</div>
+          <div style={{ ...cellStyle, color: "#e0d4b8", fontWeight: 700 }}>${mfx.totalBalance.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+          <div style={{ ...cellStyle, color: "#22c55e", fontWeight: 700 }}>${mfx.totalProfit.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+          <div style={{ ...cellStyle, color: "#d4a537", fontWeight: 700 }}>{mfx.accounts.reduce((s, a) => s + a.pips, 0).toLocaleString("en-US")}</div>
+        </div>
+      </div>
+
+      <div style={{ textAlign: "center", marginTop: 12, fontSize: 11, color: "#52525b" }}>
+        Verifizierte Live-Performance — Daten werden alle 5 Minuten aktualisiert
+      </div>
+    </section>
+  );
+}
+
+export default function HomePage() {
+  const [stats, setStats] = useState<LpStats | null>(null);
+  const [funnelOpen, setFunnelOpen] = useState(false);
+
   useEffect(() => {
-    const onScroll = () => {
-      const h = document.documentElement.scrollHeight - window.innerHeight;
-      setScrollPct(h > 0 ? (window.scrollY / h) * 100 : 0);
-    };
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
+    fetch("/api/lp/stats").then((r) => r.json()).then(setStats).catch(() => {});
+    const interval = setInterval(() => {
+      fetch("/api/lp/stats").then((r) => r.json()).then(setStats).catch(() => {});
+    }, 30000);
+    return () => clearInterval(interval);
   }, []);
 
-  /* ─ Leverage calculator state ─ */
-  const [levMode, setLevMode] = useState<"8x" | "24x">("8x");
-  const [capital, setCapital] = useState(5000);
-  const [months, setMonths] = useState(6);
-  const leverage = levMode === "8x" ? 8 : 24;
-  const effective = capital * leverage;
-  const daily = effective * 0.01;
-  const monthly = daily * 20;
-  const total = monthly * months;
-  const maxLoss = capital * 0.05;
-
-  /* ─ Register form ─ */
-  const [regName, setRegName] = useState("");
-  const [regEmail, setRegEmail] = useState("");
-  const [regPhone, setRegPhone] = useState("");
-  const [regAccepted, setRegAccepted] = useState(false);
-  const [regStatus, setRegStatus] = useState<"idle" | "loading" | "ok" | "error">("idle");
-  const [regError, setRegError] = useState("");
-
-  const handleRegister = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!regAccepted) return;
-    setRegStatus("loading");
-    try {
-      const res = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: regEmail, fullName: regName, password: crypto.randomUUID().slice(0, 12) }),
-      });
-      if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.error || "Fehler"); }
-      setRegStatus("ok");
-    } catch (err: unknown) {
-      setRegStatus("error");
-      setRegError(err instanceof Error ? err.message : "Unbekannter Fehler");
-    }
-  };
-
-  /* ─ Strategies expand ─ */
-  const [showStrats, setShowStrats] = useState(false);
-
-  /* ─ Equity curve data ─ */
-  const heroData = [45, 42, 48, 44, 50, 47, 53, 49, 55, 52, 58, 54, 60, 56, 62, 58, 65, 61, 68, 64, 70, 66, 72, 68];
+  const openFunnel = () => setFunnelOpen(true);
+  const mfx = stats?.myfxbook;
+  const equity = mfx?.totalEquity ?? stats?.equity ?? 0;
+  const todayPnl = stats?.todayPnl ?? 0;
+  const gain = mfx?.totalGain ?? stats?.gain ?? 0;
 
   return (
-    <>
-      {/* ─── GLOBAL STYLES ─── */}
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
-        html { scroll-behavior: smooth; }
-        body { margin: 0; background: ${T.bg}; color: ${T.text}; font-family: ${T.sans}; overflow-x: hidden; }
-        body::before {
-          content: ''; position: fixed; inset: 0; z-index: 9999; pointer-events: none;
-          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-          background-size: 128px 128px;
-        }
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: ${T.bg}; }
-        ::-webkit-scrollbar-thumb { background: ${T.goldDk}; border-radius: 4px; }
-        @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-        * { box-sizing: border-box; }
-        a { color: inherit; }
-      `}</style>
+    <div style={{ background: "#040302", color: "#fafafa", minHeight: "100vh", fontFamily: "'Inter', sans-serif", position: "relative" }}>
+      <HeroBackground3D />
 
-      {/* ─── SCROLL PROGRESS BAR ─── */}
-      <div style={{ position: "fixed", top: 0, left: 0, height: 2, width: `${scrollPct}%`, background: T.grad, zIndex: 1000 }} />
+      <div style={{ position: "relative", zIndex: 1 }}>
+      <LandingNavbar />
+      <FloatingCTA onOpen={openFunnel} />
+      <FunnelOverlay open={funnelOpen} onClose={() => setFunnelOpen(false)} liveData={stats?.myfxbook ? { totalGain: stats.myfxbook.totalGain, totalMonthly: stats.myfxbook.totalMonthly, totalEquity: stats.myfxbook.totalEquity, totalProfit: stats.myfxbook.totalProfit, totalDrawdown: stats.myfxbook.totalDrawdown, totalDaily: stats.myfxbook.totalDaily } : null} />
 
-      <FloatingCTA />
-
-      <main style={{ fontFamily: T.sans }}>
-
-        {/* ═══════════════════════════════════════════════════════════════
-           SECTION 1: HERO
-           ═══════════════════════════════════════════════════════════════ */}
-        <section style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "60px 20px 40px", position: "relative", overflow: "hidden" }}>
-          {/* BG glow */}
-          <div style={{ position: "absolute", top: "30%", left: "50%", transform: "translate(-50%,-50%)", width: 800, height: 800, borderRadius: "50%", background: `radial-gradient(circle, ${T.gold}0F 0%, transparent 70%)`, pointerEvents: "none" }} />
-
-          <Reveal>
-            <GoldFoundryLogo size={36} showText />
-          </Reveal>
-
-          {/* Badge */}
-          <Reveal delay={0.1}>
-            <div style={{ display: "inline-block", border: `1px solid ${T.gold}`, borderRadius: 99, padding: "6px 18px", marginTop: 24, marginBottom: 32 }}>
-              <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.15em", textTransform: "uppercase", color: T.gold }}>
-                INSTANT FUNDING &middot; BIS ZU $500.000 &middot; REGULIERTER BROKER
+      {/* ═══ HERO ═══ */}
+      <section style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "80px 20px 40px", position: "relative" }}>
+        {/* Floating Gold Bar Elements */}
+        <div style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none", zIndex: 0 }}>
+          <div className="animate-float" style={{ position: "absolute", top: "15%", left: "8%", width: 80, height: 24, background: "linear-gradient(135deg, rgba(212,165,55,0.15), rgba(240,208,96,0.08))", borderRadius: 6, transform: "rotate3d(1, 1, 0, 35deg)", filter: "blur(1px)" }} />
+          <div className="animate-float-delayed" style={{ position: "absolute", top: "25%", right: "10%", width: 60, height: 18, background: "linear-gradient(135deg, rgba(212,165,55,0.12), rgba(240,208,96,0.06))", borderRadius: 4, transform: "rotate3d(1, -1, 0, 40deg)", filter: "blur(1.5px)" }} />
+          <div className="animate-float" style={{ position: "absolute", bottom: "20%", left: "12%", width: 50, height: 16, background: "linear-gradient(135deg, rgba(212,165,55,0.1), rgba(240,208,96,0.05))", borderRadius: 4, transform: "rotate3d(-1, 1, 0, 30deg)", filter: "blur(2px)", animationDelay: "1s" }} />
+          <div className="animate-float-delayed" style={{ position: "absolute", bottom: "30%", right: "6%", width: 70, height: 20, background: "linear-gradient(135deg, rgba(212,165,55,0.13), rgba(240,208,96,0.07))", borderRadius: 5, transform: "rotate3d(1, 1, 1, 45deg)", filter: "blur(1px)" }} />
+          <div className="animate-float" style={{ position: "absolute", top: "50%", left: "3%", width: 40, height: 12, background: "linear-gradient(135deg, rgba(212,165,55,0.08), rgba(240,208,96,0.04))", borderRadius: 3, transform: "rotate3d(0, 1, 1, 25deg)", filter: "blur(2px)", animationDelay: "3s" }} />
+        </div>
+        <div style={{ position: "relative", zIndex: 1 }}>
+          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+            <div style={{ display: "inline-block", border: "1px solid #d4a537", borderRadius: 99, padding: "6px 18px", marginBottom: 32 }}>
+              <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.15em", textTransform: "uppercase", color: "#d4a537", fontFamily: "'JetBrains Mono', monospace" }}>
+                PHANTOM &middot; GOLD TRADER &middot; LIVE
               </span>
             </div>
-          </Reveal>
+          </motion.div>
 
-          {/* H1 */}
-          <Reveal delay={0.2}>
-            <h1 style={{ margin: 0, lineHeight: 1.15 }}>
-              <span style={{ display: "block", fontSize: "clamp(28px, 5vw, 48px)", fontFamily: T.sans, fontWeight: 800, color: T.bright }}>
-                4 Profi-Trader.
-              </span>
-              <span style={{ display: "block", fontSize: "clamp(28px, 5vw, 48px)", fontFamily: T.sans, fontWeight: 800, background: T.grad, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-                Durchschnittlich +1% am Tag.
-              </span>
-              <span style={{ display: "block", fontSize: "clamp(24px, 4vw, 40px)", fontFamily: T.sans, fontWeight: 800, color: T.bright }}>
-                Geschützt von 13 KI-Strategien.
-              </span>
-            </h1>
-          </Reveal>
+          <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.15 }}
+            style={{ fontSize: "clamp(32px, 6vw, 56px)", fontWeight: 800, lineHeight: 1.1, marginBottom: 16, maxWidth: 700 }}>
+            PHANTOM tradet Gold.{" "}
+            <span style={{ background: "linear-gradient(135deg, #d4a537, #f0d060)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+              Du verdienst.
+            </span>
+          </motion.h1>
 
-          {/* Subline */}
-          <Reveal delay={0.3}>
-            <p style={{ maxWidth: 600, margin: "20px auto 0", color: T.dim, fontSize: 16, lineHeight: 1.7 }}>
-              Du wählst den Trader — unsere KI-Engine übernimmt den Rest. 13 Strategien. 9 Sicherheitssysteme. Kein EA. Kein VPS. Kostenlos.
-            </p>
-          </Reveal>
+          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
+            style={{ color: "#a1a1aa", fontSize: "clamp(16px, 2.5vw, 20px)", marginBottom: 40, maxWidth: 500, margin: "0 auto 40px" }}>
+            {equity > 0
+              ? <><span style={{ color: "#22c55e", fontWeight: 700 }}>+{gain.toFixed(0)}% Gain</span> &mdash; vollautomatisch, verifiziert</>
+              : "KI-gesteuertes Gold Trading \u2014 vollautomatisch"}
+          </motion.p>
 
-          {/* CTAs */}
-          <Reveal delay={0.4}>
-            <div style={{ display: "flex", gap: 12, marginTop: 32, flexWrap: "wrap", justifyContent: "center" }}>
-              <a href="#register" style={{ background: T.grad, color: T.bg, padding: "14px 32px", borderRadius: 99, fontWeight: 700, textDecoration: "none", fontSize: 15 }}>
-                Kostenlos registrieren
-              </a>
-              <a href="#engine" style={{ border: `1px solid ${T.gold}`, color: T.gold, padding: "14px 32px", borderRadius: 99, fontWeight: 600, textDecoration: "none", background: "transparent", fontSize: 15 }}>
-                So funktioniert&apos;s &darr;
-              </a>
-            </div>
-          </Reveal>
-
-          {/* Stats */}
-          <Reveal delay={0.5}>
-            <div style={{ display: "flex", gap: 32, marginTop: 48, flexWrap: "wrap", justifyContent: "center", fontSize: 14 }}>
-              <div><Counter end={1} prefix="+" suffix="% Ø/Tag" /></div>
-              <div><Counter end={72} suffix="% Win Rate" /></div>
-              <div><Counter end={4200} suffix="+ Trades" /></div>
-              <div style={{ fontFamily: T.mono, fontWeight: 700, color: T.gold }}>Seit 2022</div>
-            </div>
-          </Reveal>
-
-          {/* Equity Curve SVG */}
-          <Reveal delay={0.6}>
-            <div style={{ maxWidth: 500, width: "100%", margin: "40px auto 0" }}>
-              <svg viewBox="0 0 400 100" style={{ width: "100%", height: "auto" }}>
-                <defs>
-                  <linearGradient id="hero-fill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={T.gold} stopOpacity="0.25" />
-                    <stop offset="100%" stopColor={T.gold} stopOpacity="0" />
-                  </linearGradient>
-                </defs>
-                {(() => {
-                  const d = heroData;
-                  const w = 400, h = 100, pad = 10;
-                  const mn = Math.min(...d), mx = Math.max(...d);
-                  const pts = d.map((v, i) => `${(i / (d.length - 1)) * w},${h - pad - ((v - mn) / (mx - mn)) * (h - 2 * pad)}`).join(" ");
-                  return (
-                    <>
-                      <polygon points={`0,${h} ${pts} ${w},${h}`} fill="url(#hero-fill)" />
-                      <polyline points={pts} fill="none" stroke={T.gold} strokeWidth="2.5" strokeLinejoin="round" />
-                    </>
-                  );
-                })()}
-                <text x="8" y="16" fill={T.dim} fontSize="10" fontFamily={T.mono}>PHANTOM &middot; LIVE</text>
-                <text x="392" y="16" fill={T.gold} fontSize="11" fontFamily={T.mono} textAnchor="end">+142%</text>
-              </svg>
-              <p style={{ fontSize: 10, color: T.dim, marginTop: 4, textAlign: "center" }}>
-                Demo-Daten &middot; Vergangene Performance ist keine Garantie
-              </p>
-            </div>
-          </Reveal>
-        </section>
-
-        {/* ═══════════════════════════════════════════════════════════════
-           SECTION 2: TICKER + TRUST
-           ═══════════════════════════════════════════════════════════════ */}
-        <section style={{ overflow: "hidden", borderTop: `1px solid ${T.border}`, borderBottom: `1px solid ${T.border}`, padding: "14px 0" }}>
-          <div style={{ display: "flex", animation: "ticker 20s linear infinite", whiteSpace: "nowrap", width: "max-content" }}>
-            {[0, 1].map((dup) => (
-              <div key={dup} style={{ display: "flex", gap: 32, paddingRight: 32, fontSize: 13, fontFamily: T.mono, fontWeight: 600 }}>
-                <span><span style={{ color: T.gold }}>XAUUSD +1.4R</span> <span style={{ color: T.gold }}>&#x2713;</span></span>
-                <span><span style={{ color: T.gold }}>US500 +0.8R</span> <span style={{ color: T.gold }}>&#x2713;</span></span>
-                <span><span style={{ color: T.red }}>EURUSD -0.3R</span> <span style={{ color: T.red }}>&#x2717;</span></span>
-                <span><span style={{ color: T.gold }}>XAUUSD +2.1R</span> <span style={{ color: T.gold }}>&#x2713;</span></span>
-                <span><span style={{ color: T.gold }}>DAX40 +1.2R</span> <span style={{ color: T.gold }}>&#x2713;</span></span>
-                <span><span style={{ color: T.red }}>GBPJPY -0.5R</span> <span style={{ color: T.red }}>&#x2717;</span></span>
-                <span><span style={{ color: T.gold }}>NAS100 +0.9R</span> <span style={{ color: T.gold }}>&#x2713;</span></span>
-                <span><span style={{ color: T.gold }}>XAUUSD +0.6R</span> <span style={{ color: T.gold }}>&#x2713;</span></span>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Trust cards */}
-        <section style={{ ...SECTION_PAD, paddingTop: 48, paddingBottom: 48 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
-            {[
-              { t: "Regulierter Broker", d: "Tegas FX \u00b7 MISA lizenziert \u00b7 DBS Singapore" },
-              { t: "13 KI-Strategien", d: "DCA, Recovery, Trailing, Grid + 9 weitere" },
-              { t: "Dein Geld ist sicher", d: "Kein Zugriff durch Gold Foundry. Segregated." },
-            ].map((c, i) => (
-              <Reveal key={i} delay={i * 0.1}>
-                <div style={{ ...GLASS, padding: "24px 28px" }}>
-                  <div style={{ color: T.gold, fontWeight: 700, fontSize: 15, marginBottom: 6 }}>{c.t}</div>
-                  <div style={{ color: T.text, fontSize: 13 }}>{c.d}</div>
-                </div>
-              </Reveal>
-            ))}
-          </div>
-        </section>
-
-        {/* ═══════════════════════════════════════════════════════════════
-           SECTION 3: KI-ENGINE
-           ═══════════════════════════════════════════════════════════════ */}
-        <section id="engine" style={{ ...SECTION_PAD, background: T.bg2 }}>
-          <Reveal>
-            <h2 style={{ fontSize: "clamp(24px, 4vw, 36px)", fontWeight: 800, color: T.bright, textAlign: "center", margin: 0 }}>
-              Jeder Trade wird von unserer KI überwacht.
-            </h2>
-            <p style={{ color: T.dim, textAlign: "center", marginTop: 12, fontSize: 15 }}>
-              Andere Copier kopieren blind. Unsere Engine denkt mit.
-            </p>
-          </Reveal>
-
-          {/* 5 Steps */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16, marginTop: 48 }}>
-            {[
-              { n: "01", t: "EINSTIEG", d: "KI bewertet Score 0-100. Unter 70 = geblockt." },
-              { n: "02", t: "ABSICHERUNG", d: "Günstiger nachkaufen wenn Trade gegen dich läuft." },
-              { n: "03", t: "NOTFALL-PLAN", d: "Gegenorder begrenzt den Verlust." },
-              { n: "04", t: "GEWINNE SICHERN", d: "Stop Loss zieht automatisch nach." },
-              { n: "05", t: "NOTAUS", d: "Kill Switch schließt alles bei Drawdown-Limit." },
-            ].map((s, i) => (
-              <Reveal key={i} delay={i * 0.08}>
-                <div style={{ ...GLASS, padding: "24px 20px" }}>
-                  <div style={{ fontFamily: T.mono, fontSize: 28, fontWeight: 800, color: T.gold, marginBottom: 8 }}>{s.n}</div>
-                  <div style={{ fontWeight: 700, color: T.bright, fontSize: 13, letterSpacing: "0.05em", marginBottom: 6 }}>{s.t}</div>
-                  <div style={{ color: T.text, fontSize: 13, lineHeight: 1.6 }}>{s.d}</div>
-                </div>
-              </Reveal>
-            ))}
-          </div>
-
-          {/* Expandable strategies */}
-          <Reveal delay={0.3}>
-            <div style={{ marginTop: 40, textAlign: "center" }}>
-              <button onClick={() => setShowStrats(!showStrats)} style={{ background: "transparent", border: `1px solid ${T.gold}`, color: T.gold, padding: "10px 24px", borderRadius: 99, fontWeight: 600, cursor: "pointer", fontSize: 14, fontFamily: T.sans }}>
-                {showStrats ? "Weniger anzeigen" : "Alle 13 Strategien"}
-              </button>
-              {showStrats && (
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", marginTop: 20 }}>
-                  {["Smart DCA", "Zone Recovery", "Step Trail", "ATR Trail", "Mode Detection", "Grid Scalping", "Signal Scoring", "Anti-Tilt", "Pyramiding", "Smart Re-Entry", "Time Decay", "Volume Check", "Correlation Guard"].map((s) => (
-                    <span key={s} style={{ background: T.bg3, border: `1px solid ${T.border}`, borderRadius: 8, padding: "6px 14px", fontSize: 12, color: T.text, fontFamily: T.mono }}>{s}</span>
-                  ))}
-                </div>
-              )}
-            </div>
-          </Reveal>
-
-          {/* Safety pills */}
-          <Reveal delay={0.4}>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", marginTop: 32 }}>
-              {["Race Lock", "SafeAPI", "Weekend Guard", "Session Filter", "Spread Check", "ATR Min", "Fill Track", "TP Gap", "Cache"].map((p) => (
-                <span key={p} style={{ background: `${T.gold}12`, border: `1px solid ${T.gold}30`, borderRadius: 99, padding: "4px 14px", fontSize: 11, color: T.gold, fontWeight: 600 }}>{p}</span>
-              ))}
-            </div>
-          </Reveal>
-        </section>
-
-        {/* ═══════════════════════════════════════════════════════════════
-           SECTION 4: 4 TRADER
-           ═══════════════════════════════════════════════════════════════ */}
-        <section id="trader" style={SECTION_PAD}>
-          <Reveal>
-            <h2 style={{ fontSize: "clamp(24px, 4vw, 36px)", fontWeight: 800, color: T.bright, textAlign: "center", margin: 0 }}>
-              Unsere Trader. Echte Ergebnisse.
-            </h2>
-          </Reveal>
-
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 20, marginTop: 48 }}>
-            {[
-              { name: "PHANTOM", sub: "Der Gold-Spezialist", asset: "XAUUSD", perf: "+1.0%/Tag", wr: "72% WR", dd: "4.5% DD", since: "seit 2022", color: T.gold, data: [30, 28, 35, 32, 38, 36, 42, 39, 45, 43, 50, 47, 52, 49, 55, 53], gain: "+142%" },
-              { name: "NEXUS", sub: "Der Index-Sniper", asset: "US500", perf: "+0.7%/Tag", wr: "68% WR", dd: "3.8% DD", since: "seit 2023", color: "#3b82f6", data: [20, 22, 21, 25, 24, 28, 27, 31, 29, 33, 32, 36, 34, 38, 37, 40], gain: "+98%" },
-              { name: "SENTINEL", sub: "Der Europa-Trader", asset: "DAX40", perf: "+0.8%/Tag", wr: "65% WR", dd: "5.2% DD", since: "seit 2023", color: "#a855f7", data: [18, 20, 19, 23, 21, 26, 24, 28, 26, 30, 29, 33, 31, 35, 33, 37], gain: "+112%" },
-              { name: "SPECTRE", sub: "Der Marathon-Läufer", asset: "EURUSD", perf: "+0.5%/Tag", wr: "74% WR", dd: "3.2% DD", since: "seit 2022", color: "#22c55e", data: [15, 16, 17, 18, 17, 19, 20, 21, 22, 23, 22, 24, 25, 26, 27, 28], gain: "+87%" },
-            ].map((t, i) => (
-              <Reveal key={i} delay={i * 0.1}>
-                <div style={{ ...GLASS, padding: 24, transition: "box-shadow 0.3s" }} onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.boxShadow = `0 0 30px ${T.glow}`; }} onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.boxShadow = "none"; }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-                    <div>
-                      <div style={{ fontWeight: 800, color: T.bright, fontSize: 18 }}>{t.name}</div>
-                      <div style={{ color: T.dim, fontSize: 12 }}>{t.sub}</div>
-                    </div>
-                    <span style={{ fontFamily: T.mono, fontSize: 12, color: T.dim, background: T.bg3, padding: "2px 8px", borderRadius: 6 }}>{t.asset}</span>
-                  </div>
-                  <MiniCurve data={t.data} color={t.color} label={t.name} gain={t.gain} />
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8, marginTop: 12, fontSize: 12, textAlign: "center" }}>
-                    <div><div style={{ color: T.gold, fontWeight: 700, fontFamily: T.mono }}>{t.perf}</div><div style={{ color: T.dim, fontSize: 10 }}>Ø Gewinn</div></div>
-                    <div><div style={{ color: T.bright, fontWeight: 600 }}>{t.wr}</div><div style={{ color: T.dim, fontSize: 10 }}>Win Rate</div></div>
-                    <div><div style={{ color: T.bright, fontWeight: 600 }}>{t.dd}</div><div style={{ color: T.dim, fontSize: 10 }}>Max DD</div></div>
-                    <div><div style={{ color: T.bright, fontWeight: 600 }}>{t.since}</div><div style={{ color: T.dim, fontSize: 10 }}>Aktiv</div></div>
-                  </div>
-                  <a href="#register" style={{ display: "block", textAlign: "center", marginTop: 16, background: T.grad, color: T.bg, padding: "10px", borderRadius: 10, fontWeight: 700, textDecoration: "none", fontSize: 13 }}>
-                    Kostenlos kopieren
-                  </a>
-                </div>
-              </Reveal>
-            ))}
-          </div>
-          <p style={{ fontSize: 11, color: T.dim, textAlign: "center", marginTop: 20 }}>
-            Vergangene Performance ist keine Garantie für zukünftige Ergebnisse.
-          </p>
-        </section>
-
-        {/* ═══════════════════════════════════════════════════════════════
-           SECTION 5: HEBEL-RECHNER
-           ═══════════════════════════════════════════════════════════════ */}
-        <section id="rechner" style={{ ...SECTION_PAD, background: T.bg2 }}>
-          <Reveal>
-            <h2 style={{ fontSize: "clamp(24px, 4vw, 36px)", fontWeight: 800, color: T.bright, textAlign: "center", margin: 0 }}>
-              Rechne dir aus was möglich ist.
-            </h2>
-            <p style={{ color: T.dim, textAlign: "center", marginTop: 12, fontSize: 15 }}>
-              8x oder 24x Hebel. Beide mit 5% Max Drawdown.
-            </p>
-          </Reveal>
-
-          <div style={{ maxWidth: 600, margin: "40px auto 0" }}>
-            {/* Toggle */}
-            <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 32 }}>
-              {(["8x", "24x"] as const).map((m) => (
-                <button key={m} onClick={() => setLevMode(m)} style={{
-                  padding: "10px 28px", borderRadius: 99, fontWeight: 700, fontSize: 15, cursor: "pointer", fontFamily: T.sans, border: "none",
-                  background: levMode === m ? T.grad : "transparent",
-                  color: levMode === m ? T.bg : T.gold,
-                  ...(levMode !== m ? { border: `1px solid ${T.gold}` } : {}),
-                }}>
-                  {m} Hebel
-                </button>
-              ))}
-            </div>
-
-            {/* Sliders */}
-            <div style={{ marginBottom: 24 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                <label style={{ color: T.text, fontSize: 13 }}>Kapital</label>
-                <span style={{ fontFamily: T.mono, fontWeight: 700, color: T.gold }}>{capital.toLocaleString("de-DE")} &euro;</span>
-              </div>
-              <input type="range" min={500} max={100000} step={500} value={capital} onChange={(e) => setCapital(+e.target.value)}
-                style={{ width: "100%", accentColor: T.gold }} />
-            </div>
-            <div style={{ marginBottom: 32 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                <label style={{ color: T.text, fontSize: 13 }}>Monate</label>
-                <span style={{ fontFamily: T.mono, fontWeight: 700, color: T.gold }}>{months}</span>
-              </div>
-              <input type="range" min={1} max={12} step={1} value={months} onChange={(e) => setMonths(+e.target.value)}
-                style={{ width: "100%", accentColor: T.gold }} />
-            </div>
-
-            {/* Results */}
-            <div style={{ ...GLASS, padding: 28 }}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 20 }}>
-                <div>
-                  <div style={{ color: T.dim, fontSize: 11, marginBottom: 4 }}>Effektives Kapital</div>
-                  <div style={{ fontFamily: T.mono, fontWeight: 700, color: T.gold, fontSize: 20 }}>{effective.toLocaleString("de-DE")} &euro;</div>
-                </div>
-                <div>
-                  <div style={{ color: T.dim, fontSize: 11, marginBottom: 4 }}>&Oslash; Tagesgewinn</div>
-                  <div style={{ fontFamily: T.mono, fontWeight: 700, color: T.gold, fontSize: 20 }}>{daily.toLocaleString("de-DE", { maximumFractionDigits: 0 })} &euro;</div>
-                </div>
-                <div>
-                  <div style={{ color: T.dim, fontSize: 11, marginBottom: 4 }}>&Oslash; Monatsgewinn</div>
-                  <div style={{ fontFamily: T.mono, fontWeight: 700, color: T.gold, fontSize: 20 }}>{monthly.toLocaleString("de-DE", { maximumFractionDigits: 0 })} &euro;</div>
-                </div>
-                <div>
-                  <div style={{ color: T.dim, fontSize: 11, marginBottom: 4 }}>Gesamt nach {months} Monate{months > 1 ? "n" : ""}</div>
-                  <div style={{ fontFamily: T.mono, fontWeight: 800, fontSize: 38, background: T.grad, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-                    {total.toLocaleString("de-DE", { maximumFractionDigits: 0 })} &euro;
-                  </div>
-                </div>
-              </div>
-
-              {/* Risk box */}
-              <div style={{ border: `1px solid ${T.red}`, borderRadius: 12, padding: "14px 18px", marginTop: 8 }}>
-                <div style={{ color: T.red, fontWeight: 700, fontFamily: T.mono, fontSize: 15, marginBottom: 4 }}>
-                  Max Verlust (5% DD): -{maxLoss.toLocaleString("de-DE")} &euro;
-                </div>
-                <div style={{ color: T.dim, fontSize: 12 }}>
-                  Kill Switch schließt automatisch bei 5% Drawdown.
-                </div>
-              </div>
-            </div>
-
-            <p style={{ fontSize: 11, color: T.dim, textAlign: "center", marginTop: 16, lineHeight: 1.6 }}>
-              Basierend auf &Oslash; 1%/Tag. KEINE Garantie. Hebel verstärkt Gewinne UND Verluste.
-            </p>
-          </div>
-        </section>
-
-        {/* ═══════════════════════════════════════════════════════════════
-           SECTION 6: VERGLEICH
-           ═══════════════════════════════════════════════════════════════ */}
-        <section style={SECTION_PAD}>
-          <Reveal>
-            <h2 style={{ fontSize: "clamp(24px, 4vw, 36px)", fontWeight: 800, color: T.bright, textAlign: "center", margin: 0 }}>
-              Vergiss alles was du über Copier weißt.
-            </h2>
-          </Reveal>
-
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24, marginTop: 48 }}>
-            {/* Left - Andere */}
-            <Reveal delay={0.1}>
-              <div style={{ ...GLASS, padding: 28, borderColor: `${T.red}30` }}>
-                <div style={{ color: T.red, fontWeight: 700, fontSize: 18, marginBottom: 20 }}>Andere Copier</div>
-                {["EA installieren", "VPS mieten (30 &euro;/Mo)", "MetaTrader 5 offen lassen", "Lots manuell berechnen", "News überwachen", "SL nachziehen"].map((item, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: `1px solid ${T.border}`, color: T.dim, fontSize: 14 }}>
-                    <span style={{ color: T.red }}>&#x2717;</span>
-                    <span dangerouslySetInnerHTML={{ __html: item }} />
-                  </div>
-                ))}
-                <div style={{ marginTop: 20, color: T.red, fontWeight: 700, fontFamily: T.mono, fontSize: 16 }}>
-                  Gesamt: 80-230 &euro;/Monat
-                </div>
-              </div>
-            </Reveal>
-
-            {/* Right - Gold Foundry */}
-            <Reveal delay={0.2}>
-              <div style={{ ...GLASS, padding: 28, borderColor: `${T.gold}30`, boxShadow: `0 0 40px ${T.glow}` }}>
-                <div style={{ color: T.gold, fontWeight: 700, fontSize: 18, marginBottom: 20 }}>Gold Foundry</div>
-                {["Registrieren", "Trader wählen", "Fertig."].map((item, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: `1px solid ${T.border}`, color: T.bright, fontSize: 14 }}>
-                    <span style={{ color: T.gold }}>&#x2713;</span>
-                    <span>{item}</span>
-                  </div>
-                ))}
-                <div style={{ marginTop: 20, fontWeight: 800, fontFamily: T.mono, fontSize: 28, background: T.grad, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-                  Gesamt: 0 &euro;
-                </div>
-              </div>
-            </Reveal>
-          </div>
-        </section>
-
-        {/* ═══════════════════════════════════════════════════════════════
-           SECTION 7: INSTANT FUNDING
-           ═══════════════════════════════════════════════════════════════ */}
-        <section style={{ ...SECTION_PAD, background: T.bg2 }}>
-          <Reveal>
-            <h2 style={{ fontSize: "clamp(24px, 4vw, 36px)", fontWeight: 800, color: T.bright, textAlign: "center", margin: 0 }}>
-              Kein Kapital? Kein Problem.
-            </h2>
-            <p style={{ color: T.dim, textAlign: "center", marginTop: 12, fontSize: 15 }}>
-              Sofort echtes Kapital. Keine Challenge. Bis zu $500.000.
-            </p>
-          </Reveal>
-
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16, marginTop: 40 }}>
-            {[
-              { t: "Sofort starten", d: "Keine Evaluation" },
-              { t: "Bis $500k", d: "Skalierbar" },
-              { t: "Bis 90% Gewinn", d: "Behalten" },
-            ].map((c, i) => (
-              <Reveal key={i} delay={i * 0.1}>
-                <div style={{ ...GLASS, padding: "28px 24px", textAlign: "center" }}>
-                  <div style={{ color: T.gold, fontWeight: 700, fontSize: 20, marginBottom: 6 }}>{c.t}</div>
-                  <div style={{ color: T.text, fontSize: 14 }}>{c.d}</div>
-                </div>
-              </Reveal>
-            ))}
-          </div>
-          <p style={{ fontSize: 11, color: T.dim, textAlign: "center", marginTop: 20 }}>
-            Konditionen gemäß Tegas FX Instant Funding Programm.
-          </p>
-        </section>
-
-        {/* ═══════════════════════════════════════════════════════════════
-           SECTION 8: TEGAS FX
-           ═══════════════════════════════════════════════════════════════ */}
-        <section style={SECTION_PAD}>
-          <Reveal>
-            <h2 style={{ fontSize: "clamp(24px, 4vw, 36px)", fontWeight: 800, color: T.bright, textAlign: "center", margin: 0 }}>
-              Dein Broker: Tegas FX
-            </h2>
-          </Reveal>
-
-          <Reveal delay={0.1}>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 16, justifyContent: "center", marginTop: 32 }}>
-              {["MISA Reguliert", "A-Book", "7ms Execution", "DBS Segregated", "1:200 Leverage"].map((s) => (
-                <span key={s} style={{ background: T.bg2, border: `1px solid ${T.border}`, borderRadius: 10, padding: "10px 18px", fontSize: 13, fontWeight: 600, color: T.bright }}>{s}</span>
-              ))}
-            </div>
-          </Reveal>
-
-          <Reveal delay={0.2}>
-            <div style={{ maxWidth: 700, margin: "32px auto 0", textAlign: "center" }}>
-              <p style={{ fontSize: 13, color: T.text, lineHeight: 1.7, marginBottom: 16 }}>
-                tegasFX Limited, Bonovo Road, Fomboni, Comoros. MISA License BFX2024226.
-              </p>
-              <p style={{ fontSize: 13, color: T.text, lineHeight: 1.7, marginBottom: 24 }}>
-                Gold Foundry hat keinen Zugriff auf dein Kapital oder deine Trades.
-              </p>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center" }}>
-                {["\u2713 AML/KYC Compliant", "\u2713 Segregated Funds", "\u2713 A-Book Execution", "\u2713 No-Last-Look"].map((p) => (
-                  <span key={p} style={{ background: `${T.gold}10`, border: `1px solid ${T.gold}25`, borderRadius: 99, padding: "6px 16px", fontSize: 12, color: T.gold, fontWeight: 600 }}>{p}</span>
-                ))}
-              </div>
-            </div>
-          </Reveal>
-        </section>
-
-        {/* ═══════════════════════════════════════════════════════════════
-           SECTION 9: WARUM KOSTENLOS
-           ═══════════════════════════════════════════════════════════════ */}
-        <section style={{ ...SECTION_PAD, background: T.bg2 }}>
-          <Reveal>
-            <h2 style={{ fontSize: "clamp(24px, 4vw, 36px)", fontWeight: 800, color: T.bright, textAlign: "center", margin: 0 }}>
-              Warum ist Gold Foundry kostenlos?
-            </h2>
-          </Reveal>
-          <Reveal delay={0.1}>
-            <p style={{ maxWidth: 650, margin: "24px auto 0", textAlign: "center", fontSize: 15, color: T.text, lineHeight: 1.8 }}>
-              Wir verdienen vom Broker — nicht von dir. Tegas FX zahlt uns eine Vermittlungsprovision für jeden aktiven Trader.
-              Du zahlst nie etwas an Gold Foundry. Kein Abo. Kein Kleingedrucktes. Null Euro.
-            </p>
-          </Reveal>
-        </section>
-
-        {/* ═══════════════════════════════════════════════════════════════
-           SECTION 10: REGISTRIERUNG
-           ═══════════════════════════════════════════════════════════════ */}
-        <section id="register" style={SECTION_PAD}>
-          <Reveal>
-            <h2 style={{ fontSize: "clamp(24px, 4vw, 36px)", fontWeight: 800, color: T.bright, textAlign: "center", margin: 0 }}>
-              In 2 Minuten startklar.
-            </h2>
-          </Reveal>
-
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 40, marginTop: 48, alignItems: "start" }}>
-            {/* Left: Checklist */}
-            <Reveal delay={0.1}>
-              <div>
-                {[
-                  "Kostenlos registrieren",
-                  "Tegas FX Konto eröffnen",
-                  "Einzahlen ab 250 \u20ac",
-                  "Trader wählen",
-                  "Engine läuft automatisch",
-                ].map((item, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 0", borderBottom: `1px solid ${T.border}`, fontSize: 15 }}>
-                    <span style={{ color: T.gold, fontWeight: 700, fontSize: 18 }}>&#x2713;</span>
-                    <span style={{ color: T.bright }}>{item}</span>
-                  </div>
-                ))}
-              </div>
-            </Reveal>
-
-            {/* Right: Form */}
-            <Reveal delay={0.2}>
-              <div style={{ ...GLASS, padding: 28 }}>
-                {regStatus === "ok" ? (
-                  <div style={{ padding: 20, background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.3)", borderRadius: 12, textAlign: "center" }}>
-                    <div style={{ fontSize: 20, fontWeight: 700, color: "#22c55e", marginBottom: 8 }}>Erfolgreich!</div>
-                    <div style={{ color: T.text, fontSize: 14 }}>Prüfe dein E-Mail Postfach.</div>
-                  </div>
-                ) : (
-                  <form onSubmit={handleRegister}>
-                    <div style={{ marginBottom: 16 }}>
-                      <label style={{ display: "block", fontSize: 12, color: T.dim, marginBottom: 6 }}>Vorname</label>
-                      <input type="text" required value={regName} onChange={(e) => setRegName(e.target.value)}
-                        style={{ width: "100%", padding: "12px 14px", borderRadius: 10, border: `1px solid ${T.border}`, background: T.bg, color: T.bright, fontSize: 14, fontFamily: T.sans, outline: "none" }}
-                        placeholder="Max" />
-                    </div>
-                    <div style={{ marginBottom: 16 }}>
-                      <label style={{ display: "block", fontSize: 12, color: T.dim, marginBottom: 6 }}>Email</label>
-                      <input type="email" required value={regEmail} onChange={(e) => setRegEmail(e.target.value)}
-                        style={{ width: "100%", padding: "12px 14px", borderRadius: 10, border: `1px solid ${T.border}`, background: T.bg, color: T.bright, fontSize: 14, fontFamily: T.sans, outline: "none" }}
-                        placeholder="max@beispiel.de" />
-                    </div>
-                    <div style={{ marginBottom: 20 }}>
-                      <label style={{ display: "block", fontSize: 12, color: T.dim, marginBottom: 6 }}>Telefon <span style={{ color: T.dim }}>(optional)</span></label>
-                      <input type="tel" value={regPhone} onChange={(e) => setRegPhone(e.target.value)}
-                        style={{ width: "100%", padding: "12px 14px", borderRadius: 10, border: `1px solid ${T.border}`, background: T.bg, color: T.bright, fontSize: 14, fontFamily: T.sans, outline: "none" }}
-                        placeholder="+49 ..." />
-                    </div>
-
-                    {/* Checkbox */}
-                    <label style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer", marginBottom: 20 }}>
-                      <input type="checkbox" checked={regAccepted} onChange={(e) => setRegAccepted(e.target.checked)}
-                        style={{ marginTop: 3, accentColor: T.gold }} />
-                      <span style={{ fontSize: 12, color: T.text, lineHeight: 1.6 }}>
-                        Ich akzeptiere die{" "}
-                        <Link href="/agb" style={{ color: T.gold, textDecoration: "underline" }}>AGB</Link>,{" "}
-                        den <Link href="/risikohinweis" style={{ color: T.gold, textDecoration: "underline" }}>Risikohinweis</Link>{" "}
-                        und die <Link href="/datenschutz" style={{ color: T.gold, textDecoration: "underline" }}>Datenschutzerklärung</Link>.
-                      </span>
-                    </label>
-
-                    {regStatus === "error" && (
-                      <div style={{ color: T.red, fontSize: 13, marginBottom: 12 }}>{regError}</div>
-                    )}
-
-                    <button type="submit" disabled={!regAccepted || regStatus === "loading"}
-                      style={{ width: "100%", padding: "14px", borderRadius: 12, border: "none", background: regAccepted ? T.grad : T.bg3, color: regAccepted ? T.bg : T.dim, fontWeight: 700, fontSize: 15, cursor: regAccepted ? "pointer" : "not-allowed", fontFamily: T.sans }}>
-                      {regStatus === "loading" ? "Wird registriert..." : "Kostenlos registrieren"}
-                    </button>
-
-                    <p style={{ fontSize: 11, color: T.dim, textAlign: "center", marginTop: 12 }}>
-                      Anleitung zur Tegas-Kontoeröffnung per Email.
-                    </p>
-                  </form>
-                )}
-              </div>
-            </Reveal>
-          </div>
-
-          {/* Trust badges */}
-          <div style={{ display: "flex", justifyContent: "center", gap: 24, marginTop: 32, flexWrap: "wrap", fontSize: 13 }}>
-            {["\u2713 Reguliert", "\u2713 Kein Abo", "\u2713 Jederzeit kündbar"].map((b) => (
-              <span key={b} style={{ color: T.gold, fontWeight: 600 }}>{b}</span>
-            ))}
-          </div>
-        </section>
-
-        {/* ═══════════════════════════════════════════════════════════════
-           SECTION 11: FAQ
-           ═══════════════════════════════════════════════════════════════ */}
-        <section id="faq" style={{ ...SECTION_PAD, background: T.bg2 }}>
-          <Reveal>
-            <h2 style={{ fontSize: "clamp(24px, 4vw, 36px)", fontWeight: 800, color: T.bright, textAlign: "center", margin: "0 0 40px" }}>
-              Häufige Fragen
-            </h2>
-          </Reveal>
-          <div style={{ maxWidth: 700, margin: "0 auto" }}>
-            <FAQ items={[
-              { q: "Was macht Gold Foundry?", a: "Gold Foundry ist ein Technologie-Anbieter für KI-gesteuertes Trade Management. Wir sind kein Broker und kein Finanzdienstleister. Alle Trades laufen über Tegas FX (MISA lizenziert)." },
-              { q: "Warum ist Gold Foundry kostenlos?", a: "Tegas FX zahlt uns eine Vermittlungsprovision. Du zahlst keinen Cent an Gold Foundry — kein Abo, keine Performance Fee, keine versteckten Kosten." },
-              { q: "Was bedeutet 8x und 24x Hebel?", a: "Dein Kapital wird multipliziert. 1.000 \u20ac mit 8x Hebel = 8.000 \u20ac Handelskraft. Beide Optionen haben 5% Max Drawdown — der Kill Switch schließt automatisch." },
-              { q: "Was ist Instant Funding?", a: "Du bekommst sofort echtes Kapital von Tegas FX — ohne Challenge oder Wartezeit. Bis zu $500.000. Du behältst bis zu 90% der Gewinne." },
-              { q: "Was passiert bei Verlusten?", a: "13 KI-Strategien und 9 Sicherheitssysteme schützen jeden Trade. Bei 5% Drawdown greift der Kill Switch — alle Positionen werden sofort geschlossen." },
-              { q: "Brauche ich Trading-Erfahrung?", a: "Nein. Du wählst einen Trader, die KI macht den Rest. Kein EA, kein VPS, kein MetaTrader 5-Wissen nötig." },
-            ]} />
-          </div>
-        </section>
-
-        {/* ═══════════════════════════════════════════════════════════════
-           FOOTER
-           ═══════════════════════════════════════════════════════════════ */}
-        <footer style={{ padding: "48px 20px 32px", background: T.bg, borderTop: `1px solid ${T.border}` }}>
-          <div style={{ maxWidth: 800, margin: "0 auto" }}>
-            {/* Risk disclaimer */}
-            <p style={{ fontSize: 11, color: T.dim, lineHeight: 1.8, marginBottom: 32, textAlign: "center" }}>
-              CFDs sind komplexe Instrumente und bergen ein hohes Risiko. 74-89% der Kleinanleger verlieren Geld beim CFD-Handel. Vergangene Performance ist keine Garantie für zukünftige Ergebnisse. Gold Foundry ist ein Produkt der PhoenixOne AI UG (haftungsbeschränkt), Leipzig — ein Technologie-Anbieter, kein Finanzdienstleister. Alle Trades werden über Tegas FX ausgeführt (tegasFX Limited, MISA License BFX2024226, Bonovo Road, Fomboni, Comoros). Gold Foundry hat keinen Zugriff auf Kundengelder. Handeln Sie nur mit Kapital, dessen Verlust Sie sich leisten können.
-            </p>
-
-            {/* Links */}
-            <div style={{ display: "flex", justifyContent: "center", gap: 20, flexWrap: "wrap", marginBottom: 20 }}>
+          {/* Live Counters */}
+          {stats && (
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}
+              style={{ display: "flex", gap: 20, justifyContent: "center", marginBottom: 40, flexWrap: "wrap" }}>
               {[
-                { label: "Impressum", href: "/impressum" },
-                { label: "Datenschutz", href: "/datenschutz" },
-                { label: "AGB", href: "/agb" },
-                { label: "Risikohinweis", href: "/risikohinweis" },
-              ].map((l) => (
-                <Link key={l.href} href={l.href} style={{ color: T.dim, fontSize: 12, textDecoration: "none" }}>
-                  {l.label}
-                </Link>
+                { label: "Equity", value: <><span>$</span><AnimCounter end={equity} /></>, color: "#d4a537" },
+                { label: "Heute", value: <><span>{todayPnl >= 0 ? "+" : "-"}$</span><AnimCounter end={Math.abs(todayPnl)} /></>, color: todayPnl >= 0 ? "#22c55e" : "#ef4444" },
+                { label: "Gain", value: <><span>+</span><AnimCounter end={Math.round(gain)} suffix="%" /></>, color: "#22c55e" },
+              ].map((stat) => (
+                <Card3D key={stat.label} intensity={10}>
+                  <HoloPanel>
+                    <div style={{ textAlign: "center", padding: "16px 24px" }}>
+                      <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.1em", color: "#6d6045", marginBottom: 4 }}>{stat.label}</div>
+                      <div style={{ fontSize: 28, fontWeight: 700, fontFamily: "'JetBrains Mono', monospace", color: stat.color }}>
+                        {stat.value}
+                      </div>
+                    </div>
+                  </HoloPanel>
+                </Card3D>
               ))}
-            </div>
+            </motion.div>
+          )}
 
-            {/* Copyright */}
-            <p style={{ fontSize: 11, color: T.dim, textAlign: "center" }}>
-              &copy; 2026 Gold Foundry &middot; PhoenixOne AI UG (haftungsbeschränkt) &middot; Tegas FX (MISA)
-            </p>
+          {/* Dual CTA */}
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }}
+            style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+            <button onClick={openFunnel} className="gf-btn gf-btn-shimmer" style={{ padding: "16px 40px", fontSize: 16, cursor: "pointer" }}>
+              Kostenlos starten
+            </button>
+            <a href="#performance" style={{ padding: "16px 28px", fontSize: 14, color: "#a1a1aa", textDecoration: "none", border: "1px solid rgba(212,165,55,0.15)", borderRadius: 12, display: "flex", alignItems: "center", gap: 6 }}>
+              Performance ansehen &#x2193;
+            </a>
+          </motion.div>
+
+          {/* Trust line */}
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.2 }}
+            style={{ marginTop: 32, display: "flex", justifyContent: "center", gap: 20, flexWrap: "wrap" }}>
+            {["Reguliert via Tegas FX", "0.71% Max DD", "100% Kostenlos"].map((t) => (
+              <span key={t} style={{ fontSize: 11, color: "#52525b", display: "flex", alignItems: "center", gap: 4 }}>
+                <span style={{ color: "#22c55e" }}>&#x2713;</span> {t}
+              </span>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ═══ GLASS CONTENT AREA — readable over particle background ═══ */}
+      <div className="gf-glass-section" style={{ position: "relative", zIndex: 2 }}>
+
+      {/* ═══ LIVE STATS BAR ═══ */}
+      {stats && (
+        <LiveStatsBar
+          equity={stats.myfxbook?.totalEquity ?? stats.equity}
+          todayPnl={stats.todayPnl}
+          winrate={stats.winrate}
+          maxDd={stats.myfxbook?.totalDrawdown ?? stats.maxDd}
+          activePositions={stats.activePositions}
+        />
+      )}
+
+      {/* ═══ SOCIAL PROOF ═══ */}
+      <SocialProof gain={gain} equity={equity} myfxbook={stats?.myfxbook} />
+
+      {/* ═══ HOW IT WORKS ═══ */}
+      <HowItWorks />
+
+      {/* ═══ PERFORMANCE (MyFXBook Style) ═══ */}
+      <div id="performance">
+        <PerformanceChart
+          growthCurve={stats?.growthCurve ?? []} drawdownCurve={stats?.drawdownCurve ?? []}
+          equityCurve={stats?.equityCurve ?? []} recentTrades={stats?.recentTrades ?? []}
+          gain={stats?.gain ?? 0} maxDd={stats?.maxDd ?? 0}
+          todayTrades={stats?.todayTrades ?? 0} winrate={stats?.winrate ?? 0}
+          myfxbook={stats?.myfxbook}
+        />
+      </div>
+
+      {/* ═══ PROFIT CALCULATOR ═══ */}
+      {/* ProfitCalculator removed — funnel handles this now */}
+
+      {/* ═══ LEVERAGE / DD MODELL ═══ */}
+      <LeverageCards onStart={openFunnel} />
+
+      {/* ═══ TEGAS FX ═══ */}
+      <section style={{ padding: "80px 20px", maxWidth: 1000, margin: "0 auto" }}>
+        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          style={{ background: "rgba(10,8,6,0.7)", border: "1px solid rgba(212,165,55,0.1)", borderRadius: 20, padding: "48px 32px", textAlign: "center" }}>
+          <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.15em", color: "#d4a537", marginBottom: 16, fontWeight: 600 }}>Unser Broker-Partner</div>
+          <h2 style={{ fontSize: "clamp(24px, 4vw, 32px)", fontWeight: 700, color: "#fafafa", marginBottom: 8 }}>Tegas FX</h2>
+          <p style={{ color: "#a1a1aa", fontSize: 15, marginBottom: 32, maxWidth: 600, margin: "0 auto 32px" }}>
+            Regulierter ECN/STP Broker mit MISA-Lizenz. Gold Foundry vermittelt nur die Technologie — dein Kapital liegt sicher bei Tegas FX.
+          </p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 24, marginBottom: 32 }}>
+            {[
+              { icon: "🏛️", title: "MISA Lizenziert", desc: "BFX2024226, Comoros" },
+              { icon: "🔒", title: "Segregierte Gelder", desc: "Dein Geld, dein Konto" },
+              { icon: "⚡", title: "ECN/STP", desc: "Kein Dealing Desk" },
+              { icon: "💰", title: "100% Kostenlos", desc: "Wir sind nur Tech-Vermittler" },
+            ].map((item) => (
+              <div key={item.title} style={{ padding: 16 }}>
+                <div style={{ fontSize: 28, marginBottom: 8 }}>{item.icon}</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: "#fafafa", marginBottom: 4 }}>{item.title}</div>
+                <div style={{ fontSize: 12, color: "#6d6045" }}>{item.desc}</div>
+              </div>
+            ))}
           </div>
-        </footer>
-      </main>
-    </>
+        </motion.div>
+      </section>
+
+      {/* ═══ TRUST ═══ */}
+      <TrustCards />
+
+      {/* ═══ FUNNEL ═══ */}
+      <CTASection />
+
+      </div>{/* end glass-section */}
+      </div>
+    </div>
   );
 }
