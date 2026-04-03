@@ -126,7 +126,7 @@ BEREITS EXISTIERENDE SLUGS (nicht wiederholen): ${existingSlugs.join(", ") || "k
 
 Erstelle einen ${contentType}-Artikel für die Subdomain ${site.slug}.goldfoundry.de.
 400-600 Wörter. HTML mit H2/H3 Struktur. Kompakt aber informativ.`,
-      model: MODELS.fast,
+      model: MODELS.smart,
       maxTokens: 4000,
     });
   } catch (err) {
