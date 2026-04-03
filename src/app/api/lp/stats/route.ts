@@ -2,10 +2,12 @@ export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 
+import { TRADER_CONFIG } from "@/lib/trader-config";
+
 const METAAPI_BASE = "https://mt-client-api-v1.london.agiliumtrade.ai";
 const METAAPI_TOKEN = process.env.METAAPI_TOKEN ?? "";
-const PHANTOM_ID = "cb652594-04e0-4123-a89b-7528250958ed";
 const MYFXBOOK_API = "https://www.myfxbook.com/api";
+const ALL_META_IDS = TRADER_CONFIG.map((t) => t.metaApiId);
 
 let cache: { data: unknown; ts: number } | null = null;
 const CACHE_TTL = 30_000;
@@ -134,35 +136,53 @@ function startOfDayUTC() {
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
 }
 
+async function fetchStatsForAccount(accountId: string, now: string, todayStart: string, thirtyDaysAgo: string) {
+  const [accountInfo, todayDeals, thirtyDayDeals, positions] = await Promise.all([
+    metaFetch(`/users/current/accounts/${accountId}/account-information`),
+    metaFetch(`/users/current/accounts/${accountId}/history-deals/time/${todayStart}/${now}`),
+    metaFetch(`/users/current/accounts/${accountId}/history-deals/time/${thirtyDaysAgo}/${now}`),
+    metaFetch(`/users/current/accounts/${accountId}/positions`),
+  ]);
+  return { accountInfo, todayDeals: todayDeals ?? [], thirtyDayDeals: thirtyDayDeals ?? [], positions: Array.isArray(positions) ? positions : [] };
+}
+
 async function fetchStats() {
   const now = new Date().toISOString();
   const todayStart = startOfDayUTC().toISOString();
   const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString();
 
-  const [accountInfo, todayDeals, thirtyDayDeals, positions] = await Promise.all([
-    metaFetch(`/users/current/accounts/${PHANTOM_ID}/account-information`),
-    metaFetch(`/users/current/accounts/${PHANTOM_ID}/history-deals/time/${todayStart}/${now}`),
-    metaFetch(`/users/current/accounts/${PHANTOM_ID}/history-deals/time/${thirtyDaysAgo}/${now}`),
-    metaFetch(`/users/current/accounts/${PHANTOM_ID}/positions`),
-  ]);
-
-  const equity = accountInfo?.equity ?? 0;
-  const balance = accountInfo?.balance ?? 0;
-
-  // Today's closed trades
-  const todayTrades = (todayDeals ?? []).filter(
-    (d: any) => d.symbol && d.entryType === "DEAL_ENTRY_OUT"
+  // Fetch data for ALL MetaApi accounts in parallel
+  const allAccountData = await Promise.all(
+    ALL_META_IDS.map((id) => fetchStatsForAccount(id, now, todayStart, thirtyDaysAgo))
   );
-  const todayPnl = todayTrades.reduce((s: number, d: any) => s + (d.profit ?? 0), 0);
-  const wins = todayTrades.filter((d: any) => (d.profit ?? 0) > 0).length;
-  const winrate = todayTrades.length > 0 ? Math.round((wins / todayTrades.length) * 100) : 0;
 
-  // 30-day equity curve
-  const allClosed = (thirtyDayDeals ?? []).filter(
-    (d: any) => d.symbol && d.entryType === "DEAL_ENTRY_OUT"
-  );
+  // Aggregate across all accounts
+  let equity = 0;
+  let balance = 0;
+  let allTodayTrades: any[] = [];
+  let allClosedDeals: any[] = [];
+  let totalPositions = 0;
+
+  for (const acc of allAccountData) {
+    equity += acc.accountInfo?.equity ?? 0;
+    balance += acc.accountInfo?.balance ?? 0;
+    totalPositions += acc.positions.length;
+
+    const todayClosed = acc.todayDeals.filter((d: any) => d.symbol && d.entryType === "DEAL_ENTRY_OUT");
+    allTodayTrades.push(...todayClosed);
+
+    const closed30d = acc.thirtyDayDeals.filter((d: any) => d.symbol && d.entryType === "DEAL_ENTRY_OUT");
+    allClosedDeals.push(...closed30d);
+  }
+
+  // Today's PnL + Winrate across ALL accounts
+  const todayPnl = allTodayTrades.reduce((s: number, d: any) => s + (d.profit ?? 0), 0);
+  const wins = allTodayTrades.filter((d: any) => (d.profit ?? 0) > 0).length;
+  const winrate = allTodayTrades.length > 0 ? Math.round((wins / allTodayTrades.length) * 100) : 0;
+
+  // 30-day equity curve (aggregated)
   const dailyPnl: Record<string, number> = {};
-  for (const d of allClosed) {
+  for (const d of allClosedDeals) {
     if (!d.time) continue;
     const day = d.time.substring(0, 10);
     dailyPnl[day] = (dailyPnl[day] ?? 0) + (d.profit ?? 0);
@@ -176,14 +196,14 @@ async function fetchStats() {
     return { date: day, equity: Math.round(cumulative * 100) / 100 };
   });
 
-  // Growth % curve (MyFXBook style)
+  // Growth % curve
   const growthCurve = equityCurve.map((pt) => ({
     date: pt.date,
     growth: startEquity > 0 ? Math.round(((pt.equity - startEquity) / startEquity) * 10000) / 100 : 0,
     equity: pt.equity,
   }));
 
-  // Max drawdown from equity curve + intraday DD from individual trades
+  // Max drawdown from equity curve + intraday DD
   let peak = 0;
   let maxDd = 0;
   const drawdownCurve: { date: string; dd: number }[] = [];
@@ -193,16 +213,14 @@ async function fetchStats() {
     if (dd > maxDd) maxDd = dd;
     drawdownCurve.push({ date: pt.date, dd });
   }
-  // Intraday DD: check losing trades vs equity for more accurate DD
-  const losingTrades = allClosed.filter((d: any) => (d.profit ?? 0) < 0);
+  const losingTrades = allClosedDeals.filter((d: any) => (d.profit ?? 0) < 0);
   const maxSingleLoss = losingTrades.reduce((max: number, d: any) => Math.max(max, Math.abs(d.profit ?? 0)), 0);
   const intradayDd = equity > 0 ? Math.round((maxSingleLoss / equity) * 10000) / 100 : 0;
   if (intradayDd > maxDd) maxDd = intradayDd;
-  // Floor: minimum 0.71% (verified on MyFXBook)
   if (maxDd < 0.71) maxDd = 0.71;
 
-  // Recent trades (last 5 closed)
-  const recentTrades = todayTrades
+  // Recent trades (last 5 closed across all accounts)
+  const recentTrades = allTodayTrades
     .sort((a: any, b: any) => new Date(b.time).getTime() - new Date(a.time).getTime())
     .slice(0, 5)
     .map((d: any) => ({
@@ -247,7 +265,7 @@ async function fetchStats() {
     winrate,
     maxDd: Math.round(mfxMaxDd * 10) / 10,
     gain: mfxGain,
-    activePositions: Array.isArray(positions) ? positions.length : 0,
+    activePositions: totalPositions,
     equityCurve,
     growthCurve,
     drawdownCurve,
