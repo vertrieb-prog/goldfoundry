@@ -63,6 +63,14 @@ export function createRestAdapter(token: string, accountId: string) {
       const payload = { actionType: "ORDER_TYPE_SELL_LIMIT", symbol, volume: lots, openPrice: price, stopLoss: sl, takeProfit: tp };
       return apiFetch(token, accountId, "/trade", { method: "POST", body: JSON.stringify(payload) });
     },
+    async createStopBuyOrder(symbol: string, lots: number, price: number, sl: number, tp: number) {
+      const payload = { actionType: "ORDER_TYPE_BUY_STOP", symbol, volume: lots, openPrice: price, stopLoss: sl, takeProfit: tp };
+      return apiFetch(token, accountId, "/trade", { method: "POST", body: JSON.stringify(payload) });
+    },
+    async createStopSellOrder(symbol: string, lots: number, price: number, sl: number, tp: number) {
+      const payload = { actionType: "ORDER_TYPE_SELL_STOP", symbol, volume: lots, openPrice: price, stopLoss: sl, takeProfit: tp };
+      return apiFetch(token, accountId, "/trade", { method: "POST", body: JSON.stringify(payload) });
+    },
     async modifyPosition(positionId: string, sl: number | null, tp: number | null) {
       const payload: any = { actionType: "POSITION_MODIFY", positionId };
       if (sl !== null) payload.stopLoss = sl;

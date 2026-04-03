@@ -525,25 +525,39 @@ async function processChannel(db: any, channel: any) {
         Number(account.leverage) || 30
       );
 
-      // ── SELF-HEALING: Retry once on recoverable errors ──
+      // ── SELF-HEALING: Retry once on recoverable errors (with duplicate check) ──
       if (!tradeResult.success && tradeResult.error &&
           (tradeResult.error.includes("not found") ||
            tradeResult.error.includes("not connected") ||
            tradeResult.error.includes("UNDEPLOYED") ||
            tradeResult.error.includes("timeout"))) {
-        log("WARN", `[RETRY] Trade failed (${tradeResult.error}), retrying in 3s...`);
+        log("WARN", `[RETRY] Trade failed (${tradeResult.error}), checking positions before retry...`);
         await new Promise(r => setTimeout(r, 3000));
-        tradeResult = await executeTrade(
-          metaApiToken,
-          account.metaapi_account_id,
-          brokerSymbol,
-          signal,
-          Number(account.current_equity) || 10000,
-          riskPercent,
-          Number(account.leverage) || 30
-        );
-        if (tradeResult.success) {
-          log("INFO", `[RETRY] Trade succeeded on retry!`);
+        // Check if trade actually went through despite timeout
+        let alreadyFilled = false;
+        try {
+          const clientBase = "https://mt-client-api-v1.london.agiliumtrade.ai";
+          const checkRes = await fetch(
+            `${clientBase}/users/current/accounts/${account.metaapi_account_id}/positions`,
+            { headers: { "auth-token": metaApiToken }, signal: AbortSignal.timeout(10000) }
+          );
+          if (checkRes.ok) {
+            const positions = await checkRes.json();
+            alreadyFilled = (positions || []).some((p: any) =>
+              p.symbol === brokerSymbol && p.comment?.includes("TG-Signal")
+              && (Date.now() - new Date(p.time).getTime()) < 30000
+            );
+          }
+        } catch {}
+        if (alreadyFilled) {
+          log("INFO", `[RETRY] Position already exists — skipping retry`);
+          tradeResult = { success: true, orderIds: ["already-filled"], lots: 0 } as any;
+        } else {
+          tradeResult = await executeTrade(
+            metaApiToken, account.metaapi_account_id, brokerSymbol, signal,
+            Number(account.current_equity) || 10000, riskPercent, Number(account.leverage) || 30
+          );
+          if (tradeResult.success) log("INFO", `[RETRY] Trade succeeded on retry!`);
         }
       }
 

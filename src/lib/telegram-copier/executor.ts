@@ -315,7 +315,7 @@ async function executeSingleSlave(
 
     // Margin-Check
     const info = await conn.getAccountInformation();
-    const estimatedMargin = signal.symbol === "XAUUSD" ? copyLots * 1000 : copyLots * 330;
+    const estimatedMargin = /xau|gold/i.test(signal.symbol || "") ? copyLots * 10000 : copyLots * 1500;
     if (info.freeMargin < estimatedMargin) {
       await logCopyAction(db, slave, signal, channelId, messageId, "SKIPPED", assessment, copyLots, 0, "INSUFFICIENT_MARGIN");
       return "SKIPPED";
@@ -468,10 +468,12 @@ async function handleModifySignal(
         for (const pos of matching) {
           // Breakeven
           if (signal.moveToBreakeven) {
-            const buffer = pos.type === "POSITION_TYPE_BUY"
-              ? getPipSize(signal.symbol!) * 2
-              : -getPipSize(signal.symbol!) * 2;
-            await conn.modifyPosition(pos.id, pos.openPrice + buffer, pos.takeProfit);
+            const pipBuffer = getPipSize(signal.symbol!) * 2;
+            // BUY: SL slightly above entry. SELL: SL slightly below entry.
+            const beSL = pos.type === "POSITION_TYPE_BUY"
+              ? pos.openPrice + pipBuffer
+              : pos.openPrice - pipBuffer;
+            await conn.modifyPosition(pos.id, beSL, pos.takeProfit);
           } else {
             // SL/TP Update
             await conn.modifyPosition(

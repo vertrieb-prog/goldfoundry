@@ -399,12 +399,29 @@ class SafeAPI {
   async sell(symbol: string, lots: number, sl?: number | null, tp?: number | null) { return this.api.createMarketSellOrder(symbol, lots, sl, tp); }
   async limitBuy(symbol: string, lots: number, price: number, sl: number, tp: number) { return this.api.createLimitBuyOrder(symbol, lots, price, sl, tp); }
   async limitSell(symbol: string, lots: number, price: number, sl: number, tp: number) { return this.api.createLimitSellOrder(symbol, lots, price, sl, tp); }
+  async stopBuy(symbol: string, lots: number, price: number, sl: number, tp: number) { return this.api.createStopBuyOrder(symbol, lots, price, sl, tp); }
+  async stopSell(symbol: string, lots: number, price: number, sl: number, tp: number) { return this.api.createStopSellOrder(symbol, lots, price, sl, tp); }
   async getPosition(posId: string) { return this.api.getPosition(posId); }
+  async getPositions() { return this.api.getPositions(); }
+  async getAccountInfo() { return this.api.getAccountInfo(); }
 
   async fillPrice(result: any): Promise<number> {
     try {
-      const pos = await this.api.getPosition(result.positionId);
-      return pos?.openPrice || 0;
+      if (result.positionId) {
+        const pos = await this.api.getPosition(result.positionId);
+        return pos?.openPrice || 0;
+      }
+      // orderId fallback: search open positions
+      if (result.orderId) {
+        const positions = await this.api.getPositions();
+        if (Array.isArray(positions)) {
+          const match = positions.find((p: any) => p.id === result.orderId);
+          if (match?.openPrice) return match.openPrice;
+          // Return latest position's price as best guess
+          if (positions.length > 0) return positions[positions.length - 1].openPrice || 0;
+        }
+      }
+      return 0;
     } catch { return 0; }
   }
 }
@@ -658,10 +675,9 @@ class NewsStraddleEngine {
       const buyPrice = +(p.ask + offset).toFixed(2);
       const sellPrice = +(p.bid - offset).toFixed(2);
 
-      // Nicht möglich über MetaApi createStopOrder direkt, nutze pending orders
-      // BUY STOP = Limit über Preis
-      const buyRes = await this.api.limitBuy(symbol, lotSize, buyPrice, +(buyPrice - slDist).toFixed(2), 0);
-      const sellRes = await this.api.limitSell(symbol, lotSize, sellPrice, +(sellPrice + slDist).toFixed(2), 0);
+      // BUY STOP above price, SELL STOP below price
+      const buyRes = await this.api.stopBuy(symbol, lotSize, buyPrice, +(buyPrice - slDist).toFixed(2), 0);
+      const sellRes = await this.api.stopSell(symbol, lotSize, sellPrice, +(sellPrice + slDist).toFixed(2), 0);
 
       this.activeStraddles.set(symbol, {
         buyId: buyRes.orderId,
@@ -671,11 +687,6 @@ class NewsStraddleEngine {
       });
 
       console.log(`[STRADDLE] ${symbol} | BUY STOP @${buyPrice} | SELL STOP @${sellPrice}`);
-
-      // Nach 60 Sek: nicht getriggerte Order canceln
-      setTimeout(async () => {
-        await this.cleanup(symbol);
-      }, 60_000);
 
       return `STRADDLE:${symbol}:BUY@${buyPrice}|SELL@${sellPrice}`;
     } catch (err) {
@@ -697,6 +708,14 @@ class NewsStraddleEngine {
 
   hasActive(symbol: string): boolean {
     return this.activeStraddles.has(symbol);
+  }
+
+  async cleanupExpired(): Promise<void> {
+    for (const [sym, straddle] of this.activeStraddles) {
+      if (Date.now() - straddle.placedAt.getTime() > 60_000) {
+        await this.cleanup(sym);
+      }
+    }
   }
 }
 
@@ -842,6 +861,9 @@ class MasterStrategyEngine {
   async tick(): Promise<void> {
     // Weekend → defensiv
     if (this.isWeekend()) { await this.weekendProtect(); return; }
+
+    // Cleanup expired straddles (>60s old)
+    await this.newsStraddle.cleanupExpired();
 
     // Keine offenen Gruppen UND kein Grid → NICHTS TUN
     const activeGroups = [...this.groups.values()].filter(g => g.status !== "CLOSED");
@@ -1455,8 +1477,11 @@ class MasterStrategyEngine {
         const slDistPips = Math.abs(signal.entryPrice - sl) / pipSize(sym);
         const pipValue = pipSize(sym) * 10; // ~$1 pro Pip bei 0.01L für Forex, ~$0.10 für Gold
         const riskPercent = 0.01; // 1% Risiko pro Trade
-        // TODO: Account Balance von MetaApi holen für echte Berechnung
-        const balance = 10000; // Placeholder bis MetaApi Balance implementiert
+        let balance = 10000;
+        try {
+          const accInfo = await this.api.getAccountInfo();
+          balance = accInfo?.balance || accInfo?.equity || 10000;
+        } catch { /* Fallback auf 10k */ }
         const riskAmount = balance * riskPercent;
         if (slDistPips > 0 && pipValue > 0) {
           baseLot = +(riskAmount / (slDistPips * pipValue * 100)).toFixed(2);
@@ -1514,7 +1539,7 @@ class MasterStrategyEngine {
 
   private isWeekend(): boolean {
     const d = new Date();
-    return (d.getUTCDay() === 5 && d.getUTCHours() >= 16) || d.getUTCDay() === 6 || d.getUTCDay() === 0;
+    return (d.getUTCDay() === 5 && d.getUTCHours() >= 22) || d.getUTCDay() === 6 || (d.getUTCDay() === 0 && d.getUTCHours() < 22);
   }
 
   private isActiveSession(): boolean {
@@ -1556,7 +1581,7 @@ class MasterStrategyEngine {
   }
 
   private async getCachedCandles(symbol: string, tf: string, count: number) {
-    const key = `${symbol}:${tf}`;
+    const key = `${symbol}:${tf}:${count}`;
     const cached = this.candleCache.get(key);
     if (cached && Date.now() - cached.ts < this.CANDLE_TTL) return cached.data;
     const data = await this.api.candles(symbol, tf, count);

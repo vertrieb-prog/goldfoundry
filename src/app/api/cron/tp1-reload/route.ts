@@ -7,7 +7,7 @@ export const maxDuration = 60;
 // Max 1 Reload pro Signal. Enger SL ($3 Gold).
 // ═══════════════════════════════════════════════════════════════
 import { NextResponse } from "next/server";
-import { createSupabaseAdmin } from "@/lib/supabase/server";
+import { createSupabaseAdmin, fetchActiveSlaveAccounts } from "@/lib/supabase/server";
 
 const CLIENT_BASE = "https://mt-client-api-v1.london.agiliumtrade.ai";
 
@@ -35,8 +35,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ reloads: [], message: "News — kein Reload" });
     }
 
-    const { data: allAccounts } = await db.from("slave_accounts").select("*");
-    const accounts = (allAccounts || []).filter((a: any) => a.copier_active === true);
+    const accounts = await fetchActiveSlaveAccounts();
     if (!accounts?.length) return NextResponse.json({ reloads: [] });
 
     for (const account of accounts) {
@@ -52,10 +51,12 @@ export async function GET(request: Request) {
 
         // Originale (ohne RELOAD)
         const originals = positions.filter(
-          (p: any) => p.comment && (p.comment.startsWith("TG-Signal") || p.comment.startsWith("COPY-")) && !p.comment.includes("RELOAD")
+          (p: any) => p.comment && (p.comment.startsWith("TG-Signal") || p.comment.startsWith("COPY-") || p.comment.startsWith("PH4-")) && !p.comment.includes("RELOAD")
         );
-        // Existierende Reloads
-        const hasReload = positions.some((p: any) => p.comment?.includes("RELOAD"));
+        // Existierende Reloads per Symbol (nicht account-weit)
+        const reloadSymbols = new Set(
+          positions.filter((p: any) => p.comment?.includes("RELOAD")).map((p: any) => p.symbol)
+        );
 
         // Gruppiere nach Symbol+Richtung
         const groups = new Map<string, any[]>();
@@ -81,7 +82,7 @@ export async function GET(request: Request) {
           if (remaining >= 4) continue;
 
           // 2. Kein Reload fuer dieses Symbol aktiv
-          if (hasReload) continue;
+          if (reloadSymbols.has(symbol)) continue;
 
           // 3. Preis muss zurueck in Entry-Zone sein (±$1 Gold)
           const distFromEntry = Math.abs(currentPrice - entry);
@@ -131,7 +132,8 @@ export async function GET(request: Request) {
           if (!tp1Target || !isFinite(tp1Target)) continue;
 
           // SL: $3 fuer Gold, eng
-          const reloadSL = isBuy ? currentPrice - 3 : currentPrice + 3;
+          const slDist = /xau|gold/i.test(symbol) ? 3.0 : /jpy/i.test(symbol) ? 0.30 : /us30|nas|us500|de40/i.test(symbol) ? 15 : /btc/i.test(symbol) ? 200 : 0.0030;
+          const reloadSL = isBuy ? currentPrice - slDist : currentPrice + slDist;
 
           log("INFO", `${account.mt_login} ${groupKey}: RELOAD 1 Order ${reloadLots}L → TP ${tp1Target} (Preis ${currentPrice} nah an Entry ${entry})`);
 

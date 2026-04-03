@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 import { NextResponse } from "next/server";
-import { createSupabaseAdmin } from "@/lib/supabase/server";
+import { createSupabaseAdmin, supabaseRestQuery } from "@/lib/supabase/server";
 
 const META_PROV = "https://mt-provisioning-api-v1.agiliumtrade.agiliumtrade.ai";
 
@@ -24,10 +24,7 @@ export async function GET(request: Request) {
   const results: any[] = [];
 
   try {
-    const { data: accounts } = await db
-      .from("slave_accounts")
-      .select("id, metaapi_account_id, mt_login, current_equity, initial_balance, total_trades, total_profit")
-      ;
+    const accounts = await supabaseRestQuery("slave_accounts", "select=id,metaapi_account_id,mt_login,current_equity,initial_balance,total_trades,total_profit,equity_high,dd_limit,dd_type");
 
     if (!accounts?.length) return NextResponse.json({ message: "No active accounts", results: [] });
 
@@ -58,7 +55,16 @@ export async function GET(request: Request) {
 
         // Update DB — only columns that exist
         const updates: Record<string, any> = { last_sync: new Date().toISOString() };
-        if (equity !== null) updates.current_equity = equity;
+        if (equity !== null) {
+          updates.current_equity = equity;
+          const oldHigh = Number(acc.equity_high) || 0;
+          if (equity > oldHigh) {
+            updates.equity_high = equity;
+            if (acc.dd_type === "trailing") {
+              updates.dd_limit = equity * 0.95;
+            }
+          }
+        }
         if (profit !== null) updates.total_profit = profit;
 
         await db.from("slave_accounts").update(updates).eq("id", acc.id);

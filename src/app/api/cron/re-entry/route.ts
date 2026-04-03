@@ -6,7 +6,7 @@ export const maxDuration = 60;
 // Bedingungen: 30 Min seit letztem Close, gleiche Richtung, Momentum passt
 // ═══════════════════════════════════════════════════════════════
 import { NextResponse } from "next/server";
-import { createSupabaseAdmin } from "@/lib/supabase/server";
+import { createSupabaseAdmin, fetchActiveSlaveAccounts } from "@/lib/supabase/server";
 
 const CLIENT_BASE = "https://mt-client-api-v1.london.agiliumtrade.ai";
 
@@ -44,8 +44,7 @@ export async function GET(request: Request) {
   const reEntries: any[] = [];
 
   try {
-    const { data: allAccounts } = await db.from("slave_accounts").select("*");
-    const accounts = (allAccounts || []).filter((a: any) => a.copier_active === true);
+    const accounts = await fetchActiveSlaveAccounts();
     if (!accounts?.length) return NextResponse.json({ reEntries: [], message: "No accounts" });
 
     for (const account of accounts) {
@@ -59,7 +58,7 @@ export async function GET(request: Request) {
         if (!posRes.ok) continue;
         const positions = await posRes.json();
         const managed = (positions || []).filter(
-          (p: any) => p.comment && (p.comment.startsWith("TG-Signal") || p.comment.startsWith("COPY-"))
+          (p: any) => p.comment && (p.comment.startsWith("TG-Signal") || p.comment.startsWith("COPY-") || p.comment.startsWith("PH4-"))
         );
 
         // Nur Re-Entry wenn KEINE offenen Positionen auf diesem Account
@@ -145,7 +144,7 @@ export async function GET(request: Request) {
         const isBuy = lastClose.direction === "BUY";
         const sl = isBuy ? currentPrice - slDist : currentPrice + slDist;
         const balance = Number(account.current_equity) || 10000;
-        const riskAmount = balance * 0.05;
+        const riskAmount = balance * 0.01;
         const pipValue = /xau|gold/i.test(symbol) ? 100 : /jpy/i.test(symbol) ? 1000 : 100000;
         let totalLots = Math.max(0.01, Math.floor((riskAmount / (slDist * pipValue)) * 100) / 100);
 

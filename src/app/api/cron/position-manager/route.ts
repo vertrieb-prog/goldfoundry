@@ -6,7 +6,7 @@ export const maxDuration = 300;
 // TP-Hit Floor System. Optimiert fuer XAUUSD Copy Trading.
 // ═══════════════════════════════════════════════════════════════
 import { NextResponse } from "next/server";
-import { createSupabaseAdmin } from "@/lib/supabase/server";
+import { createSupabaseAdmin, fetchActiveSlaveAccounts } from "@/lib/supabase/server";
 
 const CLIENT_BASE = "https://mt-client-api-v1.london.agiliumtrade.ai";
 
@@ -31,8 +31,15 @@ async function metaApiFetch(url: string, token: string, options?: RequestInit) {
 // === ATR BERECHNUNG aus Candle-Daten ===
 function calcATR(candles: any[]): number {
   if (!candles?.length) return 0;
-  const ranges = candles.map((c: any) => Math.abs(c.high - c.low));
-  return ranges.reduce((s, r) => s + r, 0) / ranges.length;
+  let sum = 0;
+  for (let i = 0; i < candles.length; i++) {
+    const c = candles[i];
+    const hl = Math.abs(c.high - c.low);
+    if (i === 0) { sum += hl; continue; }
+    const pc = candles[i - 1].close;
+    sum += Math.max(hl, Math.abs(c.high - pc), Math.abs(c.low - pc));
+  }
+  return sum / candles.length;
 }
 
 export async function GET(request: Request) {
@@ -58,9 +65,8 @@ export async function GET(request: Request) {
     const hasNews = (upcomingNews?.length || 0) > 0;
     if (hasNews) log("WARN", `News in 15min — Trail verengen`);
 
-    // Alle Accounts (JS-Filter wegen Supabase Bug)
-    const { data: allAccounts } = await db.from("slave_accounts").select("*");
-    const accounts = (allAccounts || []).filter((a: any) => a.copier_active === true);
+    // Raw REST — Supabase JS client hat Caching-Issues auf Vercel Fluid Compute
+    const accounts = await fetchActiveSlaveAccounts();
     if (!accounts?.length) return NextResponse.json({ message: "No active accounts", modifications: [] });
 
     for (const account of accounts) {
@@ -77,7 +83,7 @@ export async function GET(request: Request) {
 
         // Originale fuer Floor-System (OHNE Reload)
         const originals = positions.filter(
-          (p: any) => p.comment && (p.comment.startsWith("TG-Signal") || p.comment.startsWith("COPY-")) && !p.comment.includes("RELOAD")
+          (p: any) => p.comment && (p.comment.startsWith("TG-Signal") || p.comment.startsWith("COPY-") || p.comment.startsWith("PH4-")) && !p.comment.includes("RELOAD")
         );
         // RELOAD Positionen: werden AUCH getrailt aber nicht im Floor-Count
         const reloadPositions = positions.filter(
@@ -91,8 +97,9 @@ export async function GET(request: Request) {
         const groups = new Map<string, any[]>();
         for (const pos of managed) {
           const dir = pos.type?.replace("POSITION_TYPE_", "") || "?";
-          // Gruppierung: 1 Dezimalstelle ($4553.1 = gleiche Gruppe wie $4553.4, aber $4554.1 = neue Gruppe)
-          const key = `${pos.symbol}-${dir}-${(Math.round(pos.openPrice * 10) / 10).toFixed(1)}`;
+          // Gruppierung: nach Comment/Signal-ID (nicht Preis-Bucket)
+          const commentBase = (pos.comment || "").replace(/-TP[0-9]|-Runner|-RELOAD/g, "").trim();
+          const key = `${pos.symbol}-${dir}-${commentBase || pos.openPrice.toFixed(0)}`;
           if (!groups.has(key)) groups.set(key, []);
           groups.get(key)!.push(pos);
         }
@@ -187,10 +194,54 @@ export async function GET(request: Request) {
 
           const ageMin = groupPos[0].time ? (Date.now() - new Date(groupPos[0].time).getTime()) / 60000 : 999;
 
+          // === EXIT ENTSCHEIDUNGEN (vor SL-Trail) ===
+
+          // CRITICAL: >85% zum SL + Momentum AGAINST + Speed → Emergency Close
+          if (rMultiple < -0.85 && momentum === "AGAINST" && speed > 1.5) {
+            for (const pos of groupPos) {
+              try {
+                await metaApiFetch(`${CLIENT_BASE}/users/current/accounts/${accountId}/trade`, metaApiToken, {
+                  method: "POST", body: JSON.stringify({ actionType: "POSITION_CLOSE_ID", positionId: pos.id }),
+                });
+                log("INFO", `NOTFALL-CLOSE ${symbol} ${pos.id}: ${rMultiple.toFixed(1)}R + AGAINST`);
+                modifications.push({ symbol, posId: pos.id, action: "emergency_close", rMultiple: +rMultiple.toFixed(2) });
+              } catch (e: any) { log("WARN", `Close fehlgeschlagen: ${e.message}`); }
+            }
+            continue; // Naechste Gruppe — skip trail
+          }
+
+          // SPEED CLOSE: Im Profit + schnelle Umkehr → sofort raus
+          if (rMultiple > 0.5 && rMultiple < 2.0 && momentum === "AGAINST" && speed > 2.0 && remaining >= 3) {
+            for (const pos of groupPos) {
+              try {
+                await metaApiFetch(`${CLIENT_BASE}/users/current/accounts/${accountId}/trade`, metaApiToken, {
+                  method: "POST", body: JSON.stringify({ actionType: "POSITION_CLOSE_ID", positionId: pos.id }),
+                });
+                log("INFO", `SPEED-CLOSE ${symbol} ${pos.id}: ${rMultiple.toFixed(1)}R + Speed ${speed.toFixed(1)}x`);
+                modifications.push({ symbol, posId: pos.id, action: "speed_close", rMultiple: +rMultiple.toFixed(2), speed });
+              } catch (e: any) { log("WARN", `Speed-Close fehlgeschlagen: ${e.message}`); }
+            }
+            continue; // Naechste Gruppe — skip trail
+          }
+
+          // TIME DECAY: Runner > 4h ohne neues Hoch → schliessen
+          if (remaining === 1 && ageMin > 240 && rMultiple > 0.3) {
+            const pos = groupPos[0];
+            try {
+              await metaApiFetch(`${CLIENT_BASE}/users/current/accounts/${accountId}/trade`, metaApiToken, {
+                method: "POST", body: JSON.stringify({ actionType: "POSITION_CLOSE_ID", positionId: pos.id }),
+              });
+              log("INFO", `TIME-DECAY ${symbol} ${pos.id}: Runner > 4h, ${rMultiple.toFixed(1)}R`);
+              modifications.push({ symbol, posId: pos.id, action: "time_decay", rMultiple: +rMultiple.toFixed(2), ageMin: +ageMin.toFixed(0) });
+            } catch (e: any) { log("WARN", `Time-Decay fehlgeschlagen: ${e.message}`); }
+            continue; // Naechste Gruppe — skip trail
+          }
+
+          // === SL TRAIL (nur wenn kein Exit gefeuert hat) ===
+
           // FRESH oder im Verlust → Original SL behalten
           if (rMultiple <= 0 || ageMin < 2 || atrMultPhase === 0) {
             // KEIN Trail — original SL behalten
-            // Trotzdem Exits pruefen (weiter unten)
           } else {
             // === FLOOR berechnen ===
             const floor = isBuy ? entry + oneR * floorR : entry - oneR * floorR;
@@ -239,51 +290,6 @@ export async function GET(request: Request) {
               }
             }
           }
-
-          // === EXIT ENTSCHEIDUNGEN (vor SL-Trail) ===
-
-          // CRITICAL: >70% zum SL + Momentum AGAINST → Emergency Close
-          if (rMultiple < -0.7 && momentum === "AGAINST") {
-            for (const pos of groupPos) {
-              try {
-                await metaApiFetch(`${CLIENT_BASE}/users/current/accounts/${accountId}/trade`, metaApiToken, {
-                  method: "POST", body: JSON.stringify({ actionType: "POSITION_CLOSE_ID", positionId: pos.id }),
-                });
-                log("INFO", `NOTFALL-CLOSE ${symbol} ${pos.id}: ${rMultiple.toFixed(1)}R + AGAINST`);
-                modifications.push({ symbol, posId: pos.id, action: "emergency_close", rMultiple: +rMultiple.toFixed(2) });
-              } catch (e: any) { log("WARN", `Close fehlgeschlagen: ${e.message}`); }
-            }
-            continue; // Naechste Gruppe
-          }
-
-          // SPEED CLOSE: Im Profit + schnelle Umkehr → sofort raus
-          if (rMultiple > 0.5 && momentum === "AGAINST" && speed > 1.5) {
-            for (const pos of groupPos) {
-              try {
-                await metaApiFetch(`${CLIENT_BASE}/users/current/accounts/${accountId}/trade`, metaApiToken, {
-                  method: "POST", body: JSON.stringify({ actionType: "POSITION_CLOSE_ID", positionId: pos.id }),
-                });
-                log("INFO", `SPEED-CLOSE ${symbol} ${pos.id}: ${rMultiple.toFixed(1)}R + Speed ${speed.toFixed(1)}x`);
-                modifications.push({ symbol, posId: pos.id, action: "speed_close", rMultiple: +rMultiple.toFixed(2), speed });
-              } catch (e: any) { log("WARN", `Speed-Close fehlgeschlagen: ${e.message}`); }
-            }
-            continue;
-          }
-
-          // TIME DECAY: Runner > 4h ohne neues Hoch → schliessen
-          if (remaining === 1 && ageMin > 240 && rMultiple > 0) {
-            const pos = groupPos[0];
-            try {
-              await metaApiFetch(`${CLIENT_BASE}/users/current/accounts/${accountId}/trade`, metaApiToken, {
-                method: "POST", body: JSON.stringify({ actionType: "POSITION_CLOSE_ID", positionId: pos.id }),
-              });
-              log("INFO", `TIME-DECAY ${symbol} ${pos.id}: Runner > 4h, ${rMultiple.toFixed(1)}R`);
-              modifications.push({ symbol, posId: pos.id, action: "time_decay", rMultiple: +rMultiple.toFixed(2), ageMin: +ageMin.toFixed(0) });
-            } catch (e: any) { log("WARN", `Time-Decay fehlgeschlagen: ${e.message}`); }
-            continue;
-          }
-
-          // SL-Trail ist oben im Phase-System integriert
         }
 
         // === RELOAD POSITIONEN SEPARAT TRAILEN ===

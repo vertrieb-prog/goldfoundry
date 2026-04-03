@@ -399,7 +399,8 @@ export class MasterTradeListener {
 
       // Final margin check
       const info = await conn.getAccountInformation();
-      if (info.freeMargin < copyLots * 1000) { // Simplified margin check
+      const estMargin = /xau|gold/i.test(signal.instrument || "") ? copyLots * 10000 : copyLots * 1500;
+      if (info.freeMargin < estMargin) { // Margin check
         logEntry.action = "SKIPPED";
         logEntry.skip_reason = "INSUFFICIENT_MARGIN";
         await this.db.from("copier_log").insert(logEntry);

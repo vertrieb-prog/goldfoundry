@@ -1,4 +1,5 @@
 export const dynamic = "force-dynamic";
+export const maxDuration = 120;
 // src/app/api/cron/equity-snapshot/route.ts
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
@@ -47,13 +48,49 @@ export async function GET(request: Request) {
           phase = profitPct >= 15 ? 4 : profitPct >= 8 ? 3 : profitPct >= 3 ? 2 : 1;
         }
 
+        // ══════════════════════════════════════════════════════
+        // EMERGENCY KILL SWITCH — Last line of defense
+        // If buffer < 2% → close ALL open positions IMMEDIATELY
+        // This is the ULTIMATE account saver
+        // Must run BEFORE copierActive gets modified by auto-pause logic
+        // ══════════════════════════════════════════════════════
+        if (ddBuffer < 2 && positions.length > 0) {
+          console.log(`[EMERGENCY] ${acc.mt_login}: Buffer ${ddBuffer.toFixed(1)}% < 2% — CLOSING ALL ${positions.length} POSITIONS`);
+          try {
+            for (const pos of positions) {
+              await (conn as any).closePosition(pos.id);
+              console.log(`[EMERGENCY] Closed position ${pos.id} (${pos.symbol} ${pos.volume}L)`);
+            }
+
+            // Log to copier_log
+            await db.from("copier_log").insert({
+              slave_account_id: acc.id,
+              firm_profile: acc.firm_profile,
+              instrument: "ALL",
+              direction: "EMERGENCY_CLOSE",
+              master_lots: 0,
+              calculated_lots: 0,
+              action: "EMERGENCY_KILL",
+              skip_reason: `Buffer ${ddBuffer.toFixed(1)}% — ${positions.length} Positionen geschlossen`,
+              dd_buffer_pct: ddBuffer,
+              equity_at_copy: equity,
+              risk_assessment: { buffer: ddBuffer, positions: positions.length },
+            });
+          } catch (killErr) {
+            console.error(`[EMERGENCY] Kill switch failed for ${acc.mt_login}:`, (killErr as Error).message);
+          }
+        }
+
         // Auto-pause if DD emergency
         let copierActive = acc.copier_active;
         let pauseReason = acc.copier_paused_reason;
-        if (ddBuffer < 5 && copierActive) {
+        if (ddBuffer < 2 && positions.length > 0) {
+          copierActive = false;
+          pauseReason = `EMERGENCY-KILL: Buffer ${ddBuffer.toFixed(1)}% < 2%. Alle ${positions.length} Positionen geschlossen. Account gerettet.`;
+        } else if (ddBuffer < 5 && copierActive) {
           copierActive = false;
           pauseReason = `DD-EMERGENCY: Buffer ${ddBuffer.toFixed(1)}% < 5%. Auto-Pause.`;
-        } else if (ddBuffer > 15 && !copierActive && pauseReason?.startsWith("DD-EMERGENCY")) {
+        } else if (ddBuffer > 15 && !copierActive && (pauseReason?.startsWith("DD-EMERGENCY") || pauseReason?.startsWith("EMERGENCY-KILL"))) {
           copierActive = true;
           pauseReason = null;
         }
@@ -100,40 +137,6 @@ export async function GET(request: Request) {
                 pauseReason = null;
               }
             }
-          }
-        }
-
-        // ══════════════════════════════════════════════════════
-        // EMERGENCY KILL SWITCH — Last line of defense
-        // If buffer < 2% → close ALL open positions IMMEDIATELY
-        // This is the ULTIMATE account saver
-        // ══════════════════════════════════════════════════════
-        if (ddBuffer < 2 && positions.length > 0 && copierActive) {
-          console.log(`[EMERGENCY] ${acc.mt_login}: Buffer ${ddBuffer.toFixed(1)}% < 2% — CLOSING ALL ${positions.length} POSITIONS`);
-          try {
-            for (const pos of positions) {
-              await (conn as any).closePosition(pos.id);
-              console.log(`[EMERGENCY] Closed position ${pos.id} (${pos.symbol} ${pos.volume}L)`);
-            }
-            copierActive = false;
-            pauseReason = `EMERGENCY-KILL: Buffer ${ddBuffer.toFixed(1)}% < 2%. Alle ${positions.length} Positionen geschlossen. Account gerettet.`;
-
-            // Log to copier_log
-            await db.from("copier_log").insert({
-              slave_account_id: acc.id,
-              firm_profile: acc.firm_profile,
-              instrument: "ALL",
-              direction: "EMERGENCY_CLOSE",
-              master_lots: 0,
-              calculated_lots: 0,
-              action: "EMERGENCY_KILL",
-              skip_reason: `Buffer ${ddBuffer.toFixed(1)}% — ${positions.length} Positionen geschlossen`,
-              dd_buffer_pct: ddBuffer,
-              equity_at_copy: equity,
-              risk_assessment: { buffer: ddBuffer, positions: positions.length },
-            });
-          } catch (killErr) {
-            console.error(`[EMERGENCY] Kill switch failed for ${acc.mt_login}:`, (killErr as Error).message);
           }
         }
 

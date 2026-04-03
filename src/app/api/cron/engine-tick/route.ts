@@ -6,7 +6,7 @@ export const maxDuration = 120;
 // Uses MetaApi REST (NOT SDK) via engine-adapter
 // ═══════════════════════════════════════════════════════════════
 import { NextResponse } from "next/server";
-import { createSupabaseAdmin } from "@/lib/supabase/server";
+import { createSupabaseAdmin, fetchActiveSlaveAccounts } from "@/lib/supabase/server";
 import { createRestAdapter } from "@/lib/engine-adapter";
 import { MasterStrategyEngine, DEFAULT_CONFIG } from "@/lib/strategy-engine";
 
@@ -29,11 +29,7 @@ export async function GET(request: Request) {
   const db = createSupabaseAdmin();
 
   try {
-    // Hole ALLE Accounts und filtere in JS (Supabase boolean filter ist unzuverlaessig auf Vercel)
-    const { data: allAccounts } = await db
-      .from("slave_accounts")
-      .select("*");
-    const accounts = (allAccounts || []).filter((a: any) => a.copier_active === true);
+    const accounts = await fetchActiveSlaveAccounts();
 
     if (!accounts?.length) {
       return NextResponse.json({ message: "No active accounts", ticked: 0 });
