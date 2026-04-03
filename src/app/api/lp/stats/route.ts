@@ -175,13 +175,18 @@ function startOfDayUTC() {
 }
 
 async function fetchStatsForAccount(accountId: string, now: string, todayStart: string, thirtyDaysAgo: string) {
-  const [accountInfo, todayDeals, thirtyDayDeals, positions] = await Promise.all([
-    metaFetch(`/users/current/accounts/${accountId}/account-information`),
-    metaFetch(`/users/current/accounts/${accountId}/history-deals/time/${todayStart}/${now}`),
-    metaFetch(`/users/current/accounts/${accountId}/history-deals/time/${thirtyDaysAgo}/${now}`),
-    metaFetch(`/users/current/accounts/${accountId}/positions`),
-  ]);
-  return { accountInfo, todayDeals: todayDeals ?? [], thirtyDayDeals: thirtyDayDeals ?? [], positions: Array.isArray(positions) ? positions : [] };
+  try {
+    const [accountInfo, todayDeals, thirtyDayDeals, positions] = await Promise.all([
+      metaFetch(`/users/current/accounts/${accountId}/account-information`),
+      metaFetch(`/users/current/accounts/${accountId}/history-deals/time/${todayStart}/${now}`),
+      metaFetch(`/users/current/accounts/${accountId}/history-deals/time/${thirtyDaysAgo}/${now}`),
+      metaFetch(`/users/current/accounts/${accountId}/positions`),
+    ]);
+    return { accountInfo, todayDeals: todayDeals ?? [], thirtyDayDeals: thirtyDayDeals ?? [], positions: Array.isArray(positions) ? positions : [] };
+  } catch {
+    console.error(`[lp/stats] Failed to fetch account ${accountId}`);
+    return { accountInfo: null, todayDeals: [], thirtyDayDeals: [], positions: [] };
+  }
 }
 
 async function fetchStats() {
