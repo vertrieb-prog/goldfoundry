@@ -16,26 +16,78 @@ const CACHE_TTL = 30_000;
 let myfxCache: { data: any; ts: number } | null = null;
 const MYFX_CACHE_TTL = 5 * 60_000; // 5 min
 
-const STALE_THRESHOLD = 60 * 60 * 1000; // 1 hour — trigger update if older
+const STALE_THRESHOLD = 30 * 60 * 1000; // 30 min — trigger update if older
 
 /** Fresh MyFXBook login + fetch accounts in one go (same IP) */
+// Cached session to avoid re-login on every request
+let cachedMfxSession: { session: string; ts: number } | null = null;
+const MFX_SESSION_TTL = 3 * 60 * 60_000; // 3h
+
 async function fetchMyFXBook() {
   const email = process.env.MYFXBOOK_EMAIL ?? "";
   const password = process.env.MYFXBOOK_PASSWORD ?? "";
   if (!email || !password) return null;
 
-  // Login — cache: 'no-store' to prevent Next.js from caching stale sessions
-  const loginRes = await fetch(
-    `${MYFXBOOK_API}/login.json?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`,
-    { signal: AbortSignal.timeout(10000), cache: "no-store" }
-  );
-  const loginData = await loginRes.json();
-  if (loginData.error) {
-    console.error(`[MyFXBook] Login failed: ${loginData.message} (email: ${email.slice(0, 3)}***)`);
-    return null;
+  let session = "";
+
+  // 1. Cached Session verwenden wenn noch gueltig
+  if (cachedMfxSession && Date.now() - cachedMfxSession.ts < MFX_SESSION_TTL) {
+    session = cachedMfxSession.session;
+    // Testen ob Session noch gueltig
+    try {
+      const testRes = await fetch(
+        `${MYFXBOOK_API}/get-my-accounts.json?session=${session}`,
+        { signal: AbortSignal.timeout(8000), cache: "no-store" }
+      );
+      const testData = await testRes.json();
+      if (!testData.error) {
+        // Session ist noch gueltig, direkt weiter
+      } else {
+        console.warn("[MyFXBook] Cached session expired, re-login...");
+        session = "";
+        cachedMfxSession = { session: "", ts: 0 };
+      }
+    } catch {
+      session = "";
+      cachedMfxSession = { session: "", ts: 0 };
+    }
   }
 
-  const session = loginData.session;
+  // 2. Neuer Login nur wenn noetig
+  if (!session) {
+    // Retry bis zu 2x mit 5s Pause
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      try {
+        const loginRes = await fetch(
+          `${MYFXBOOK_API}/login.json?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`,
+          { signal: AbortSignal.timeout(10000), cache: "no-store" }
+        );
+        const loginData = await loginRes.json();
+        if (!loginData.error && loginData.session) {
+          session = loginData.session;
+          cachedMfxSession = { session, ts: Date.now() };
+          console.log(`[MyFXBook] Login OK (attempt ${attempt})`);
+          break;
+        }
+        console.warn(`[MyFXBook] Login attempt ${attempt} failed: ${loginData.message}`);
+      } catch (err: any) {
+        console.warn(`[MyFXBook] Login attempt ${attempt} error: ${err.message}`);
+      }
+      if (attempt < 2) await new Promise((r) => setTimeout(r, 5000));
+    }
+
+    // 3. Fallback: Session aus ENV oder Supabase
+    if (!session) {
+      const fallback = process.env.MYFXBOOK_SESSION ?? "";
+      if (fallback) {
+        console.warn("[MyFXBook] Using fallback session from ENV");
+        session = fallback;
+      } else {
+        console.error("[MyFXBook] All login attempts failed, no fallback");
+        return null;
+      }
+    }
+  }
 
   // Fetch accounts with session (same execution = same IP)
   const accRes = await fetch(
@@ -140,10 +192,67 @@ async function fetchMyFXBook() {
     })).catch(() => ({ accountId: acc.id, dataDaily: [] }))
   );
 
-  const [dailyGains, dailyDatas] = await Promise.all([
+  // Fetch trade history for winrate + open trades for active positions
+  const historyPromises = accounts.map((acc: any) =>
+    fetch(
+      `${MYFXBOOK_API}/get-history.json?session=${session}&id=${acc.id}`,
+      { signal: AbortSignal.timeout(10000), cache: "no-store" }
+    ).then((r) => r.json()).then((d) => d.history ?? [])
+      .catch(() => [])
+  );
+
+  const openTradesPromises = accounts.map((acc: any) =>
+    fetch(
+      `${MYFXBOOK_API}/get-open-trades.json?session=${session}&id=${acc.id}`,
+      { signal: AbortSignal.timeout(10000), cache: "no-store" }
+    ).then((r) => r.json()).then((d) => d.openTrades ?? [])
+      .catch(() => [])
+  );
+
+  const [dailyGains, dailyDatas, allHistories, allOpenTrades] = await Promise.all([
     Promise.all(dailyGainPromises),
     Promise.all(dailyDataPromises),
+    Promise.all(historyPromises),
+    Promise.all(openTradesPromises),
   ]);
+
+  // Calculate winrate from all closed trades
+  const allTrades = allHistories.flat();
+  const wins = allTrades.filter((t: any) => (t.profit ?? 0) > 0).length;
+  const mfxWinrate = allTrades.length > 0 ? Math.round((wins / allTrades.length) * 100) : 0;
+
+  // Today's trades + winrate from MyFXBook history
+  // MyFXBook uses MM/DD/YYYY format for closeTime
+  const now2 = new Date();
+  const todayMM = String(now2.getUTCMonth() + 1).padStart(2, "0");
+  const todayDD = String(now2.getUTCDate()).padStart(2, "0");
+  const todayYYYY = now2.getUTCFullYear();
+  const todayMfx = `${todayMM}/${todayDD}/${todayYYYY}`; // MM/DD/YYYY
+  const todayISO = `${todayYYYY}-${todayMM}-${todayDD}`; // YYYY-MM-DD
+  const todayMfxTrades = allTrades.filter((t: any) => {
+    const ct = t.closeTime ?? t.close_time ?? t.closeDate ?? "";
+    return ct.startsWith(todayMfx) || ct.startsWith(todayISO);
+  });
+  const todayMfxWins = todayMfxTrades.filter((t: any) => (t.profit ?? 0) > 0).length;
+  const mfxTodayWinrate = todayMfxTrades.length > 0 ? Math.round((todayMfxWins / todayMfxTrades.length) * 100) : mfxWinrate;
+  const mfxTodayTrades = todayMfxTrades.length;
+  if (allTrades.length > 0) {
+    console.log(`[MyFXBook] History: ${allTrades.length} total, ${mfxTodayTrades} today, winrate: ${mfxWinrate}%, today winrate: ${mfxTodayWinrate}%`);
+  }
+
+  // Count active positions across all accounts
+  const mfxActivePositions = allOpenTrades.reduce((s: number, trades: any[]) => s + trades.length, 0);
+
+  // 72h drawdown: max negative daily gain in last 3 days across accounts
+  let dd72h = 0;
+  for (const acc of accounts) {
+    const dg = dailyGains.find((d: any) => d.accountId === acc.id);
+    if (!dg?.dailyGain?.length) continue;
+    const last3 = dg.dailyGain.slice(-3);
+    for (const day of last3) {
+      if ((day.value ?? 0) < 0) dd72h = Math.max(dd72h, Math.abs(day.value));
+    }
+  }
 
   const totalDeposits = accounts.reduce((s: number, a: any) => s + a.deposits, 0);
   const totalProfit = accounts.reduce((s: number, a: any) => s + a.profit, 0);
@@ -153,6 +262,11 @@ async function fetchMyFXBook() {
     accounts,
     dailyGains,
     dailyDatas,
+    winrate: mfxWinrate,
+    todayWinrate: mfxTodayWinrate,
+    todayTradesMfx: mfxTodayTrades,
+    activePositions: mfxActivePositions,
+    dd72h: Math.round(dd72h * 100) / 100,
     totalGain: Math.round(totalGain * 100) / 100,
     totalBalance: Math.round(accounts.reduce((s: number, a: any) => s + a.balance, 0) * 100) / 100,
     totalEquity: Math.round(accounts.reduce((s: number, a: any) => s + a.equity, 0) * 100) / 100,
@@ -307,11 +421,11 @@ async function fetchStats() {
     equity: Math.round(mfxEquity * 100) / 100,
     balance: Math.round(mfxBalance * 100) / 100,
     todayPnl: mfxTodayPnl,
-    todayTrades: allTodayTrades.length,
-    winrate,
+    todayTrades: myfx?.todayTradesMfx || allTodayTrades.length,
+    winrate: myfx?.todayWinrate ?? myfx?.winrate ?? winrate,
     maxDd: Math.round(mfxMaxDd * 10) / 10,
     gain: mfxGain,
-    activePositions: totalPositions,
+    activePositions: myfx?.activePositions ?? totalPositions,
     equityCurve,
     growthCurve,
     drawdownCurve,
@@ -343,6 +457,7 @@ async function fetchStats() {
           totalDrawdown: myfx.totalDrawdown,
           totalDaily: myfx.totalDaily,
           totalMonthly: myfx.totalMonthly,
+          dd72h: myfx.dd72h,
         }
       : null,
   };
