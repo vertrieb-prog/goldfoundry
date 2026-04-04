@@ -512,11 +512,7 @@ export default function HomePage() {
           </div>
           <div style={{ padding: "12px 14px", borderTop: "1px solid rgba(212,165,55,0.06)", display: "flex", justifyContent: "center", alignItems: "center", gap: 8 }}>
             <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#22c55e", display: "inline-block" }} />
-            <span style={{ fontSize: 11, color: "#6d6045" }}>Alle Daten live von</span>
-            <a href="https://www.myfxbook.com/members/PhantomGold" target="_blank" rel="noopener noreferrer" style={{ color: "#d4a537", fontSize: 11, fontWeight: 600, textDecoration: "none" }}>
-              MyFXBook verifiziert
-            </a>
-            <span style={{ fontSize: 11, color: "#52525b" }}>&#x2022; Unabhaengig geprueft</span>
+            <span style={{ fontSize: 11, color: "#6d6045" }}>Live-Daten — verifiziert und automatisch synchronisiert</span>
           </div>
         </section>
       )}
