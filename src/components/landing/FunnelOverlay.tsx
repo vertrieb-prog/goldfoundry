@@ -1,18 +1,55 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 type Step = 1 | 2 | 3 | 4;
+type Experience = "beginner" | "intermediate" | "pro" | null;
 type Risk = "8x" | "12x" | "24x" | null;
 
 const MONO = "'JetBrains Mono', monospace";
 
-const PROFILES: Record<string, { label: string; dd: string; ddType: string; monthlyLow: number; monthlyHigh: number; color: string; desc: string }> = {
-  "8x": { label: "Konservativ", dd: "20%", ddType: "Fix", monthlyLow: 0.08, monthlyHigh: 0.15, color: "#22c55e", desc: "Grosser DD-Puffer, optimiert auf Stabilitaet" },
-  "12x": { label: "Balanced", dd: "10%", ddType: "Trailing", monthlyLow: 0.12, monthlyHigh: 0.25, color: "#d4a537", desc: "Bester Kompromiss — empfohlen von PHANTOM" },
-  "24x": { label: "Aggressiv", dd: "5%", ddType: "Fix", monthlyLow: 0.20, monthlyHigh: 0.40, color: "#f97316", desc: "Maximale Rendite, enges DD-Limit" },
+const BROKERS = [
+  {
+    id: "tegasfx",
+    name: "Tegas FX",
+    desc: "MISA-reguliert, ECN/STP, 0 EUR Setup",
+    url: "https://tegasfx.com",
+    badge: "Empfohlen",
+    color: "#d4a537",
+    features: ["MISA License BFX2024226", "Segregierte Gelder", "ECN/STP Execution"],
+  },
+  {
+    id: "roboforex",
+    name: "RoboForex",
+    desc: "FSC-reguliert, Copy Trading, niedrige Spreads",
+    url: "https://roboforex.com",
+    badge: null,
+    color: "#3b82f6",
+    features: ["FSC License 000138/437", "Copy Trading Support", "0.0 Pip Spreads"],
+  },
+  {
+    id: "tagmarkets",
+    name: "Tag Markets",
+    desc: "Australisch reguliert, tiefe Liquiditaet",
+    url: "https://tagmarkets.com",
+    badge: null,
+    color: "#8b5cf6",
+    features: ["ASIC-reguliert", "Tier-1 Liquiditaet", "MetaTrader 5"],
+  },
+];
+
+const RISK_PROFILES: Record<string, { label: string; dd: string; ddType: string; color: string; desc: string }> = {
+  "8x": { label: "Konservativ", dd: "20%", ddType: "Fix", color: "#22c55e", desc: "Grosser DD-Puffer, ideal fuer Einsteiger" },
+  "12x": { label: "Balanced", dd: "10%", ddType: "Trailing", color: "#d4a537", desc: "Bester Kompromiss — empfohlen von PHANTOM" },
+  "24x": { label: "Aggressiv", dd: "5%", ddType: "Fix", color: "#f97316", desc: "Maximale Rendite, enges DD-Limit" },
 };
+
+function getRecommendation(exp: Experience): "8x" | "12x" | "24x" {
+  if (exp === "beginner") return "8x";
+  if (exp === "pro") return "24x";
+  return "12x";
+}
 
 interface LiveData {
   totalGain: number;
@@ -31,53 +68,35 @@ interface Props {
 
 export default function FunnelOverlay({ open, onClose, liveData }: Props) {
   const [step, setStep] = useState<Step>(1);
+  const [experience, setExperience] = useState<Experience>(null);
   const [capital, setCapital] = useState(1000);
   const [risk, setRisk] = useState<Risk>(null);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
 
-  // Live performance metrics
-  const monthlyPct = liveData?.totalMonthly ?? 28;
   const totalGain = liveData?.totalGain ?? 28;
   const maxDd = liveData?.totalDrawdown ?? 6.76;
-  const dailyPct = liveData?.totalDaily ?? 8;
+
+  const recommendation = getRecommendation(experience);
 
   function handleClose() {
-    setStep(1); setRisk(null); setName(""); setEmail(""); setStatus("idle");
+    setStep(1); setExperience(null); setRisk(null);
     onClose();
+  }
+
+  function selectExperience(e: Experience) {
+    setExperience(e);
+    setTimeout(() => setStep(2), 250);
   }
 
   function selectRisk(r: Risk) {
     setRisk(r);
-    setTimeout(() => setStep(3), 250);
+    setTimeout(() => setStep(4), 250);
   }
 
-  async function onSubmit(e: FormEvent) {
-    e.preventDefault();
-    setStatus("loading");
-    try {
-      const res = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password: crypto.randomUUID().slice(0, 12), meta: { capital, risk } }),
-      });
-      if (res.ok) { setStatus("success"); window.location.href = "/dashboard"; }
-      else { setStatus("error"); }
-    } catch { setStatus("error"); }
+  function selectBroker(url: string) {
+    window.open(url, "_blank", "noopener,noreferrer");
   }
 
-  // Projection based on selected risk profile + real performance
-  const profile = risk ? PROFILES[risk] : null;
-  const avgMonthly = profile ? (profile.monthlyLow + profile.monthlyHigh) / 2 : 0;
-  const proj1m = Math.round(capital * avgMonthly);
-  const proj3m = Math.round(capital * Math.pow(1 + avgMonthly, 3) - capital);
-  const proj12m = Math.round(capital * Math.pow(1 + avgMonthly, 12) - capital);
-
-  const inputStyle = {
-    background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)",
-    borderRadius: 12, padding: "16px 20px", color: "#fafafa", fontSize: 16, outline: "none", width: "100%",
-  };
+  const progressPct = ((step - 1) / 3) * 100;
 
   return (
     <AnimatePresence>
@@ -112,9 +131,7 @@ export default function FunnelOverlay({ open, onClose, liveData }: Props) {
             }}>
               {[
                 { label: "Live Gain", value: `+${totalGain.toFixed(1)}%`, color: "#22c55e" },
-                { label: "Monatlich", value: `${monthlyPct.toFixed(1)}%`, color: "#22c55e" },
                 { label: "Max DD", value: `${maxDd.toFixed(2)}%`, color: "#ef4444" },
-                { label: "Daily", value: `${dailyPct.toFixed(1)}%`, color: "#e0d4b8" },
               ].map((s) => (
                 <div key={s.label} style={{ textAlign: "center" }}>
                   <div style={{ fontSize: 9, color: "#6d6045", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 2 }}>{s.label}</div>
@@ -123,23 +140,65 @@ export default function FunnelOverlay({ open, onClose, liveData }: Props) {
               ))}
             </div>
 
+            {/* Progress Bar */}
+            <div style={{ marginBottom: 28 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                {["Erfahrung", "Kapital", "Risiko", "Broker"].map((label, i) => (
+                  <span key={label} style={{ fontSize: 10, color: step > i ? "#d4a537" : "#52525b", fontWeight: step === i + 1 ? 700 : 400, transition: "all 0.3s" }}>{label}</span>
+                ))}
+              </div>
+              <div style={{ height: 3, borderRadius: 2, background: "rgba(212,165,55,0.1)", overflow: "hidden" }}>
+                <motion.div
+                  animate={{ width: `${progressPct}%` }}
+                  transition={{ duration: 0.4, ease: "easeOut" }}
+                  style={{ height: "100%", background: "linear-gradient(90deg, #d4a537, #f0d060)", borderRadius: 2, boxShadow: "0 0 12px rgba(212,165,55,0.4)" }}
+                />
+              </div>
+            </div>
+
             <AnimatePresence mode="wait">
-              {/* ═══ STEP 1: Capital ═══ */}
+              {/* STEP 1: Erfahrung */}
               {step === 1 && (
                 <motion.div key="s1" initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }} transition={{ duration: 0.2 }}>
-                  <div style={{ textAlign: "center", marginBottom: 28 }}>
+                  <div style={{ textAlign: "center", marginBottom: 24 }}>
+                    <h2 style={{ fontSize: 28, fontWeight: 800, color: "#fafafa", marginBottom: 6 }}>Deine Trading-Erfahrung</h2>
+                    <p style={{ color: "#8a7a5a", fontSize: 14 }}>Damit wir das richtige Risikoprofil empfehlen koennen</p>
+                  </div>
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    {([
+                      { id: "beginner" as const, label: "Anfaenger", desc: "Noch nie getradet oder erst wenige Wochen" },
+                      { id: "intermediate" as const, label: "Fortgeschritten", desc: "1-2 Jahre Erfahrung, kenne die Basics" },
+                      { id: "pro" as const, label: "Profi", desc: "3+ Jahre, eigene Strategien" },
+                    ]).map((opt) => (
+                      <button key={opt.id} onClick={() => selectExperience(opt.id)} style={{
+                        background: experience === opt.id ? "rgba(212,165,55,0.06)" : "rgba(255,255,255,0.015)",
+                        border: `2px solid ${experience === opt.id ? "rgba(212,165,55,0.4)" : "rgba(255,255,255,0.05)"}`,
+                        borderRadius: 14, padding: "18px 24px", cursor: "pointer", textAlign: "left",
+                        transition: "all 0.15s",
+                      }}>
+                        <div style={{ color: "#fafafa", fontWeight: 600, fontSize: 15 }}>{opt.label}</div>
+                        <div style={{ color: "#6d6045", fontSize: 12, marginTop: 2 }}>{opt.desc}</div>
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+
+              {/* STEP 2: Kapital */}
+              {step === 2 && (
+                <motion.div key="s2" initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }} transition={{ duration: 0.2 }}>
+                  <div style={{ textAlign: "center", marginBottom: 24 }}>
                     <h2 style={{ fontSize: 28, fontWeight: 800, color: "#fafafa", marginBottom: 6 }}>Dein Startkapital</h2>
                     <p style={{ color: "#8a7a5a", fontSize: 14 }}>Wie viel moechtest du von PHANTOM verwalten lassen?</p>
                   </div>
 
-                  {/* Capital Display */}
                   <div style={{ textAlign: "center", marginBottom: 24 }}>
                     <div style={{ fontSize: 48, fontWeight: 800, fontFamily: MONO, color: "#d4a537" }}>
                       {capital.toLocaleString("de-DE")}<span style={{ fontSize: 24, color: "#8a7a5a" }}>&euro;</span>
                     </div>
                   </div>
 
-                  {/* Slider */}
                   <div style={{ padding: "0 8px", marginBottom: 8 }}>
                     <input
                       type="range" min={250} max={25000} step={250} value={capital}
@@ -151,7 +210,6 @@ export default function FunnelOverlay({ open, onClose, liveData }: Props) {
                     </div>
                   </div>
 
-                  {/* Quick Select */}
                   <div style={{ display: "flex", gap: 8, justifyContent: "center", margin: "20px 0 32px", flexWrap: "wrap" }}>
                     {[500, 1000, 2500, 5000, 10000].map((amt) => (
                       <button key={amt} onClick={() => setCapital(amt)} style={{
@@ -163,70 +221,40 @@ export default function FunnelOverlay({ open, onClose, liveData }: Props) {
                     ))}
                   </div>
 
-                  {/* Live preview */}
-                  <div style={{
-                    background: "rgba(34,197,94,0.04)", border: "1px solid rgba(34,197,94,0.1)",
-                    borderRadius: 12, padding: "16px 20px", marginBottom: 24,
-                  }}>
-                    <div style={{ fontSize: 11, color: "#6d6045", marginBottom: 8 }}>Basierend auf aktueller Live-Performance ({monthlyPct.toFixed(1)}%/Monat):</div>
-                    <div style={{ display: "flex", justifyContent: "space-around" }}>
-                      <div style={{ textAlign: "center" }}>
-                        <div style={{ fontSize: 9, color: "#6d6045", textTransform: "uppercase" }}>1 Monat</div>
-                        <div style={{ fontSize: 18, fontWeight: 700, fontFamily: MONO, color: "#22c55e" }}>+{Math.round(capital * monthlyPct / 100).toLocaleString("de-DE")}&euro;</div>
-                      </div>
-                      <div style={{ textAlign: "center" }}>
-                        <div style={{ fontSize: 9, color: "#6d6045", textTransform: "uppercase" }}>6 Monate</div>
-                        <div style={{ fontSize: 18, fontWeight: 700, fontFamily: MONO, color: "#22c55e" }}>+{Math.round(capital * (Math.pow(1 + monthlyPct / 100, 6) - 1)).toLocaleString("de-DE")}&euro;</div>
-                      </div>
-                      <div style={{ textAlign: "center" }}>
-                        <div style={{ fontSize: 9, color: "#6d6045", textTransform: "uppercase" }}>12 Monate</div>
-                        <div style={{ fontSize: 18, fontWeight: 700, fontFamily: MONO, color: "#d4a537" }}>+{Math.round(capital * (Math.pow(1 + monthlyPct / 100, 12) - 1)).toLocaleString("de-DE")}&euro;</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <button onClick={() => setStep(2)} className="gf-btn gf-btn-shimmer" style={{ width: "100%", padding: "16px", fontSize: 16, cursor: "pointer", fontWeight: 700 }}>
+                  <button onClick={() => setStep(3)} className="gf-btn gf-btn-shimmer" style={{ width: "100%", padding: "16px", fontSize: 16, cursor: "pointer", fontWeight: 700 }}>
                     Weiter — Risikoprofil waehlen
                   </button>
 
-                  <p style={{ textAlign: "center", color: "#52525b", fontSize: 9, marginTop: 12 }}>
-                    Prognose basiert auf historischer Performance. Keine Garantie fuer zukuenftige Ergebnisse.
-                  </p>
+                  <button onClick={() => setStep(1)} style={{ display: "block", margin: "12px auto 0", background: "none", border: "none", color: "#8a7a5a", fontSize: 13, cursor: "pointer" }}>&larr; Erfahrung aendern</button>
                 </motion.div>
               )}
 
-              {/* ═══ STEP 2: Risk Profile ═══ */}
-              {step === 2 && (
-                <motion.div key="s2" initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }} transition={{ duration: 0.2 }}>
+              {/* STEP 3: Risikoprofil */}
+              {step === 3 && (
+                <motion.div key="s3" initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }} transition={{ duration: 0.2 }}>
                   <div style={{ textAlign: "center", marginBottom: 24 }}>
                     <h2 style={{ fontSize: 28, fontWeight: 800, color: "#fafafa", marginBottom: 6 }}>Dein Risikoprofil</h2>
-                    <p style={{ color: "#8a7a5a", fontSize: 14 }}>Mehr Hebel = mehr Rendite, aber strikteres Drawdown-Limit</p>
+                    <p style={{ color: "#8a7a5a", fontSize: 14 }}>
+                      Empfehlung: <span style={{ color: "#d4a537", fontWeight: 700 }}>{recommendation} {RISK_PROFILES[recommendation].label}</span>
+                    </p>
                   </div>
 
                   <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                     {(["8x", "12x", "24x"] as const).map((r) => {
-                      const p = PROFILES[r];
-                      const isRec = r === "12x";
-                      const monthlyProj = Math.round(capital * (p.monthlyLow + p.monthlyHigh) / 2);
-                      const yearlyProj = Math.round(capital * (Math.pow(1 + (p.monthlyLow + p.monthlyHigh) / 2, 12) - 1));
+                      const p = RISK_PROFILES[r];
+                      const isRec = r === recommendation;
                       return (
                         <button key={r} onClick={() => selectRisk(r)} style={{
                           background: risk === r ? "rgba(212,165,55,0.06)" : "rgba(255,255,255,0.015)",
                           border: `2px solid ${risk === r ? p.color : "rgba(255,255,255,0.05)"}`,
-                          borderRadius: 14, padding: "20px 24px", cursor: "pointer", textAlign: "left" as const,
-                          position: "relative" as const, transition: "all 0.15s",
+                          borderRadius: 14, padding: "20px 24px", cursor: "pointer", textAlign: "left",
+                          position: "relative", transition: "all 0.15s",
                         }}>
                           {isRec && <span style={{ position: "absolute", top: -10, right: 16, background: "#d4a537", color: "#040302", fontSize: 9, fontWeight: 700, padding: "3px 10px", borderRadius: 99, textTransform: "uppercase" }}>Empfohlen</span>}
-
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                             <div>
                               <div style={{ fontSize: 20, fontWeight: 800, color: "#fafafa" }}>{r} <span style={{ fontSize: 13, fontWeight: 600, color: p.color }}>{p.label}</span></div>
                               <div style={{ color: "#6d6045", fontSize: 12, marginTop: 4 }}>{p.dd} {p.ddType} DD &middot; {p.desc}</div>
-                            </div>
-                            <div style={{ textAlign: "right", minWidth: 100 }}>
-                              <div style={{ fontSize: 18, fontWeight: 800, fontFamily: MONO, color: "#22c55e" }}>+{monthlyProj.toLocaleString("de-DE")}&euro;</div>
-                              <div style={{ fontSize: 10, color: "#6d6045" }}>pro Monat</div>
-                              <div style={{ fontSize: 12, fontFamily: MONO, color: "#d4a537", marginTop: 2 }}>+{yearlyProj.toLocaleString("de-DE")}&euro;/Jahr</div>
                             </div>
                           </div>
                         </button>
@@ -234,119 +262,47 @@ export default function FunnelOverlay({ open, onClose, liveData }: Props) {
                     })}
                   </div>
 
-                  <button onClick={() => setStep(1)} style={{ marginTop: 16, background: "none", border: "none", color: "#8a7a5a", fontSize: 13, cursor: "pointer" }}>&larr; Kapital aendern ({capital.toLocaleString("de-DE")}&euro;)</button>
+                  <button onClick={() => setStep(2)} style={{ display: "block", margin: "16px auto 0", background: "none", border: "none", color: "#8a7a5a", fontSize: 13, cursor: "pointer" }}>&larr; Kapital aendern ({capital.toLocaleString("de-DE")}&euro;)</button>
                 </motion.div>
               )}
 
-              {/* ═══ STEP 3: Prognose + Ergebnis ═══ */}
-              {step === 3 && profile && (
-                <motion.div key="s3" initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.25 }}>
+              {/* STEP 4: Broker-Auswahl + Redirect */}
+              {step === 4 && (
+                <motion.div key="s4" initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.25 }}>
                   <div style={{ textAlign: "center", marginBottom: 24 }}>
-                    <h2 style={{ fontSize: 28, fontWeight: 800, color: "#fafafa", marginBottom: 6 }}>Deine Prognose</h2>
-                    <p style={{ color: "#8a7a5a", fontSize: 14 }}>Basierend auf Live-Performance von PHANTOM</p>
+                    <h2 style={{ fontSize: 28, fontWeight: 800, color: "#fafafa", marginBottom: 6 }}>Waehle deinen Broker</h2>
+                    <p style={{ color: "#8a7a5a", fontSize: 14 }}>
+                      Dein Setup: {capital.toLocaleString("de-DE")}&euro; &middot; {risk} Hebel &middot; {risk ? RISK_PROFILES[risk].label : ""}
+                    </p>
                   </div>
 
-                  {/* Setup Summary */}
-                  <div style={{
-                    background: "rgba(212,165,55,0.03)", border: "1px solid rgba(212,165,55,0.1)",
-                    borderRadius: 14, padding: 24, marginBottom: 20, textAlign: "center",
-                  }}>
-                    <div style={{ fontSize: 11, color: "#6d6045", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Dein PHANTOM Setup</div>
-                    <div style={{ fontSize: 28, fontWeight: 800, color: "#fafafa", marginBottom: 4 }}>
-                      {capital.toLocaleString("de-DE")}&euro; &middot; {risk} Hebel
-                    </div>
-                    <div style={{ fontSize: 13, color: profile.color, fontWeight: 600 }}>{profile.label} &middot; {profile.dd} {profile.ddType} DD</div>
-                  </div>
-
-                  {/* Prognose Grid */}
-                  <div style={{
-                    display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 1,
-                    background: "rgba(255,255,255,0.04)", borderRadius: 12, overflow: "hidden", marginBottom: 20,
-                  }}>
-                    {[
-                      { label: "Nach 1 Monat", value: `+${proj1m.toLocaleString("de-DE")}\u20AC`, sub: `= ${(capital + proj1m).toLocaleString("de-DE")}\u20AC`, color: "#22c55e" },
-                      { label: "Nach 3 Monaten", value: `+${proj3m.toLocaleString("de-DE")}\u20AC`, sub: `= ${(capital + proj3m).toLocaleString("de-DE")}\u20AC`, color: "#22c55e" },
-                      { label: "Nach 12 Monaten", value: `+${proj12m.toLocaleString("de-DE")}\u20AC`, sub: `= ${(capital + proj12m).toLocaleString("de-DE")}\u20AC`, color: "#d4a537" },
-                    ].map((p) => (
-                      <div key={p.label} style={{ background: "#0a0906", padding: "18px 12px", textAlign: "center" }}>
-                        <div style={{ fontSize: 9, color: "#6d6045", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 4 }}>{p.label}</div>
-                        <div style={{ fontSize: 22, fontWeight: 800, fontFamily: MONO, color: p.color }}>{p.value}</div>
-                        <div style={{ fontSize: 11, color: "#8a7a5a", fontFamily: MONO, marginTop: 2 }}>{p.sub}</div>
-                      </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    {BROKERS.map((broker) => (
+                      <button key={broker.id} onClick={() => selectBroker(broker.url)} style={{
+                        background: "rgba(255,255,255,0.015)",
+                        border: `2px solid ${broker.badge ? "rgba(212,165,55,0.3)" : "rgba(255,255,255,0.05)"}`,
+                        borderRadius: 14, padding: "20px 24px", cursor: "pointer", textAlign: "left",
+                        position: "relative", transition: "all 0.15s",
+                      }}>
+                        {broker.badge && <span style={{ position: "absolute", top: -10, right: 16, background: "#d4a537", color: "#040302", fontSize: 9, fontWeight: 700, padding: "3px 10px", borderRadius: 99, textTransform: "uppercase" }}>{broker.badge}</span>}
+                        <div style={{ marginBottom: 8 }}>
+                          <div style={{ fontSize: 20, fontWeight: 800, color: broker.color }}>{broker.name}</div>
+                          <div style={{ color: "#6d6045", fontSize: 12, marginTop: 2 }}>{broker.desc}</div>
+                        </div>
+                        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                          {broker.features.map((f) => (
+                            <span key={f} style={{ fontSize: 10, color: "#8a7a5a", background: "rgba(255,255,255,0.03)", padding: "3px 8px", borderRadius: 6, border: "1px solid rgba(255,255,255,0.04)" }}>{f}</span>
+                          ))}
+                        </div>
+                        <div style={{ marginTop: 10, fontSize: 12, color: broker.color, fontWeight: 600 }}>Konto eroeffnen &rarr;</div>
+                      </button>
                     ))}
                   </div>
 
-                  {/* Monthly Rendite Indicator */}
-                  <div style={{
-                    display: "flex", justifyContent: "space-between", alignItems: "center",
-                    background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)",
-                    borderRadius: 10, padding: "12px 16px", marginBottom: 24,
-                  }}>
-                    <span style={{ color: "#8a7a5a", fontSize: 12 }}>Erwartete monatliche Rendite</span>
-                    <span style={{ color: "#22c55e", fontSize: 16, fontWeight: 700, fontFamily: MONO }}>
-                      {(profile.monthlyLow * 100).toFixed(0)}-{(profile.monthlyHigh * 100).toFixed(0)}% / Monat
-                    </span>
-                  </div>
-
-                  <button onClick={() => setStep(4)} className="gf-btn gf-btn-shimmer" style={{ width: "100%", padding: "16px", fontSize: 16, cursor: "pointer", fontWeight: 700 }}>
-                    Jetzt kostenlos starten
-                  </button>
-
-                  <div style={{ display: "flex", justifyContent: "center", gap: 16, marginTop: 16 }}>
-                    <button onClick={() => setStep(1)} style={{ background: "none", border: "none", color: "#8a7a5a", fontSize: 12, cursor: "pointer" }}>Kapital aendern</button>
-                    <button onClick={() => setStep(2)} style={{ background: "none", border: "none", color: "#8a7a5a", fontSize: 12, cursor: "pointer" }}>Risiko aendern</button>
-                  </div>
+                  <button onClick={() => setStep(3)} style={{ display: "block", margin: "16px auto 0", background: "none", border: "none", color: "#8a7a5a", fontSize: 13, cursor: "pointer" }}>&larr; Risikoprofil aendern</button>
 
                   <p style={{ textAlign: "center", color: "#52525b", fontSize: 9, marginTop: 16, lineHeight: 1.5 }}>
-                    Prognose basiert auf historischer Performance ({monthlyPct.toFixed(1)}%/Monat). Keine Garantie. Trading birgt Verlustrisiken.
-                  </p>
-                </motion.div>
-              )}
-
-              {/* ═══ STEP 4: Register ═══ */}
-              {step === 4 && (
-                <motion.div key="s4" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
-                  <div style={{ textAlign: "center", marginBottom: 28 }}>
-                    <h2 style={{ fontSize: 28, fontWeight: 800, color: "#fafafa", marginBottom: 6 }}>Letzter Schritt</h2>
-                    <p style={{ color: "#8a7a5a", fontSize: 14 }}>Erstelle dein kostenloses Konto — in 10 Sekunden fertig</p>
-                  </div>
-
-                  {/* Mini Summary */}
-                  <div style={{
-                    display: "flex", justifyContent: "center", gap: 20, marginBottom: 24,
-                    padding: "12px 0", borderBottom: "1px solid rgba(255,255,255,0.04)",
-                  }}>
-                    <div style={{ textAlign: "center" }}>
-                      <div style={{ fontSize: 9, color: "#6d6045" }}>Kapital</div>
-                      <div style={{ fontSize: 15, fontWeight: 700, fontFamily: MONO, color: "#e0d4b8" }}>{capital.toLocaleString("de-DE")}&euro;</div>
-                    </div>
-                    <div style={{ textAlign: "center" }}>
-                      <div style={{ fontSize: 9, color: "#6d6045" }}>Hebel</div>
-                      <div style={{ fontSize: 15, fontWeight: 700, fontFamily: MONO, color: "#d4a537" }}>{risk}</div>
-                    </div>
-                    <div style={{ textAlign: "center" }}>
-                      <div style={{ fontSize: 9, color: "#6d6045" }}>Prognose/Monat</div>
-                      <div style={{ fontSize: 15, fontWeight: 700, fontFamily: MONO, color: "#22c55e" }}>+{proj1m.toLocaleString("de-DE")}&euro;</div>
-                    </div>
-                  </div>
-
-                  {status === "success" ? (
-                    <div style={{ color: "#22c55e", fontSize: 18, fontWeight: 700, padding: 40, textAlign: "center" }}>Weiterleitung zum Dashboard...</div>
-                  ) : (
-                    <form onSubmit={onSubmit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                      <input type="text" placeholder="Dein Name" value={name} onChange={(e) => setName(e.target.value)} required style={inputStyle} />
-                      <input type="email" placeholder="Deine Email" value={email} onChange={(e) => setEmail(e.target.value)} required style={inputStyle} />
-                      <button type="submit" disabled={status === "loading"} className="gf-btn gf-btn-shimmer" style={{ padding: "18px 24px", fontSize: 17, width: "100%", marginTop: 4, fontWeight: 700, cursor: "pointer" }}>
-                        {status === "loading" ? "Wird eingerichtet..." : "Kostenlos starten"}
-                      </button>
-                      {status === "error" && <p style={{ color: "#ef4444", fontSize: 13, textAlign: "center" }}>Fehler. Versuche es erneut.</p>}
-                    </form>
-                  )}
-
-                  <button onClick={() => setStep(3)} style={{ display: "block", margin: "16px auto 0", background: "none", border: "none", color: "#8a7a5a", fontSize: 13, cursor: "pointer" }}>&larr; Zurueck zur Prognose</button>
-
-                  <p style={{ textAlign: "center", color: "#52525b", fontSize: 10, marginTop: 16 }}>
-                    100% kostenlos. Kein Abo. Gold Foundry vermittelt nur die Technologie.
+                    Gold Foundry vermittelt nur die Technologie. Dein Kapital liegt beim Broker deiner Wahl. Trading birgt erhebliche Verlustrisiken.
                   </p>
                 </motion.div>
               )}

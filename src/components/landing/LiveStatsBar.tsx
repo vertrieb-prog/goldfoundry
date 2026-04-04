@@ -29,8 +29,7 @@ export default function LiveStatsBar({ pnl72h, pct72h, winrate, dd72h, maxDd, ac
   return (
     <div
       style={{
-        position: "sticky",
-        top: 56,
+        position: "relative",
         zIndex: 40,
         background: "rgba(4,3,2,0.85)",
         backdropFilter: "blur(16px)",
@@ -38,7 +37,7 @@ export default function LiveStatsBar({ pnl72h, pct72h, winrate, dd72h, maxDd, ac
         padding: "14px 20px",
       }}
     >
-      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "16px 28px", maxWidth: 1000, margin: "0 auto", overflowX: "auto", flexWrap: "wrap" as const }}>
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "12px 20px", maxWidth: 1000, margin: "0 auto", overflowX: "auto", flexWrap: "wrap" as const }}>
         <div
           style={{
             width: 8, height: 8, borderRadius: "50%", background: "#22c55e",

@@ -194,7 +194,7 @@ function LeverageCards({ onStart }: { onStart: () => void }) {
       <p style={{ textAlign: "center", color: "#a1a1aa", marginBottom: 40, fontSize: 15 }}>
         Gleiche Engine, unterschiedliches Risiko. Wähle was zu dir passt.
       </p>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 20 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(260px, 100%), 1fr))", gap: 20 }}>
         {plans.map((plan) => {
           const isHovered = hovered === plan.leverage;
           const otherHovered = hovered !== null && !isHovered;
@@ -316,7 +316,7 @@ export default function HomePage() {
       <FunnelOverlay open={funnelOpen} onClose={() => setFunnelOpen(false)} liveData={stats?.myfxbook ? { totalGain: stats.myfxbook.totalGain, totalMonthly: stats.myfxbook.totalMonthly, totalEquity: stats.myfxbook.totalEquity, totalProfit: stats.myfxbook.totalProfit, totalDrawdown: stats.myfxbook.totalDrawdown, totalDaily: stats.myfxbook.totalDaily } : null} />
 
       {/* ═══ HERO ═══ */}
-      <section style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "80px 20px 40px", position: "relative" }}>
+      <section style={{ minHeight: "85vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "80px 20px 40px", position: "relative" }}>
         {/* Floating Gold Bar Elements */}
         <div style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none", zIndex: 0 }}>
           <div className="animate-float" style={{ position: "absolute", top: "15%", left: "8%", width: 80, height: 24, background: "linear-gradient(135deg, rgba(212,165,55,0.15), rgba(240,208,96,0.08))", borderRadius: 6, transform: "rotate3d(1, 1, 0, 35deg)", filter: "blur(1px)" }} />
@@ -342,8 +342,8 @@ export default function HomePage() {
           <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
             style={{ color: "#a1a1aa", fontSize: "clamp(16px, 2.5vw, 20px)", marginBottom: 40, maxWidth: 500, margin: "0 auto 40px" }}>
             {equity > 0
-              ? <>6 Algorithmen. <span style={{ color: "#22c55e", fontWeight: 700 }}>{winrate}% Winrate.</span> Verifiziert auf MyFXBook.</>
-              : "6 Algorithmen. 1 Engine. Verifiziert auf MyFXBook."}
+              ? <>{mfx?.accounts?.length ?? 6} Strategien. <span style={{ color: "#22c55e", fontWeight: 700 }}>{winrate}% Winrate.</span> Verifiziert auf MyFXBook.</>
+              : "Mehrere Strategien. 1 Engine. Verifiziert auf MyFXBook."}
           </motion.p>
 
           {/* Live Counters */}
@@ -407,16 +407,10 @@ export default function HomePage() {
         />
       )}
 
-      {/* ═══ SOCIAL PROOF ═══ */}
-      <SocialProof gain={gain} equity={equity} myfxbook={stats?.myfxbook} />
+      {/* ═══ 1. STRATEGY ENGINE — Was macht PHANTOM? (direkt nach Stats Bar) ═══ */}
+      <StrategyEngine accounts={stats?.myfxbook?.accounts ?? []} />
 
-      {/* ═══ HOW IT WORKS ═══ */}
-      <HowItWorks />
-
-      {/* ═══ STRATEGY ENGINE ═══ */}
-      <StrategyEngine />
-
-      {/* ═══ PERFORMANCE (MyFXBook Style) ═══ */}
+      {/* ═══ 2. PERFORMANCE — Beweis dass es funktioniert ═══ */}
       <div id="performance">
         <PerformanceChart
           growthCurve={stats?.growthCurve ?? []} drawdownCurve={stats?.drawdownCurve ?? []}
@@ -427,40 +421,60 @@ export default function HomePage() {
         />
       </div>
 
-      {/* ═══ PROFIT CALCULATOR ═══ */}
-      {/* ProfitCalculator removed — funnel handles this now */}
+      {/* ═══ 3. HOW IT WORKS — Wie starte ich? ═══ */}
+      <HowItWorks />
 
-      {/* ═══ LEVERAGE / DD MODELL ═══ */}
+      {/* ═══ 5. LEVERAGE — Welches Risikoprofil? ═══ */}
       <LeverageCards onStart={openFunnel} />
 
-      {/* ═══ TEGAS FX ═══ */}
-      <section style={{ padding: "80px 20px", maxWidth: 1000, margin: "0 auto" }}>
-        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-          style={{ background: "rgba(10,8,6,0.7)", border: "1px solid rgba(212,165,55,0.1)", borderRadius: 20, padding: "48px 32px", textAlign: "center" }}>
-          <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.15em", color: "#d4a537", marginBottom: 16, fontWeight: 600 }}>Regulierter Broker-Partner</div>
-          <h2 style={{ fontSize: "clamp(24px, 4vw, 32px)", fontWeight: 700, color: "#fafafa", marginBottom: 8 }}>Tegas FX</h2>
-          <p style={{ color: "#a1a1aa", fontSize: 15, marginBottom: 32, maxWidth: 600, margin: "0 auto 32px" }}>
-            Dein Kapital liegt sicher bei Tegas FX — reguliert mit MISA-Lizenz. Gold Foundry ist reiner Technologie-Vermittler. Wir verdienen nichts an deinen Trades.
-          </p>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 24, marginBottom: 32 }}>
-            {[
-              { icon: "MISA", title: "MISA Lizenziert", desc: "BFX2024226, Comoros" },
-              { icon: "SEG", title: "Segregierte Gelder", desc: "Dein Geld, dein Konto" },
-              { icon: "ECN", title: "ECN/STP Execution", desc: "Kein Dealing Desk, kein Interessenkonflikt" },
-              { icon: "0", title: "0 EUR Gebühren", desc: "Für dich komplett kostenlos" },
-            ].map((item) => (
-              <div key={item.title} style={{ padding: 16 }}>
-                <div style={{ fontSize: 14, fontWeight: 800, fontFamily: "'JetBrains Mono', monospace", color: "#d4a537", marginBottom: 8, letterSpacing: "0.05em" }}>[{item.icon}]</div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: "#fafafa", marginBottom: 4 }}>{item.title}</div>
-                <div style={{ fontSize: 12, color: "#6d6045" }}>{item.desc}</div>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-      </section>
-
-      {/* ═══ TRUST ═══ */}
+      {/* ═══ 6. TRUST — Letzte Einwände beseitigen ═══ */}
       <TrustCards />
+
+      {/* ═══ 7. BROKER-PARTNER — 3 Broker ═══ */}
+      <section style={{ padding: "60px 20px", maxWidth: 1000, margin: "0 auto" }}>
+        <div style={{ textAlign: "center", marginBottom: 32 }}>
+          <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.15em", color: "#6d6045", marginBottom: 8 }}>Diversifizierte Broker-Partner</div>
+          <h3 style={{ fontSize: "clamp(20px, 3vw, 28px)", fontWeight: 700, color: "#fafafa", marginBottom: 8 }}>
+            3 Broker. <span style={{ color: "#d4a537" }}>Maximale Sicherheit.</span>
+          </h3>
+          <p style={{ color: "#52525b", fontSize: 13, maxWidth: 500, margin: "0 auto" }}>
+            Dein Kapital liegt beim Broker deiner Wahl — Gold Foundry vermittelt nur die Technologie.
+          </p>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(280px, 100%), 1fr))", gap: 16 }}>
+          {[
+            { name: "Tegas FX", color: "#d4a537", reg: "MISA License BFX2024226", features: ["ECN/STP", "Segregierte Gelder", "0 EUR Setup"], badge: "Empfohlen" },
+            { name: "RoboForex", color: "#3b82f6", reg: "FSC License 000138/437", features: ["Copy Trading", "0.0 Pip Spreads", "Niedrige Kommission"], badge: null },
+            { name: "Tag Markets", color: "#8b5cf6", reg: "ASIC-reguliert", features: ["Tier-1 Liquiditaet", "MetaTrader 5", "Deep Liquidity"], badge: null },
+          ].map((broker) => (
+            <motion.div key={broker.name} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+              onClick={openFunnel}
+              style={{
+                background: broker.badge ? "rgba(212,165,55,0.04)" : "rgba(10,8,6,0.5)",
+                border: `1px solid ${broker.badge ? "rgba(212,165,55,0.15)" : "rgba(212,165,55,0.06)"}`,
+                borderRadius: 16, padding: "28px 24px", cursor: "pointer", position: "relative",
+                transition: "border-color 0.2s",
+              }}>
+              {broker.badge && (
+                <div style={{ position: "absolute", top: -10, left: "50%", transform: "translateX(-50%)", background: "#d4a537", color: "#040302", fontSize: 9, fontWeight: 700, padding: "3px 12px", borderRadius: 99, textTransform: "uppercase" }}>{broker.badge}</div>
+              )}
+              <div style={{ fontSize: 20, fontWeight: 800, color: broker.color, marginBottom: 4 }}>{broker.name}</div>
+              <div style={{ fontSize: 11, color: "#6d6045", marginBottom: 12 }}>{broker.reg}</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {broker.features.map((f) => (
+                  <div key={f} style={{ fontSize: 12, color: "#8a7a5a", display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ color: "#22c55e", fontSize: 10 }}>&#x2713;</span> {f}
+                  </div>
+                ))}
+              </div>
+              <div style={{ marginTop: 14, fontSize: 12, color: broker.color, fontWeight: 600, textAlign: "center" }}>Auswaehlen &rarr;</div>
+            </motion.div>
+          ))}
+        </div>
+        <p style={{ textAlign: "center", color: "#52525b", fontSize: 10, marginTop: 16 }}>
+          Alle Broker sind reguliert. Gold Foundry hat keinen Zugriff auf deine Einlagen. Auszahlung jederzeit moeglich.
+        </p>
+      </section>
 
       {/* ═══ FUNNEL ═══ */}
       <CTASection />
