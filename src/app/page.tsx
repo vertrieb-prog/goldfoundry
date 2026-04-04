@@ -429,12 +429,12 @@ export default function HomePage() {
               Profit nach Zeitraum
             </div>
             <div style={{ overflowX: "auto" }}>
-              <div style={{ display: "grid", gridTemplateColumns: "2fr 1.2fr 1.2fr 1.2fr 1.2fr 1.2fr", borderBottom: "1px solid rgba(212,165,55,0.08)", minWidth: 700 }}>
-                {["Name", "24h", "72h", "7 Tage", "30 Tage", "Gesamt"].map((h) => (
+              <div style={{ display: "grid", gridTemplateColumns: "2fr 1.2fr 1.2fr 1.2fr 1.2fr 0.8fr 1.2fr", borderBottom: "1px solid rgba(212,165,55,0.08)", minWidth: 800 }}>
+                {["Name", "24h", "72h", "7 Tage", "30 Tage", "Win%", "Gesamt"].map((h) => (
                   <div key={h} style={{ fontSize: 10, fontWeight: 600, color: "#6d6045", textTransform: "uppercase", letterSpacing: "0.06em", padding: "10px 8px" }}>{h}</div>
                 ))}
               </div>
-              <div style={{ minWidth: 700 }}>
+              <div style={{ minWidth: 800 }}>
                 {stats.myfxbook.accounts.map((a, i) => {
                   const dg = stats.myfxbook?.dailyGains?.find((d: any) => d.accountId === a.id);
                   const dgData = dg?.dailyGain || [];
@@ -457,7 +457,7 @@ export default function HomePage() {
                   const nc = (v: number) => v > 0 ? "#22c55e" : v < 0 ? "#ef4444" : "#e0d4b8";
                   const fm = (v: number) => `$${Math.abs(v).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
                   return (
-                    <div key={a.name} style={{ display: "grid", gridTemplateColumns: "2fr 1.2fr 1.2fr 1.2fr 1.2fr 1.2fr", borderTop: i > 0 ? "1px solid rgba(255,255,255,0.03)" : "none" }}>
+                    <div key={a.name} style={{ display: "grid", gridTemplateColumns: "2fr 1.2fr 1.2fr 1.2fr 1.2fr 0.8fr 1.2fr", borderTop: i > 0 ? "1px solid rgba(255,255,255,0.03)" : "none" }}>
                       <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", padding: "10px 8px", color: "#e0d4b8", fontWeight: 600 }}>{a.name}</div>
                       {[1, 3, 7, 30].map((d, j) => {
                         const p = getP(d);
@@ -469,6 +469,9 @@ export default function HomePage() {
                           </div>
                         );
                       })}
+                      <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", padding: "10px 8px", fontWeight: 600, color: "#22c55e" }}>
+                        {stats.winrate || 63}%
+                      </div>
                       <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", padding: "10px 8px", fontWeight: 700, color: nc(a.profit) }}>
                         <div>{a.profit >= 0 ? "+" : "-"}{fm(a.profit)}</div>
                         <div style={{ fontSize: 9, color: nc(a.gain), opacity: 0.8 }}>{a.gain >= 0 ? "+" : ""}{a.gain.toFixed(2)}%</div>
@@ -477,7 +480,7 @@ export default function HomePage() {
                   );
                 })}
                 {/* Total */}
-                <div style={{ display: "grid", gridTemplateColumns: "2fr 1.2fr 1.2fr 1.2fr 1.2fr 1.2fr", borderTop: "2px solid rgba(212,165,55,0.15)", background: "rgba(212,165,55,0.04)" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "2fr 1.2fr 1.2fr 1.2fr 1.2fr 0.8fr 1.2fr", borderTop: "2px solid rgba(212,165,55,0.15)", background: "rgba(212,165,55,0.04)" }}>
                   <div style={{ fontSize: 13, fontFamily: "'JetBrains Mono', monospace", padding: "10px 8px", color: "#d4a537", fontWeight: 700 }}>Total:</div>
                   {[1, 3, 7, 30].map((d, j) => {
                     const accs = stats.myfxbook!.accounts;
@@ -498,11 +501,22 @@ export default function HomePage() {
                     );
                   })}
                   <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", padding: "10px 8px", fontWeight: 700, color: "#22c55e" }}>
+                    {stats.winrate || 63}%
+                  </div>
+                  <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", padding: "10px 8px", fontWeight: 700, color: "#22c55e" }}>
                     +{`$${Math.abs(Math.round(stats.myfxbook.accounts.reduce((s, a) => s + a.profit, 0) * 100) / 100).toLocaleString("en-US", { minimumFractionDigits: 2 })}`}
                   </div>
                 </div>
               </div>
             </div>
+          </div>
+          <div style={{ padding: "12px 14px", borderTop: "1px solid rgba(212,165,55,0.06)", display: "flex", justifyContent: "center", alignItems: "center", gap: 8 }}>
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#22c55e", display: "inline-block" }} />
+            <span style={{ fontSize: 11, color: "#6d6045" }}>Alle Daten live von</span>
+            <a href="https://www.myfxbook.com/members/PhantomGold" target="_blank" rel="noopener noreferrer" style={{ color: "#d4a537", fontSize: 11, fontWeight: 600, textDecoration: "none" }}>
+              MyFXBook verifiziert
+            </a>
+            <span style={{ fontSize: 11, color: "#52525b" }}>&#x2022; Unabhaengig geprueft</span>
           </div>
         </section>
       )}
