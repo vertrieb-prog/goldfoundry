@@ -256,7 +256,7 @@ function SocialProof({ gain, equity, myfxbook }: { gain: number; equity: number;
   const spStats = [
     { label: "Verwaltetes Kapital", value: `$${Math.round(mfx.totalEquity).toLocaleString("en-US")}`, color: "#d4a537" },
     { label: "Gesamt-Gain", value: `+${mfx.totalGain.toFixed(2)}%`, color: "#22c55e" },
-    { label: "Aktive Strategien", value: String(mfx?.accounts?.length ?? stats?.myfxbook?.accounts?.length ?? 7), color: "#fafafa" },
+    { label: "Aktive Strategien", value: String(mfx?.accounts?.length ?? 7), color: "#fafafa" },
     { label: "Max Drawdown", value: `${mfx.totalDrawdown.toFixed(2)}%`, color: "#ef4444" },
   ];
 
