@@ -421,6 +421,92 @@ export default function HomePage() {
         />
       </div>
 
+      {/* ═══ PROFIT TABELLE — 24h/72h/7d/30d pro Account ═══ */}
+      {stats?.myfxbook?.accounts && stats.myfxbook.accounts.length > 0 && (
+        <section style={{ padding: "20px 20px 60px", maxWidth: 1100, margin: "0 auto" }}>
+          <div style={{ background: "#0a0906", border: "1px solid rgba(212,165,55,0.08)", borderRadius: 10, overflow: "hidden" }}>
+            <div style={{ padding: "12px 14px", fontSize: 12, fontWeight: 700, color: "#d4a537", borderBottom: "1px solid rgba(212,165,55,0.08)" }}>
+              Profit nach Zeitraum
+            </div>
+            <div style={{ overflowX: "auto" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "2fr 1.2fr 1.2fr 1.2fr 1.2fr 1.2fr", borderBottom: "1px solid rgba(212,165,55,0.08)", minWidth: 700 }}>
+                {["Name", "24h", "72h", "7 Tage", "30 Tage", "Gesamt"].map((h) => (
+                  <div key={h} style={{ fontSize: 10, fontWeight: 600, color: "#6d6045", textTransform: "uppercase", letterSpacing: "0.06em", padding: "10px 8px" }}>{h}</div>
+                ))}
+              </div>
+              <div style={{ minWidth: 700 }}>
+                {stats.myfxbook.accounts.map((a, i) => {
+                  const dg = stats.myfxbook?.dailyGains?.find((d: any) => d.accountId === a.id);
+                  const dgData = dg?.dailyGain || [];
+                  const getP = (days: number) => {
+                    if (dgData.length > 0) return Math.round(dgData.slice(-days).reduce((s: number, d: any) => s + (d.profit ?? 0), 0) * 100) / 100;
+                    if (days <= 1) return Math.round(a.balance * a.daily / 100 * 100) / 100;
+                    if (days <= 3) return Math.round(a.balance * a.daily / 100 * 3 * 100) / 100;
+                    return Math.round(a.profit * 100) / 100;
+                  };
+                  const getPct = (days: number) => {
+                    if (dgData.length > 0) {
+                      const end = dgData[dgData.length - 1]?.value ?? 0;
+                      const start = dgData.length > days ? (dgData[dgData.length - days - 1]?.value ?? 0) : 0;
+                      return Math.round((end - start) * 100) / 100;
+                    }
+                    if (days <= 1) return Math.round(a.daily * 100) / 100;
+                    if (days <= 3) return Math.round(a.daily * 3 * 100) / 100;
+                    return Math.round(a.gain * 100) / 100;
+                  };
+                  const nc = (v: number) => v > 0 ? "#22c55e" : v < 0 ? "#ef4444" : "#e0d4b8";
+                  const fm = (v: number) => `$${Math.abs(v).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                  return (
+                    <div key={a.name} style={{ display: "grid", gridTemplateColumns: "2fr 1.2fr 1.2fr 1.2fr 1.2fr 1.2fr", borderTop: i > 0 ? "1px solid rgba(255,255,255,0.03)" : "none" }}>
+                      <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", padding: "10px 8px", color: "#e0d4b8", fontWeight: 600 }}>{a.name}</div>
+                      {[1, 3, 7, 30].map((d, j) => {
+                        const p = getP(d);
+                        const pct = getPct(d);
+                        return (
+                          <div key={j} style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", padding: "10px 8px", fontWeight: 500, color: nc(p) }}>
+                            <div>{p >= 0 ? "+" : "-"}{fm(p)}</div>
+                            <div style={{ fontSize: 9, color: nc(pct), opacity: 0.8 }}>{pct >= 0 ? "+" : ""}{pct.toFixed(2)}%</div>
+                          </div>
+                        );
+                      })}
+                      <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", padding: "10px 8px", fontWeight: 700, color: nc(a.profit) }}>
+                        <div>{a.profit >= 0 ? "+" : "-"}{fm(a.profit)}</div>
+                        <div style={{ fontSize: 9, color: nc(a.gain), opacity: 0.8 }}>{a.gain >= 0 ? "+" : ""}{a.gain.toFixed(2)}%</div>
+                      </div>
+                    </div>
+                  );
+                })}
+                {/* Total */}
+                <div style={{ display: "grid", gridTemplateColumns: "2fr 1.2fr 1.2fr 1.2fr 1.2fr 1.2fr", borderTop: "2px solid rgba(212,165,55,0.15)", background: "rgba(212,165,55,0.04)" }}>
+                  <div style={{ fontSize: 13, fontFamily: "'JetBrains Mono', monospace", padding: "10px 8px", color: "#d4a537", fontWeight: 700 }}>Total:</div>
+                  {[1, 3, 7, 30].map((d, j) => {
+                    const accs = stats.myfxbook!.accounts;
+                    const totalP = accs.reduce((s, a) => {
+                      const dg = stats.myfxbook?.dailyGains?.find((x: any) => x.accountId === a.id);
+                      const dgD = dg?.dailyGain || [];
+                      if (dgD.length > 0) return s + dgD.slice(-d).reduce((ss: number, dd: any) => ss + (dd.profit ?? 0), 0);
+                      if (d <= 1) return s + a.balance * a.daily / 100;
+                      if (d <= 3) return s + a.balance * a.daily / 100 * 3;
+                      return s + a.profit;
+                    }, 0);
+                    const nc = (v: number) => v > 0 ? "#22c55e" : v < 0 ? "#ef4444" : "#e0d4b8";
+                    const fm = (v: number) => `$${Math.abs(v).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                    return (
+                      <div key={j} style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", padding: "10px 8px", fontWeight: 700, color: nc(totalP) }}>
+                        {Math.round(totalP) >= 0 ? "+" : "-"}{fm(Math.abs(Math.round(totalP * 100) / 100))}
+                      </div>
+                    );
+                  })}
+                  <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", padding: "10px 8px", fontWeight: 700, color: "#22c55e" }}>
+                    +{`$${Math.abs(Math.round(stats.myfxbook.accounts.reduce((s, a) => s + a.profit, 0) * 100) / 100).toLocaleString("en-US", { minimumFractionDigits: 2 })}`}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* ═══ 3. HOW IT WORKS — Wie starte ich? ═══ */}
       <HowItWorks />
 
