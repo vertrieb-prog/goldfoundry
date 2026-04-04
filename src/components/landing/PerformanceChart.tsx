@@ -660,12 +660,7 @@ export default function PerformanceChart({ growthCurve, drawdownCurve, equityCur
         </div>
       )}
 
-      {/* Profit nach Zeitraum — 24h/72h/7d/30d pro Account */}
-      {mfx && (
-        <div style={{ marginTop: 16 }}>
-          <TradingPeriods accounts={mfx.accounts} dailyGains={mfx.dailyGains} />
-        </div>
-      )}
+      {/* Profit-Tabelle ist jetzt direkt in page.tsx */}
 
       {/* Recent Trades */}
       {recentTrades.length > 0 && (
