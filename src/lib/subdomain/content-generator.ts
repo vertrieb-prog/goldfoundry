@@ -7,6 +7,7 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import { autoLink } from "@/lib/seo/auto-linker";
 import { SUBDOMAIN_CONFIG, SUBDOMAIN_PROMPTS } from "./config";
 import { buildGeoEnrichedContent } from "./geo-optimizer";
+import { generateArticleImage, buildImageHtml } from "./image-generator";
 import type { SubdomainSite, SubdomainArticle } from "./types";
 
 const CONTENT_TYPES = ["news", "strategy", "guide", "faq", "comparison"] as const;
@@ -145,7 +146,33 @@ Erstelle einen ${contentType}-Artikel für die Subdomain ${site.slug}.goldfoundr
     return null;
   }
 
-  const linkedContent = autoLink(generated.content, `/${generated.slug}`);
+  // Erklärbild generieren via Gemini
+  const image = await generateArticleImage(
+    generated.slug,
+    site.slug,
+    generated.title,
+    site.niche_keywords,
+    contentType
+  );
+
+  // Bild nach dem ersten H2 einfügen
+  let contentWithImage = generated.content;
+  if (image) {
+    const imageHtml = buildImageHtml(image);
+    const firstH2End = contentWithImage.indexOf("</h2>");
+    if (firstH2End !== -1) {
+      const insertPos = contentWithImage.indexOf("</p>", firstH2End);
+      if (insertPos !== -1) {
+        contentWithImage = contentWithImage.slice(0, insertPos + 4) + imageHtml + contentWithImage.slice(insertPos + 4);
+      } else {
+        contentWithImage = contentWithImage.slice(0, firstH2End + 5) + imageHtml + contentWithImage.slice(firstH2End + 5);
+      }
+    } else {
+      contentWithImage = imageHtml + contentWithImage;
+    }
+  }
+
+  const linkedContent = autoLink(contentWithImage, `/${generated.slug}`);
 
   const enrichedContent = buildGeoEnrichedContent(
     linkedContent,
