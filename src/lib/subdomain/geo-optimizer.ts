@@ -6,6 +6,9 @@ import type { ArticleGeoData, SubdomainSite, SubdomainArticle } from "./types";
 export function generateArticleSchema(article: SubdomainArticle, site: SubdomainSite): Record<string, unknown> {
   const baseUrl = `https://${site.slug}.goldfoundry.de`;
 
+  // Erklärbild-URL für Schema.org
+  const imageUrl = `${baseUrl}/subdomain-images/${site.slug}-${article.slug}.png`;
+
   const schema: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": "Article",
@@ -14,15 +17,31 @@ export function generateArticleSchema(article: SubdomainArticle, site: Subdomain
     url: `${baseUrl}/${article.slug}`,
     datePublished: article.published_at,
     dateModified: article.published_at,
+    image: {
+      "@type": "ImageObject",
+      url: imageUrl,
+      caption: `Infografik: ${article.title} — Gold Foundry`,
+    },
     publisher: {
       "@type": "Organization",
       name: "Gold Foundry",
       url: "https://goldfoundry.de",
+      logo: {
+        "@type": "ImageObject",
+        url: "https://goldfoundry.de/icon-192.png",
+      },
     },
     author: {
       "@type": "Organization",
       name: "Gold Foundry",
+      url: "https://goldfoundry.de",
     },
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": `${baseUrl}/${article.slug}`,
+    },
+    inLanguage: site.locale || "de",
+    keywords: (article.seo_data as any)?.keywords?.join(", ") || "",
   };
 
   return schema;

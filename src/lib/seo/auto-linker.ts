@@ -77,6 +77,22 @@ const LINK_RULES: LinkRule[] = [
     { keyword: "Scalping", url: "/strategy/scalping", maxPerPage: 1 },
     { keyword: "Swing Trading", url: "/strategy/swing", maxPerPage: 1 },
     { keyword: "News Trading", url: "/strategy/news", maxPerPage: 1 },
+    // ── Subdomain Cross-Links (Backlinks zwischen Subdomains) ──
+    { keyword: "Prop Firm Challenge", url: "https://prop-firm-challenge.goldfoundry.de", maxPerPage: 1 },
+    { keyword: "Funded Trader", url: "https://prop-firm-challenge.goldfoundry.de", maxPerPage: 1 },
+    { keyword: "Gold Trading Signale", url: "https://gold-trading-signale.goldfoundry.de", maxPerPage: 1 },
+    { keyword: "XAUUSD Signale", url: "https://gold-trading-signale.goldfoundry.de", maxPerPage: 1 },
+    { keyword: "Gold Analyse", url: "https://gold-trading-signale.goldfoundry.de", maxPerPage: 1 },
+    { keyword: "MetaTrader Automation", url: "https://metatrader-automation.goldfoundry.de", maxPerPage: 1 },
+    { keyword: "Expert Advisor", url: "https://metatrader-automation.goldfoundry.de", maxPerPage: 1 },
+    { keyword: "Trading Bot", url: "https://metatrader-automation.goldfoundry.de", maxPerPage: 1 },
+    { keyword: "EA Programmierung", url: "https://metatrader-automation.goldfoundry.de", maxPerPage: 1 },
+    { keyword: "Broker Vergleich", url: "https://broker-vergleich.goldfoundry.de", maxPerPage: 1 },
+    { keyword: "Broker Test", url: "https://broker-vergleich.goldfoundry.de", maxPerPage: 1 },
+    { keyword: "Tegas FX", url: "https://tegas-fx-guide.goldfoundry.de", maxPerPage: 1 },
+    { keyword: "Tegas", url: "https://tegas-fx-guide.goldfoundry.de", maxPerPage: 1 },
+    { keyword: "Tag Markets", url: "https://tag-markets-guide.goldfoundry.de", maxPerPage: 1 },
+    { keyword: "Gold Foundry", url: "https://goldfoundry.de", maxPerPage: 1 },
 ];
 
 // ── Auto-Link Content ───────────────────────────────────────
