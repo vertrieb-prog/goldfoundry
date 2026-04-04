@@ -2,114 +2,115 @@
 
 import { motion } from "framer-motion";
 
-const strategies = [
-  {
-    num: "01",
-    name: "Gold Scalper",
-    result: "+32%",
-    resultLabel: "Top Gain",
-    what: "Findet profitable Gold-Trades in Sekunden",
-    how: "Analysiert 4 Zeitrahmen gleichzeitig und schlägt zu, wenn alle übereinstimmen.",
-  },
-  {
-    num: "02",
-    name: "Trend Rider",
-    result: "+366%",
-    resultLabel: "Bester Account",
-    what: "Reitet den Gold-Trend bis zum Ende",
-    how: "Erkennt den Haupttrend und baut die Position schrittweise aus — maximaler Profit.",
-  },
-  {
-    num: "03",
-    name: "Reversal Engine",
-    result: "73%",
-    resultLabel: "Winrate",
-    what: "Kauft wenn alle verkaufen",
-    how: "Erkennt Übertreibungen im Markt und handelt die Gegenbewegung — antizyklisch.",
-  },
-  {
-    num: "04",
-    name: "Breakout System",
-    result: "3:1",
-    resultLabel: "Risk:Reward",
-    what: "Wartet auf den perfekten Moment",
-    how: "Geduldig bis der Kurs ausbricht, dann volle Kraft voraus mit engem Stop.",
-  },
-  {
-    num: "05",
-    name: "News Shield",
-    result: "24/7",
-    resultLabel: "Aktiv",
-    what: "Schützt dein Kapital vor News-Crashs",
-    how: "Schließt alle Positionen automatisch vor NFP, FOMC und anderen Risiko-Events.",
-  },
-  {
-    num: "06",
-    name: "DD Guardian",
-    result: "<18%",
-    resultLabel: "Max Drawdown",
-    what: "Dein automatischer Sicherheitsgurt",
-    how: "Trailing Stop-Loss nach jedem Gewinn. Begrenzt Verluste, sichert Profits.",
-  },
-];
+interface Account {
+  id?: number;
+  name: string;
+  gain: number;
+  daily: number;
+  monthly: number;
+  drawdown: number;
+  balance: number;
+  equity: number;
+  profit: number;
+  pips: number;
+}
 
-const card = {
-  hidden: { opacity: 0, y: 40, scale: 0.95 },
-  visible: (i: number) => ({ opacity: 1, y: 0, scale: 1, transition: { delay: i * 0.1, duration: 0.5 } }),
+interface Props {
+  accounts: Account[];
+}
+
+function numColor(v: number) { return v >= 0 ? "#22c55e" : "#ef4444"; }
+function fmtMoney(v: number) { return `$${Math.abs(Math.round(v)).toLocaleString("en-US")}`; }
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.08, duration: 0.4 } }),
 } as any;
 
-export default function StrategyEngine() {
+export default function StrategyEngine({ accounts }: Props) {
+  if (!accounts?.length) return null;
+
   return (
-    <section id="strategies" style={{ padding: "80px 20px", maxWidth: 960, margin: "0 auto" }}>
-      <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} style={{ textAlign: "center", marginBottom: 56 }}>
+    <section id="strategies" style={{ padding: "80px 20px", maxWidth: 1000, margin: "0 auto" }}>
+      <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} style={{ textAlign: "center", marginBottom: 48 }}>
         <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.2em", color: "#d4a537", marginBottom: 12, fontWeight: 600 }}>
           Die PHANTOM Engine
         </div>
         <h2 style={{ fontSize: "clamp(28px, 5vw, 44px)", fontWeight: 800, lineHeight: 1.15, marginBottom: 16, color: "#fafafa" }}>
-          6 Strategien handeln{" "}
-          <span style={{ background: "linear-gradient(135deg, #d4a537, #f0d060)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>gleichzeitig</span>
-          {" "}für dich
+          <span style={{ background: "linear-gradient(135deg, #d4a537, #f0d060)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+            {accounts.length} Strategien
+          </span>{" "}
+          handeln gerade für dich
         </h2>
-        <p style={{ color: "#a1a1aa", fontSize: "clamp(14px, 2vw, 17px)", maxWidth: 560, margin: "0 auto", lineHeight: 1.7 }}>
-          Während andere auf eine Strategie setzen, kombiniert PHANTOM sechs spezialisierte Systeme.
-          Jeder Trade wird live auf MyFXBook protokolliert — du siehst alles in Echtzeit.
+        <p style={{ color: "#a1a1aa", fontSize: "clamp(14px, 2vw, 16px)", maxWidth: 520, margin: "0 auto", lineHeight: 1.7 }}>
+          Jede Strategie laeuft auf einem eigenen Account — alle live verifiziert.
+          {accounts.length > 6 && " Neue Strategien werden laufend ergaenzt."}
         </p>
       </motion.div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
-        {strategies.map((s, i) => (
-          <motion.div key={s.num} custom={i} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={card}
-            style={{ background: "rgba(10,8,6,0.7)", border: "1px solid rgba(212,165,55,0.08)", borderRadius: 16, padding: "24px 22px", position: "relative", overflow: "hidden", cursor: "default" }}
-          >
-            {/* Strategy number + LIVE */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-              <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: "#52525b", letterSpacing: "0.1em" }}>{s.num}</span>
-              <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 9, color: "#22c55e", fontFamily: "'JetBrains Mono', monospace" }}>
-                <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#22c55e", animation: "sp-pulse 2s ease-in-out infinite" }} /> LIVE
-              </span>
-            </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(280px, 100%), 1fr))", gap: 16 }}>
+        {accounts.map((acc, i) => {
+          const isNew = acc.gain === 0 && acc.profit === 0;
+          return (
+            <motion.div key={acc.name} custom={i} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={cardVariants}
+              style={{ background: "rgba(10,8,6,0.7)", border: "1px solid rgba(212,165,55,0.08)", borderRadius: 16, padding: "20px 22px", position: "relative" }}>
 
-            {/* Result badge */}
-            <div style={{ display: "inline-flex", alignItems: "baseline", gap: 8, marginBottom: 12, padding: "6px 12px", background: "rgba(212,165,55,0.06)", borderRadius: 8, border: "1px solid rgba(212,165,55,0.12)" }}>
-              <span style={{ fontSize: 22, fontWeight: 800, fontFamily: "'JetBrains Mono', monospace", color: "#d4a537" }}>{s.result}</span>
-              <span style={{ fontSize: 10, color: "#6d6045", textTransform: "uppercase", letterSpacing: "0.08em" }}>{s.resultLabel}</span>
-            </div>
+              {/* LIVE indicator */}
+              <div style={{ position: "absolute", top: 14, right: 14, display: "flex", alignItems: "center", gap: 5 }}>
+                <span style={{ width: 6, height: 6, borderRadius: "50%", background: isNew ? "#6d6045" : "#22c55e", animation: isNew ? "none" : "sp-pulse 2s ease-in-out infinite" }} />
+                <span style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", color: isNew ? "#6d6045" : "#22c55e", letterSpacing: "0.08em" }}>
+                  {isNew ? "NEU" : "LIVE"}
+                </span>
+              </div>
 
-            {/* Name + description */}
-            <h3 style={{ fontSize: 17, fontWeight: 700, marginBottom: 4, color: "#fafafa" }}>{s.name}</h3>
-            <p style={{ fontSize: 14, fontWeight: 600, color: "#d4a537", marginBottom: 6 }}>{s.what}</p>
-            <p style={{ fontSize: 13, color: "#8b8b8b", lineHeight: 1.6 }}>{s.how}</p>
-          </motion.div>
-        ))}
+              {/* Strategy name */}
+              <h3 style={{ fontSize: 17, fontWeight: 700, color: "#fafafa", marginBottom: 14, paddingRight: 50 }}>{acc.name}</h3>
+
+              {/* Key metrics grid */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px 16px" }}>
+                <div>
+                  <div style={{ fontSize: 10, color: "#6d6045", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>Gain</div>
+                  <div style={{ fontSize: 18, fontWeight: 800, fontFamily: "'JetBrains Mono', monospace", color: numColor(acc.gain) }}>
+                    {acc.gain >= 0 ? "+" : ""}{acc.gain.toFixed(1)}%
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 10, color: "#6d6045", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>Profit</div>
+                  <div style={{ fontSize: 18, fontWeight: 800, fontFamily: "'JetBrains Mono', monospace", color: numColor(acc.profit) }}>
+                    {acc.profit >= 0 ? "+" : "-"}{fmtMoney(acc.profit)}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 10, color: "#6d6045", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>Drawdown</div>
+                  <div style={{ fontSize: 14, fontWeight: 600, fontFamily: "'JetBrains Mono', monospace", color: acc.drawdown > 10 ? "#ef4444" : "#a1a1aa" }}>
+                    {acc.drawdown.toFixed(1)}%
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 10, color: "#6d6045", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>Balance</div>
+                  <div style={{ fontSize: 14, fontWeight: 600, fontFamily: "'JetBrains Mono', monospace", color: "#d4a537" }}>
+                    {fmtMoney(acc.balance)}
+                  </div>
+                </div>
+              </div>
+
+              {/* Daily badge */}
+              {acc.daily !== 0 && (
+                <div style={{ marginTop: 12, display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 10px", background: "rgba(34,197,94,0.06)", borderRadius: 6, border: "1px solid rgba(34,197,94,0.1)" }}>
+                  <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: numColor(acc.daily), fontWeight: 600 }}>
+                    {acc.daily >= 0 ? "+" : ""}{acc.daily.toFixed(2)}% heute
+                  </span>
+                </div>
+              )}
+            </motion.div>
+          );
+        })}
       </div>
 
-      <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.4 }}
-        style={{ textAlign: "center", marginTop: 48 }}>
-        <p style={{ color: "#6d6045", fontSize: 13, marginBottom: 20 }}>
-          Alle 6 Strategien laufen parallel auf 6 separaten Accounts — volle Diversifikation, minimales Risiko.
-        </p>
-        <a href="#performance" style={{ display: "inline-block", padding: "14px 36px", fontSize: 15, fontWeight: 700, color: "#0a0806", background: "linear-gradient(135deg, #d4a537, #f0d060)", borderRadius: 10, textDecoration: "none", letterSpacing: "0.02em" }}>
-          Live-Ergebnisse ansehen
+      <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.3 }}
+        style={{ textAlign: "center", marginTop: 40 }}>
+        <a href="#performance" style={{ display: "inline-block", padding: "14px 36px", fontSize: 15, fontWeight: 700, color: "#0a0806", background: "linear-gradient(135deg, #d4a537, #f0d060)", borderRadius: 10, textDecoration: "none" }}>
+          Alle Live-Ergebnisse ansehen
         </a>
       </motion.div>
 

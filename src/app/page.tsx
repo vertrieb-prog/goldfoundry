@@ -256,7 +256,7 @@ function SocialProof({ gain, equity, myfxbook }: { gain: number; equity: number;
   const spStats = [
     { label: "Verwaltetes Kapital", value: `$${Math.round(mfx.totalEquity).toLocaleString("en-US")}`, color: "#d4a537" },
     { label: "Gesamt-Gain", value: `+${mfx.totalGain.toFixed(2)}%`, color: "#22c55e" },
-    { label: "Aktive Strategien", value: "6", color: "#fafafa" },
+    { label: "Aktive Strategien", value: String(mfx?.accounts?.length ?? stats?.myfxbook?.accounts?.length ?? 7), color: "#fafafa" },
     { label: "Max Drawdown", value: `${mfx.totalDrawdown.toFixed(2)}%`, color: "#ef4444" },
   ];
 
@@ -280,7 +280,7 @@ function SocialProof({ gain, equity, myfxbook }: { gain: number; equity: number;
         ))}
       </motion.div>
       <p style={{ textAlign: "center", color: "#52525b", fontSize: 11, marginTop: 16 }}>
-        Alle Daten live von MyFXBook &mdash; unabhaengig verifiziert
+        Alle Daten live &mdash; unabhaengig verifiziert
       </p>
     </section>
   );
@@ -342,8 +342,8 @@ export default function HomePage() {
           <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
             style={{ color: "#a1a1aa", fontSize: "clamp(16px, 2.5vw, 20px)", marginBottom: 40, maxWidth: 500, margin: "0 auto 40px" }}>
             {equity > 0
-              ? <>{mfx?.accounts?.length ?? 6} Strategien. <span style={{ color: "#22c55e", fontWeight: 700 }}>{winrate}% Winrate.</span> Verifiziert auf MyFXBook.</>
-              : "Mehrere Strategien. 1 Engine. Verifiziert auf MyFXBook."}
+              ? <>{mfx?.accounts?.length ?? stats?.myfxbook?.accounts?.length ?? 7} Strategien. <span style={{ color: "#22c55e", fontWeight: 700 }}>{winrate}% Winrate.</span> Live verifiziert.</>
+              : "Mehrere Strategien. 1 Engine. Live verifiziert."}
           </motion.p>
 
           {/* Live Counters */}
@@ -383,7 +383,7 @@ export default function HomePage() {
           {/* Trust line */}
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.2 }}
             style={{ marginTop: 32, display: "flex", justifyContent: "center", gap: 20, flexWrap: "wrap" }}>
-            {["MyFXBook verifiziert", "73% Winrate", "100% Kostenlos"].map((t) => (
+            {["Live verifiziert", `${winrate}% Winrate`, "100% Kostenlos"].map((t) => (
               <span key={t} style={{ fontSize: 11, color: "#52525b", display: "flex", alignItems: "center", gap: 4 }}>
                 <span style={{ color: "#22c55e" }}>&#x2713;</span> {t}
               </span>
