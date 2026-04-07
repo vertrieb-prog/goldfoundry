@@ -49,17 +49,29 @@ async function getMfxSession(): Promise<string | null> {
   const email = process.env.MYFXBOOK_EMAIL ?? "";
   const pw = process.env.MYFXBOOK_PASSWORD ?? "";
   if (!email || !pw) return null;
-  try {
-    const res = await fetch(
-      `${MYFXBOOK}/login.json?email=${encodeURIComponent(email)}&password=${encodeURIComponent(pw)}`,
-      { signal: AbortSignal.timeout(10000), cache: "no-store" }
-    );
-    const d = await res.json();
-    if (d.error || !d.session) return null;
-    const s = decodeURIComponent(d.session);
-    mfxSessionCache = { session: s, ts: Date.now() };
-    return s;
-  } catch { return null; }
+  // Try login with retries
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      const res = await fetch(
+        `${MYFXBOOK}/login.json?email=${encodeURIComponent(email)}&password=${encodeURIComponent(pw)}`,
+        { signal: AbortSignal.timeout(15000), cache: "no-store" }
+      );
+      const d = await res.json();
+      if (d.error || !d.session) {
+        console.warn(`[sync] MFX login attempt ${attempt} failed: ${d.message ?? d.error}`);
+        if (attempt < 2) { await new Promise(r => setTimeout(r, 3000)); continue; }
+        return null;
+      }
+      const s = decodeURIComponent(d.session);
+      mfxSessionCache = { session: s, ts: Date.now() };
+      console.log(`[sync] MFX login OK (attempt ${attempt})`);
+      return s;
+    } catch (err: any) {
+      console.warn(`[sync] MFX login attempt ${attempt} error: ${err.message}`);
+      if (attempt < 2) await new Promise(r => setTimeout(r, 3000));
+    }
+  }
+  return null;
 }
 
 async function fetchMfxHistory(session: string, mfxId: number): Promise<any[]> {
