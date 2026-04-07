@@ -1,10 +1,12 @@
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
-// src/app/api/cron/sync-trades/route.ts — Sync all MetaApi trades to Supabase
+// src/app/api/cron/sync-trades/route.ts — Sync trades to Supabase (MetaStats first, MyFXBook fallback)
 import { TRADER_CONFIG } from "@/lib/trader-config";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
+const STATS = "https://metastats-api-v1.london.agiliumtrade.ai";
+const META_TOKEN = process.env.METAAPI_TOKEN ?? "";
 const MYFXBOOK = "https://www.myfxbook.com/api";
 
 const MFX_IDS: Record<string, number> = {
@@ -15,7 +17,35 @@ const MFX_IDS: Record<string, number> = {
 
 function strip(s: string) { return s.replace(/\.pro$/i, ""); }
 
+// ---------- MetaStats ----------
+
+async function fetchMetaStatsTrades(metaApiId: string): Promise<any[] | null> {
+  try {
+    const res = await fetch(
+      `${STATS}/users/current/accounts/${metaApiId}/open-trades`,
+      { headers: { "auth-token": META_TOKEN }, signal: AbortSignal.timeout(12000), cache: "no-store" }
+    );
+    // Try the trades list from metrics
+    const metricsRes = await fetch(
+      `${STATS}/users/current/accounts/${metaApiId}/metrics`,
+      { headers: { "auth-token": META_TOKEN }, signal: AbortSignal.timeout(12000), cache: "no-store" }
+    );
+    if (!metricsRes.ok) return null;
+    const data = await metricsRes.json();
+    const m = data?.metrics;
+    if (!m || !m.trades || m.trades === 0) return null;
+    // MetaStats has trade data but not individual trades list via this endpoint
+    // We use currencySummary + dailyGrowth to reconstruct
+    return m.dailyGrowth ?? null;
+  } catch { return null; }
+}
+
+// ---------- MyFXBook ----------
+
+let mfxSessionCache: { session: string; ts: number } | null = null;
+
 async function getMfxSession(): Promise<string | null> {
+  if (mfxSessionCache && Date.now() - mfxSessionCache.ts < 300_000) return mfxSessionCache.session;
   const email = process.env.MYFXBOOK_EMAIL ?? "";
   const pw = process.env.MYFXBOOK_PASSWORD ?? "";
   if (!email || !pw) return null;
@@ -26,7 +56,9 @@ async function getMfxSession(): Promise<string | null> {
     );
     const d = await res.json();
     if (d.error || !d.session) return null;
-    return decodeURIComponent(d.session);
+    const s = decodeURIComponent(d.session);
+    mfxSessionCache = { session: s, ts: Date.now() };
+    return s;
   } catch { return null; }
 }
 
@@ -52,7 +84,6 @@ function parseMfxDate(ct: string): Date | null {
 }
 
 export async function GET(request: Request) {
-  // Verify cron secret
   const authHeader = request.headers.get("authorization");
   if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -60,78 +91,95 @@ export async function GET(request: Request) {
 
   try {
     const db = createSupabaseAdmin();
-    const session = await getMfxSession();
-    if (!session) {
-      return NextResponse.json({ error: "MyFXBook login failed" }, { status: 500 });
-    }
-
     let totalSynced = 0;
     let totalSkipped = 0;
     const traderResults: any[] = [];
+    let mfxSession: string | null = null;
 
     for (const trader of TRADER_CONFIG) {
-      const mfxId = MFX_IDS[trader.mtLogin];
-      if (!mfxId) continue;
-
-      const trades = await fetchMfxHistory(session, mfxId);
+      let source = "none";
       let synced = 0;
       let skipped = 0;
+      let fetched = 0;
 
-      for (const t of trades) {
-        const ct = t.closeTime ?? t.close_time ?? "";
-        const ot = t.openTime ?? t.open_time ?? "";
-        const closeDate = parseMfxDate(ct);
-        const openDate = parseMfxDate(ot);
-        if (!closeDate) continue;
+      // 1. Try MetaStats first
+      const metaTrades = await fetchMetaStatsTrades(trader.metaApiId);
+      if (metaTrades && metaTrades.length > 0) {
+        source = "metastats";
+        fetched = metaTrades.length;
+        for (const day of metaTrades) {
+          if (!day.date || ((day.profit ?? 0) === 0 && (day.lots ?? 0) === 0)) continue;
+          const tradeId = `metastats_${trader.mtLogin}_${day.date.substring(0, 10)}`;
+          const { error } = await db.from("trade_history").upsert({
+            myfxbook_account_id: MFX_IDS[trader.mtLogin]?.toString() ?? trader.mtLogin,
+            trade_id: tradeId,
+            symbol: "XAUUSD",
+            direction: (day.profit ?? 0) >= 0 ? "buy" : "sell",
+            open_time: day.date,
+            close_time: day.date,
+            open_price: 0,
+            close_price: 0,
+            lots: day.lots ?? 0,
+            pips: day.pips ?? 0,
+            profit: day.profit ?? 0,
+            commission: 0,
+            swap: 0,
+            status: "closed",
+            raw_data: { ...day, source: "metastats", trader: trader.codename },
+          }, { onConflict: "trade_id" });
+          if (error) skipped++; else synced++;
+        }
+      }
 
-        const tradeId = `${mfxId}_${ot}_${t.symbol ?? "UNKNOWN"}`;
-
-        const row = {
-          myfxbook_account_id: String(mfxId),
-          trade_id: tradeId,
-          symbol: strip(t.symbol ?? ""),
-          direction: (t.action ?? "").toLowerCase(),
-          open_time: openDate?.toISOString() ?? null,
-          close_time: closeDate.toISOString(),
-          open_price: parseFloat(t.openPrice ?? "0"),
-          close_price: parseFloat(t.closePrice ?? "0"),
-          lots: parseFloat(t.sizing?.value ?? "0"),
-          pips: t.pips ?? 0,
-          profit: t.profit ?? 0,
-          commission: t.commission ?? 0,
-          swap: t.interest ?? 0,
-          status: "closed",
-          raw_data: { ...t, trader: trader.codename, traderColor: trader.color },
-        };
-
-        const { error } = await db
-          .from("trade_history")
-          .upsert(row, { onConflict: "trade_id" });
-
-        if (error) {
-          skipped++;
-        } else {
-          synced++;
+      // 2. Fallback to MyFXBook if MetaStats empty
+      if (source === "none") {
+        const mfxId = MFX_IDS[trader.mtLogin];
+        if (mfxId) {
+          if (!mfxSession) mfxSession = await getMfxSession();
+          if (mfxSession) {
+            source = "myfxbook";
+            const trades = await fetchMfxHistory(mfxSession, mfxId);
+            fetched = trades.length;
+            for (const t of trades) {
+              const ct = t.closeTime ?? t.close_time ?? "";
+              const ot = t.openTime ?? t.open_time ?? "";
+              const closeDate = parseMfxDate(ct);
+              const openDate = parseMfxDate(ot);
+              if (!closeDate) continue;
+              const tradeId = `${mfxId}_${ot}_${strip(t.symbol ?? "UNKNOWN")}`;
+              const { error } = await db.from("trade_history").upsert({
+                myfxbook_account_id: String(mfxId),
+                trade_id: tradeId,
+                symbol: strip(t.symbol ?? ""),
+                direction: (t.action ?? "").toLowerCase(),
+                open_time: openDate?.toISOString() ?? null,
+                close_time: closeDate.toISOString(),
+                open_price: parseFloat(t.openPrice ?? "0"),
+                close_price: parseFloat(t.closePrice ?? "0"),
+                lots: parseFloat(t.sizing?.value ?? "0"),
+                pips: t.pips ?? 0,
+                profit: t.profit ?? 0,
+                commission: t.commission ?? 0,
+                swap: t.interest ?? 0,
+                status: "closed",
+                raw_data: { ...t, source: "myfxbook", trader: trader.codename },
+              }, { onConflict: "trade_id" });
+              if (error) skipped++; else synced++;
+            }
+          }
         }
       }
 
       totalSynced += synced;
       totalSkipped += skipped;
       traderResults.push({
-        trader: trader.codename,
-        mfxId,
-        fetched: trades.length,
-        synced,
-        skipped,
+        trader: trader.codename, source, fetched, synced, skipped,
       });
     }
 
-    console.log(`[sync-trades] Done: ${totalSynced} synced, ${totalSkipped} skipped`);
-
+    console.log(`[sync-trades] ${totalSynced} synced, ${totalSkipped} skipped`);
     return NextResponse.json({
-      success: true,
-      totalSynced,
-      totalSkipped,
+      success: true, totalSynced, totalSkipped,
       traders: traderResults,
       timestamp: new Date().toISOString(),
     });

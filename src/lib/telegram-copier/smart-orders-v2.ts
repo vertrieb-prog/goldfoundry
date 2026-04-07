@@ -4,6 +4,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import type { ParsedSignal, SmartOrder } from "./types";
+import { getBeBuffer } from "./sl-config";
 
 const SPLIT_PERCENTAGES = [40, 25, 20, 15];
 const SPLIT_LABELS = ["TP1 (Quick)", "TP2 (Standard)", "TP3 (Extended)", "TP4 (Runner)"];
@@ -124,14 +125,15 @@ export function calculateOrders(
 }
 
 /**
- * Calculate breakeven price with a small buffer for spread.
+ * Calculate breakeven price with symbol-specific buffer.
+ * XAUUSD: $1.50, US30: 15pt, NAS100: 20pt — nicht nur 2 Pips!
  */
 export function getBreakevenPrice(
   entryPrice: number,
   direction: "BUY" | "SELL",
   symbol: string
 ): number {
-  const buffer = getPipSize(symbol) * 2;
+  const buffer = getBeBuffer(symbol);
   return direction === "BUY" ? entryPrice + buffer : entryPrice - buffer;
 }
 

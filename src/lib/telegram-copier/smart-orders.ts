@@ -3,6 +3,8 @@
 // 4-Split TP, Auto-BE, Trailing Runner
 // ═══════════════════════════════════════════════════════════════
 
+import { getBeBuffer } from "./sl-config";
+
 export interface SmartOrderConfig {
   splitMode: "equal" | "pyramid" | "aggressive";
   autoBreakeven: boolean;
@@ -56,12 +58,13 @@ export function shouldMoveToBreakeven(
   entryPrice: number,
   direction: "BUY" | "SELL",
   tpHit: number,
-  config: SmartOrderConfig = DEFAULT_SMART_CONFIG
+  config: SmartOrderConfig = DEFAULT_SMART_CONFIG,
+  symbol?: string
 ): { moveBE: boolean; newSL: number } {
   if (!config.autoBreakeven) return { moveBE: false, newSL: 0 };
   if (tpHit >= config.beAfterTP) {
-    // Add small buffer (2 pips) to cover spread — direction-aware
-    const buffer = entryPrice > 100 ? 0.2 : 0.0002;
+    // Symbol-spezifischer Buffer (XAUUSD $1.50, US30 15pt, etc.)
+    const buffer = symbol ? getBeBuffer(symbol) : (entryPrice > 100 ? 1.5 : 0.0015);
     const newSL = direction === "BUY" ? entryPrice + buffer : entryPrice - buffer;
     return { moveBE: true, newSL };
   }

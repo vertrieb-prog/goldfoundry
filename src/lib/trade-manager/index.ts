@@ -10,6 +10,13 @@
 
 import { cachedCall, PROMPTS } from "@/lib/ai/cached-client";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
+import {
+  calculateBreakEvenSL,
+  enforceMinDistance,
+  calculateSteppedTrailingSL,
+  canModifySL,
+  recordSLChange,
+} from "@/lib/telegram-copier/sl-config";
 
 const log = (level: string, msg: string, data?: any) => {
   const ts = new Date().toISOString();
@@ -411,36 +418,47 @@ export class AITradeManager {
 
   private async executeDecision(positionId: string, pos: any, decision: ManagementDecision) {
     try {
+      // Cooldown: Min 2 Min zwischen SL-Änderungen
+      if (decision.decision !== "HOLD" && decision.decision !== "CLOSE_ALL" && decision.decision !== "PARTIAL_CLOSE") {
+        if (!canModifySL(positionId)) {
+          log("INFO", `[SL] Cooldown aktiv für ${pos.symbol} ${positionId}`);
+          return;
+        }
+      }
+
+      const direction = pos.type === "POSITION_TYPE_BUY" ? "BUY" : "SELL" as const;
+
       switch (decision.decision) {
         case "HOLD":
           break;
 
         case "TIGHTEN_SL":
           if (decision.newSL) {
-            // Validierung: SL darf nur in Profit-Richtung bewegt werden
             const isBuy = pos.type === "POSITION_TYPE_BUY";
             const validTighten = isBuy
               ? decision.newSL > pos.stopLoss
               : decision.newSL < pos.stopLoss || pos.stopLoss === 0;
             if (validTighten) {
-              await this.conn.modifyPosition(positionId, decision.newSL, pos.takeProfit);
-              log("INFO", `${pos.symbol} SL -> ${decision.newSL} (${decision.reason})`);
+              // Enforce minimum SL distance
+              const price = await this.conn.getSymbolPrice(pos.symbol);
+              const currentPrice = isBuy ? price.bid : price.ask;
+              const safeSL = enforceMinDistance(pos.symbol, direction, currentPrice, decision.newSL);
+              await this.conn.modifyPosition(positionId, safeSL, pos.takeProfit);
+              recordSLChange(positionId);
+              log("INFO", `${pos.symbol} SL -> ${safeSL} (${decision.reason})`);
             }
           }
           break;
 
         case "MOVE_BE": {
-          const pipSize = getPipSize(pos.symbol);
-          const buffer = pipSize * 2; // 2 Pips Buffer
-          const bePrice = pos.type === "POSITION_TYPE_BUY"
-            ? pos.openPrice + buffer
-            : pos.openPrice - buffer;
-          // Nur wenn BE besser als aktueller SL
-          const isBetter = pos.type === "POSITION_TYPE_BUY"
+          // Symbol-spezifischer Buffer (XAUUSD $1.50, US30 15pt, etc.)
+          const bePrice = calculateBreakEvenSL(pos.symbol, direction, pos.openPrice);
+          const isBetter = direction === "BUY"
             ? bePrice > (pos.stopLoss || 0)
             : bePrice < pos.stopLoss || pos.stopLoss === 0;
           if (isBetter) {
             await this.conn.modifyPosition(positionId, bePrice, pos.takeProfit);
+            recordSLChange(positionId);
             log("INFO", `${pos.symbol} SL -> BE ${bePrice} (${decision.reason})`);
           }
           break;
@@ -464,11 +482,12 @@ export class AITradeManager {
         case "WIDEN_SL":
           if (decision.newSL && pos.stopLoss) {
             const pipSize = getPipSize(pos.symbol);
-            const maxWiden = 10 * pipSize; // Max 10 Pips weiten
+            const maxWiden = 10 * pipSize;
             const currentSLDist = Math.abs(pos.openPrice - pos.stopLoss);
             const newSLDist = Math.abs(pos.openPrice - decision.newSL);
             if (newSLDist <= currentSLDist + maxWiden) {
               await this.conn.modifyPosition(positionId, decision.newSL, pos.takeProfit);
+              recordSLChange(positionId);
               log("INFO", `${pos.symbol} SL widened -> ${decision.newSL} (${decision.reason})`);
             }
           }

@@ -10,6 +10,12 @@ import {
   calculateRiskMultiplier,
   calculateCopyLots,
 } from "@/lib/copier/risk-engine";
+import {
+  calculateBreakEvenSL,
+  enforceMinDistance,
+  canModifySL,
+  recordSLChange,
+} from "./sl-config";
 
 const log = (level: string, msg: string, data?: any) => {
   const ts = new Date().toISOString();
@@ -466,21 +472,42 @@ async function handleModifySignal(
         );
 
         for (const pos of matching) {
-          // Breakeven
+          // Cooldown: Min 2 Min zwischen SL-Änderungen
+          if (!canModifySL(pos.id)) {
+            log("INFO", `[SL] Cooldown aktiv für ${pos.symbol} ${pos.id}`);
+            continue;
+          }
+
+          const direction = pos.type === "POSITION_TYPE_BUY" ? "BUY" : "SELL" as const;
+
           if (signal.moveToBreakeven) {
-            const pipBuffer = getPipSize(signal.symbol!) * 2;
-            // BUY: SL slightly above entry. SELL: SL slightly below entry.
-            const beSL = pos.type === "POSITION_TYPE_BUY"
-              ? pos.openPrice + pipBuffer
-              : pos.openPrice - pipBuffer;
-            await conn.modifyPosition(pos.id, beSL, pos.takeProfit);
+            // Break Even MIT symbol-spezifischem Buffer
+            let beSL = calculateBreakEvenSL(signal.symbol!, direction, pos.openPrice);
+
+            // Nur wenn besser als aktueller SL
+            const isBetter = direction === "BUY"
+              ? beSL > (pos.stopLoss || 0)
+              : beSL < pos.stopLoss || pos.stopLoss === 0;
+
+            if (isBetter) {
+              await conn.modifyPosition(pos.id, beSL, pos.takeProfit);
+              recordSLChange(pos.id);
+              log("INFO", `[BE] ${pos.symbol} SL → ${beSL} (Entry + Buffer)`);
+            }
           } else {
-            // SL/TP Update
+            // SL/TP Update — enforce minimum distance
+            let newSL = signal.stopLoss ?? pos.stopLoss;
+            if (newSL && signal.symbol) {
+              const price = await conn.getSymbolPrice(pos.symbol);
+              const currentPrice = direction === "BUY" ? price.bid : price.ask;
+              newSL = enforceMinDistance(signal.symbol, direction, currentPrice, newSL);
+            }
             await conn.modifyPosition(
               pos.id,
-              signal.stopLoss ?? pos.stopLoss,
+              newSL,
               signal.takeProfits[0] ?? pos.takeProfit
             );
+            recordSLChange(pos.id);
           }
           result.copied++;
         }

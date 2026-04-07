@@ -197,6 +197,49 @@ export function isLikelySignal(message: string): boolean {
     "raus", "schließen", "dicht", "profit nehmen", "profite",
     "signal alert", "setup", "signal",
     "xauusd", "gold", "xau", "eurusd", "gbpusd", "btcusd", "nas", "us500",
+    // Deutsche Trade-Management Befehle
+    "nachziehen", "absichern", "sichern", "teilgewinn", "partial",
+    "trail", "lock", "be setzen", "sl nachziehen",
+    "gewinne mitnehmen", "gewinne absichern",
   ];
   return keywords.some((kw) => lower.includes(kw));
+}
+
+/**
+ * Parse deutsche Telegram-Befehle für Trade-Management.
+ * Erkennt: "Break Even", "nachziehen", "absichern", "teilgewinn"
+ */
+export function parseManagementCommand(message: string): {
+  type: "BREAK_EVEN" | "TRAIL" | "SECURE" | "PARTIAL_CLOSE" | null;
+  symbol: string | null;
+  closePercent: number | null;
+} {
+  const lower = message.toLowerCase();
+
+  // Symbol erkennen
+  const symRegex = new RegExp(`(${Object.keys(SYMBOL_MAP).sort((a, b) => b.length - a.length).join("|")})`, "i");
+  const symMatch = message.match(symRegex);
+  const symbol = symMatch ? (SYMBOL_MAP[symMatch[1].toLowerCase()] || symMatch[1].toUpperCase()) : null;
+
+  // Break Even
+  if (lower.includes("break even") || lower.includes("breakeven") || lower.includes("be setzen") || /\bbe\b/.test(lower)) {
+    return { type: "BREAK_EVEN", symbol, closePercent: null };
+  }
+
+  // SL nachziehen / Trail
+  if (lower.includes("nachziehen") || lower.includes("trail") || lower.includes("sl nachziehen") || lower.includes("sl enger")) {
+    return { type: "TRAIL", symbol, closePercent: null };
+  }
+
+  // Absichern / Lock / Gewinne absichern
+  if (lower.includes("absichern") || lower.includes("sichern") || lower.includes("lock") || lower.includes("trade sichern") || lower.includes("gewinne absichern")) {
+    return { type: "SECURE", symbol, closePercent: null };
+  }
+
+  // Teilgewinn / Partial / Gewinne mitnehmen
+  if (lower.includes("teilgewinn") || lower.includes("partial") || lower.includes("tp1") || lower.includes("teil schliessen") || lower.includes("teil schließen") || lower.includes("gewinne mitnehmen") || lower.includes("profit nehmen")) {
+    return { type: "PARTIAL_CLOSE", symbol, closePercent: 30 };
+  }
+
+  return { type: null, symbol: null, closePercent: null };
 }
