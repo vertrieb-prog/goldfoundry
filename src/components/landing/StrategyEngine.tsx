@@ -3,16 +3,22 @@
 import { motion } from "framer-motion";
 
 interface Account {
-  id?: number;
   name: string;
+  color?: string;
   gain: number;
-  daily: number;
-  monthly: number;
-  drawdown: number;
+  daily?: number;
+  monthly?: number;
+  drawdown?: number;
   balance: number;
   equity: number;
   profit: number;
-  pips: number;
+  pnl24h?: number;
+  pnl72h?: number;
+  pnl7d?: number;
+  pnl30d?: number;
+  winrate?: number;
+  trades?: number;
+  active?: boolean;
 }
 
 interface Props {
@@ -82,8 +88,8 @@ export default function StrategyEngine({ accounts }: Props) {
                 </div>
                 <div>
                   <div style={{ fontSize: 10, color: "#6d6045", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>Drawdown</div>
-                  <div style={{ fontSize: 14, fontWeight: 600, fontFamily: "'JetBrains Mono', monospace", color: acc.drawdown > 10 ? "#ef4444" : "#a1a1aa" }}>
-                    {acc.drawdown.toFixed(1)}%
+                  <div style={{ fontSize: 14, fontWeight: 600, fontFamily: "'JetBrains Mono', monospace", color: (acc.drawdown ?? 0) > 10 ? "#ef4444" : "#a1a1aa" }}>
+                    {(acc.drawdown ?? 0).toFixed(1)}%
                   </div>
                 </div>
                 <div>
@@ -95,10 +101,10 @@ export default function StrategyEngine({ accounts }: Props) {
               </div>
 
               {/* Daily badge */}
-              {acc.daily !== 0 && (
+              {(acc.daily ?? acc.pnl24h ?? 0) !== 0 && (
                 <div style={{ marginTop: 12, display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 10px", background: "rgba(34,197,94,0.06)", borderRadius: 6, border: "1px solid rgba(34,197,94,0.1)" }}>
-                  <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: numColor(acc.daily), fontWeight: 600 }}>
-                    {acc.daily >= 0 ? "+" : ""}{acc.daily.toFixed(2)}% heute
+                  <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: numColor(acc.pnl24h ?? acc.daily ?? 0), fontWeight: 600 }}>
+                    {(acc.pnl24h ?? acc.daily ?? 0) >= 0 ? "+" : ""}${Math.abs(acc.pnl24h ?? 0).toFixed(2)} heute
                   </span>
                 </div>
               )}

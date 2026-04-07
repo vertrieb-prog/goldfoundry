@@ -45,20 +45,23 @@ interface LpStats {
   equityCurve: { date: string; equity: number }[];
   growthCurve: { date: string; growth: number; equity: number }[];
   drawdownCurve: { date: string; dd: number }[];
-  recentTrades: { direction: string; symbol: string; lots: number; pnl: number; time: string }[];
-  myfxbook?: {
-    accounts: MyfxAccount[];
-    dailyGains?: any[];
-    dailyDatas?: any[];
-    totalGain: number;
-    totalBalance: number;
-    totalEquity: number;
-    totalProfit: number;
-    totalDrawdown: number;
-    totalDaily: number;
-    totalMonthly: number;
-    dd72h?: number;
-  } | null;
+  recentTrades: { direction: string; symbol: string; lots: number; pnl: number; time: string; trader?: string; traderColor?: string }[];
+  accounts: {
+    name: string;
+    color: string;
+    equity: number;
+    balance: number;
+    profit: number;
+    gain: number;
+    pnl24h: number;
+    pnl72h: number;
+    pnl7d: number;
+    pnl30d: number;
+    winrate: number;
+    trades: number;
+    active: boolean;
+  }[];
+  source?: string;
 }
 
 /* ─── Animated Counter ─── */
@@ -250,15 +253,16 @@ function LeverageCards({ onStart }: { onStart: () => void }) {
 }
 
 /* ─── Portfolio Overview (Clean, Professional) ─── */
-function SocialProof({ gain, equity, myfxbook }: { gain: number; equity: number; myfxbook?: LpStats["myfxbook"] }) {
-  const mfx = myfxbook;
-  if (!mfx) return null;
+function SocialProof({ gain, equity, accounts }: { gain: number; equity: number; accounts?: LpStats["accounts"] }) {
+  const accs = accounts ?? [];
+  if (accs.length === 0 && equity <= 0) return null;
 
+  const totalProfit = accs.reduce((s, a) => s + a.profit, 0);
   const spStats = [
-    { label: "Verwaltetes Kapital", value: `$${Math.round(mfx.totalEquity).toLocaleString("en-US")}`, color: "#d4a537" },
-    { label: "Gesamt-Gain", value: `+${mfx.totalGain.toFixed(2)}%`, color: "#22c55e" },
-    { label: "Aktive Strategien", value: String(mfx?.accounts?.length ?? 7), color: "#fafafa" },
-    { label: "Max Drawdown", value: `${mfx.totalDrawdown.toFixed(2)}%`, color: "#ef4444" },
+    { label: "Verwaltetes Kapital", value: `$${Math.round(equity).toLocaleString("en-US")}`, color: "#d4a537" },
+    { label: "Gesamt-Gain", value: `${gain >= 0 ? "+" : ""}${gain.toFixed(2)}%`, color: "#22c55e" },
+    { label: "Aktive Strategien", value: String(accs.length || 7), color: "#fafafa" },
+    { label: "Gesamt-Profit", value: `${totalProfit >= 0 ? "+" : ""}$${Math.abs(Math.round(totalProfit)).toLocaleString("en-US")}`, color: totalProfit >= 0 ? "#22c55e" : "#ef4444" },
   ];
 
   return (
