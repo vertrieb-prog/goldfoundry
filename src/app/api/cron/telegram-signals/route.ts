@@ -439,9 +439,23 @@ async function processChannel(db: any, channel: any) {
 
         if (metaApiToken && account) {
           try {
+            // Region auflösen (cold start hat keinen Cache)
             let clientBase = META_CLIENT_BASE;
             const cachedR = getCachedRegion(account.metaapi_account_id);
-            if (cachedR) clientBase = getClientBase(cachedR);
+            if (cachedR) {
+              clientBase = getClientBase(cachedR);
+            } else {
+              try {
+                const accStatus = await metaApiFetch(
+                  `${META_PROV_BASE}/users/current/accounts/${account.metaapi_account_id}`, metaApiToken
+                );
+                if (accStatus.region) {
+                  clientBase = getClientBase(accStatus.region);
+                  setCachedRegion(account.metaapi_account_id, accStatus.region);
+                  log("INFO", `[MGMT] Region resolved: ${accStatus.region}`);
+                }
+              } catch {}
+            }
 
             const positions = await metaApiFetch(
               `${clientBase}/users/current/accounts/${account.metaapi_account_id}/positions`,
