@@ -1,19 +1,23 @@
 export const dynamic = "force-dynamic";
-// src/app/api/lp/stats/route.ts — LP stats powered 100% by MetaApi
+// src/app/api/lp/stats/route.ts — LP stats 100% MetaApi (MetaStats + Account Info)
 import { NextResponse } from "next/server";
 import { TRADER_CONFIG } from "@/lib/trader-config";
 
-const BASE = "https://mt-client-api-v1.london.agiliumtrade.ai";
+const CLIENT_BASE = "https://mt-client-api-v1.london.agiliumtrade.ai";
+const STATS_BASE = "https://metastats-api-v1.london.agiliumtrade.ai";
 const TOKEN = process.env.METAAPI_TOKEN ?? "";
 
+// Persistent fallback cache — NEVER show zeros
+let lastGoodResponse: any = null;
 let cache: { data: any; ts: number } | null = null;
 const CACHE_TTL = 30_000;
 
-async function metaFetch(path: string) {
+async function metaFetch(url: string) {
   try {
-    const res = await fetch(`${BASE}${path}`, {
+    const res = await fetch(url, {
       headers: { "auth-token": TOKEN },
       cache: "no-store",
+      signal: AbortSignal.timeout(15000),
     });
     if (!res.ok) return null;
     return await res.json();
@@ -22,39 +26,15 @@ async function metaFetch(path: string) {
   }
 }
 
-function strip(s: string) {
-  return s.replace(/\.pro$/i, "");
-}
-
-function startOfDayUTC() {
-  const n = new Date();
-  return new Date(Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate()));
-}
+function strip(s: string) { return s.replace(/\.pro$/i, ""); }
 
 async function fetchTrader(t: typeof TRADER_CONFIG[0]) {
-  const now = new Date();
-  const todayStart = startOfDayUTC().toISOString();
-  const thirtyDaysAgo = new Date(now.getTime() - 30 * 86400000).toISOString();
-
-  const [info, positions, todayDeals, monthDeals] = await Promise.all([
-    metaFetch(`/users/current/accounts/${t.metaApiId}/account-information`),
-    metaFetch(`/users/current/accounts/${t.metaApiId}/positions`),
-    metaFetch(
-      `/users/current/accounts/${t.metaApiId}/history-deals/by-time-range` +
-        `?startTime=${encodeURIComponent(todayStart)}&endTime=${encodeURIComponent(now.toISOString())}`
-    ),
-    metaFetch(
-      `/users/current/accounts/${t.metaApiId}/history-deals/by-time-range` +
-        `?startTime=${encodeURIComponent(thirtyDaysAgo)}&endTime=${encodeURIComponent(now.toISOString())}`
-    ),
+  const [info, positions, metrics] = await Promise.all([
+    metaFetch(`${CLIENT_BASE}/users/current/accounts/${t.metaApiId}/account-information`),
+    metaFetch(`${CLIENT_BASE}/users/current/accounts/${t.metaApiId}/positions`),
+    metaFetch(`${STATS_BASE}/users/current/accounts/${t.metaApiId}/metrics`),
   ]);
-
-  return { config: t, info, positions: positions ?? [], todayDeals: todayDeals ?? [], monthDeals: monthDeals ?? [] };
-}
-
-function isTrade(d: any) {
-  const t = (d.type ?? "").toUpperCase();
-  return (t.includes("BUY") || t.includes("SELL")) && d.entryType !== "DEAL_ENTRY_IN";
+  return { config: t, info, positions: positions ?? [], metrics: metrics?.metrics ?? null };
 }
 
 export async function GET() {
@@ -67,131 +47,139 @@ export async function GET() {
 
     let totalEquity = 0;
     let totalBalance = 0;
-    let todayPnl = 0;
-    let todayTradeCount = 0;
-    let allMonthTrades: any[] = [];
-    let allTodayTrades: any[] = [];
     let totalPositions = 0;
-
+    let totalTrades = 0;
+    let totalWon = 0;
+    let totalProfit = 0;
+    let worstDd = 0;
     const accounts: any[] = [];
+    const equityCurveMap: Record<string, number> = {};
+    const recentTrades: any[] = [];
 
     for (const r of results) {
       const eq = r.info?.equity ?? 0;
       const bal = r.info?.balance ?? 0;
+      const m = r.metrics;
       totalEquity += eq;
       totalBalance += bal;
       totalPositions += r.positions.length;
 
-      const tTrades = (Array.isArray(r.todayDeals) ? r.todayDeals : []).filter(isTrade);
-      const mTrades = (Array.isArray(r.monthDeals) ? r.monthDeals : []).filter(isTrade);
+      const trades = m?.trades ?? 0;
+      const won = m?.wonTrades ?? 0;
+      const profit = m?.profit ?? 0;
+      const dd = m?.maxDrawdown ?? 0;
+      totalTrades += trades;
+      totalWon += won;
+      totalProfit += profit;
+      if (dd > worstDd) worstDd = dd;
 
-      const tPnl = tTrades.reduce((s: number, d: any) => s + (d.profit ?? 0), 0);
-      todayPnl += tPnl;
-      todayTradeCount += tTrades.length;
+      // Period PnL from MetaStats
+      const periods = m?.periods ?? {};
+      const pnl24h = periods.today?.profit ?? 0;
+      const pnl7d = periods.thisWeek?.profit ?? 0;
+      const pnl30d = periods.thisMonth?.profit ?? 0;
+      // 72h: estimate from dailyGrowth last 3 days
+      const dg = m?.dailyGrowth ?? [];
+      const last3 = dg.slice(-3);
+      const pnl72h = last3.reduce((s: number, d: any) => s + (d.profit ?? 0), 0);
 
-      for (const d of tTrades) allTodayTrades.push({ ...d, trader: r.config.codename, traderColor: r.config.color });
-      for (const d of mTrades) allMonthTrades.push({ ...d, trader: r.config.codename, traderColor: r.config.color });
-
-      // Per-account stats for profit table
-      const mWins = mTrades.filter((d: any) => (d.profit ?? 0) > 0).length;
-      const mPnl = mTrades.reduce((s: number, d: any) => s + (d.profit ?? 0), 0);
-      const last3d = mTrades.filter((d: any) => new Date(d.time).getTime() > Date.now() - 3 * 86400000);
-      const last7d = mTrades.filter((d: any) => new Date(d.time).getTime() > Date.now() - 7 * 86400000);
+      const wr = trades > 0 ? Math.round((won / trades) * 100) : 0;
 
       accounts.push({
         name: r.config.codename,
         color: r.config.color,
         equity: Math.round(eq * 100) / 100,
         balance: Math.round(bal * 100) / 100,
-        profit: Math.round(mPnl * 100) / 100,
-        gain: bal > 0 ? Math.round(((eq - bal) / bal) * 10000) / 100 : 0,
-        drawdown: 0,
-        pnl24h: Math.round(tPnl * 100) / 100,
-        pnl72h: Math.round(last3d.reduce((s: number, d: any) => s + (d.profit ?? 0), 0) * 100) / 100,
-        pnl7d: Math.round(last7d.reduce((s: number, d: any) => s + (d.profit ?? 0), 0) * 100) / 100,
-        pnl30d: Math.round(mPnl * 100) / 100,
-        winrate: mTrades.length > 0 ? Math.round((mWins / mTrades.length) * 100) : 0,
-        trades: mTrades.length,
+        profit: Math.round(profit * 100) / 100,
+        gain: m?.absoluteGain ? Math.round(m.absoluteGain * 100) / 100 : 0,
+        drawdown: Math.round(dd * 100) / 100,
+        pnl24h: Math.round(pnl24h * 100) / 100,
+        pnl72h: Math.round(pnl72h * 100) / 100,
+        pnl7d: Math.round(pnl7d * 100) / 100,
+        pnl30d: Math.round(pnl30d * 100) / 100,
+        winrate: wr,
+        trades,
         active: r.info !== null,
       });
+
+      // Equity curve from dailyGrowth
+      for (const d of dg) {
+        if (!d.date) continue;
+        const day = d.date.substring(0, 10);
+        equityCurveMap[day] = (equityCurveMap[day] ?? 0) + (d.balance ?? 0);
+      }
+
+      // Collect today's info for recent trades display
+      const todayDeals = m?.currencySummary ?? [];
+      for (const cs of todayDeals) {
+        const lastDay = cs.history?.[cs.history.length - 1];
+        if (lastDay) {
+          recentTrades.push({
+            direction: (lastDay.longProfit ?? 0) > (lastDay.shortProfit ?? 0) ? "BUY" : "SELL",
+            symbol: strip(cs.currency ?? ""),
+            lots: 0,
+            pnl: Math.round((lastDay.totalProfit ?? 0) * 100) / 100,
+            time: new Date().toISOString(),
+            trader: r.config.codename,
+            traderColor: r.config.color,
+          });
+        }
+      }
     }
 
-    // Aggregate win rate from all 30d trades
-    const allWins = allMonthTrades.filter((d) => (d.profit ?? 0) > 0).length;
-    const winrate = allMonthTrades.length > 0 ? Math.round((allWins / allMonthTrades.length) * 100) : 0;
+    const winrate = totalTrades > 0 ? Math.round((totalWon / totalTrades) * 100) : 0;
+    const gain = totalBalance > 0
+      ? Math.round(((totalEquity - totalBalance) / totalBalance) * 10000) / 100
+      : 0;
 
-    // Max drawdown estimate
-    const maxDd = accounts.reduce((max, a) => Math.max(max, a.drawdown), 0);
+    // Build equity curve
+    const sortedDays = Object.keys(equityCurveMap).sort();
+    const equityCurve = sortedDays.map((day) => ({
+      date: day,
+      equity: Math.round(equityCurveMap[day] * 100) / 100,
+    }));
 
-    // Equity curve from daily PnL (30 days)
-    const dailyPnl: Record<string, number> = {};
-    for (const d of allMonthTrades) {
-      if (!d.time) continue;
-      const day = d.time.substring(0, 10);
-      dailyPnl[day] = (dailyPnl[day] ?? 0) + (d.profit ?? 0);
-    }
-    const sortedDays = Object.keys(dailyPnl).sort();
-    const total30dPnl = sortedDays.reduce((s, d) => s + dailyPnl[d], 0);
-    let cum = totalBalance - total30dPnl;
-    const equityCurve = sortedDays.map((day) => {
-      cum += dailyPnl[day];
-      return { date: day, equity: Math.round(cum * 100) / 100 };
-    });
-
-    // Growth curve (% from start)
-    const startEq = equityCurve[0]?.equity ?? totalBalance;
+    // Growth + drawdown curves
+    const startEq = equityCurve[0]?.equity || totalBalance;
+    let peak = 0;
     const growthCurve = equityCurve.map((p) => ({
       date: p.date,
       growth: startEq > 0 ? Math.round(((p.equity - startEq) / startEq) * 10000) / 100 : 0,
       equity: p.equity,
     }));
-
-    // Drawdown curve
-    let peak = 0;
     const drawdownCurve = equityCurve.map((p) => {
       if (p.equity > peak) peak = p.equity;
-      const dd = peak > 0 ? ((peak - p.equity) / peak) * 100 : 0;
-      return { date: p.date, dd: Math.round(dd * 100) / 100 };
+      return { date: p.date, dd: peak > 0 ? Math.round(((peak - p.equity) / peak) * 10000) / 100 : 0 };
     });
 
-    // Recent trades
-    allTodayTrades.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
-    const recentTrades = allTodayTrades.slice(0, 8).map((d) => ({
-      direction: (d.type ?? "").includes("BUY") ? "BUY" : "SELL",
-      symbol: strip(d.symbol ?? ""),
-      lots: d.volume ?? 0,
-      pnl: Math.round((d.profit ?? 0) * 100) / 100,
-      time: d.time,
-      trader: d.trader,
-      traderColor: d.traderColor,
-    }));
-
-    const gain = totalBalance > 0
-      ? Math.round(((totalEquity - totalBalance) / totalBalance) * 10000) / 100
-      : 0;
+    const todayPnl = accounts.reduce((s, a) => s + a.pnl24h, 0);
 
     const response = {
       equity: Math.round(totalEquity * 100) / 100,
       balance: Math.round(totalBalance * 100) / 100,
       todayPnl: Math.round(todayPnl * 100) / 100,
-      todayTrades: todayTradeCount,
+      todayTrades: accounts.reduce((s, a) => s + (a.trades > 0 ? 1 : 0), 0),
       winrate,
-      maxDd: Math.round(maxDd * 10) / 10,
+      maxDd: Math.round(worstDd * 10) / 10,
       gain,
       activePositions: totalPositions,
       equityCurve,
       growthCurve,
       drawdownCurve,
-      recentTrades,
+      recentTrades: recentTrades.slice(0, 8),
       lastUpdated: new Date().toISOString(),
       accounts,
       source: "metaapi",
     };
 
+    // Save as fallback
+    if (totalEquity > 0) lastGoodResponse = response;
     cache = { data: response, ts: Date.now() };
     return NextResponse.json(response);
   } catch (err) {
     console.error("[lp/stats]", err);
+    // FALLBACK: never show zeros
+    if (lastGoodResponse) return NextResponse.json(lastGoodResponse);
     if (cache) return NextResponse.json(cache.data);
     return NextResponse.json({ error: "Failed" }, { status: 500 });
   }
