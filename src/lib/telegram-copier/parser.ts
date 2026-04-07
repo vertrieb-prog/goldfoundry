@@ -197,49 +197,111 @@ export function isLikelySignal(message: string): boolean {
     "raus", "schließen", "dicht", "profit nehmen", "profite",
     "signal alert", "setup", "signal",
     "xauusd", "gold", "xau", "eurusd", "gbpusd", "btcusd", "nas", "us500",
-    // Deutsche Trade-Management Befehle
+    // Deutsche Trade-Management Befehle (Phenex-Muster)
     "nachziehen", "absichern", "sichern", "teilgewinn", "partial",
     "trail", "lock", "be setzen", "sl nachziehen",
     "gewinne mitnehmen", "gewinne absichern",
+    "profite nehmen", "profit mit", "laufen lassen",
+    "% raus", "sl auf",
   ];
   return keywords.some((kw) => lower.includes(kw));
 }
 
 /**
- * Parse deutsche Telegram-Befehle für Trade-Management.
- * Erkennt: "Break Even", "nachziehen", "absichern", "teilgewinn"
+ * Parse Phenex-style Telegram-Befehle für Trade-Management.
+ * Basiert auf echten Nachrichten aus "THE TRADING PHENEX" Channel.
+ *
+ * Phenex-Muster:
+ *   "SL nach Belieben auf BE…" → Break Even
+ *   "Break Even auf sicher wieder…" → Break Even
+ *   "gerne wieder Break Even alles sichern!" → Secure
+ *   "Teilgewinne nehmen" → Partial Close 30%
+ *   "Profite nehmen und so…" → Partial Close 30%
+ *   "nehme dort dann 50% raus!" → Partial Close 50%
+ *   "Wir lassen die SELLS laufen nehmen bissl Profit mit" → Partial Close 30%
+ *   "Schlechte Einstiege im Profit schließen" → Partial Close 30%
+ *   "absichern und laufen lassen" → Secure
+ *
+ * FALSE POSITIVES zu vermeiden:
+ *   "Break Even Hit" → Nur Info, KEIN Befehl
+ *   "Seid ready für BUY" → Vorwarnung, NICHT traden
+ *   "TP1 hit, that's +300 pips" → Info, kein Befehl
  */
 export function parseManagementCommand(message: string): {
-  type: "BREAK_EVEN" | "TRAIL" | "SECURE" | "PARTIAL_CLOSE" | null;
+  type: "BREAK_EVEN" | "TRAIL" | "SECURE" | "PARTIAL_CLOSE" | "SL_UPDATE" | null;
   symbol: string | null;
   closePercent: number | null;
+  newSL: number | null;
 } {
   const lower = message.toLowerCase();
+
+  // === FALSE POSITIVES ausfiltern ===
+  // "Break Even Hit" = Status-Update, kein Befehl
+  if (/break\s*even\s*hit/i.test(lower)) {
+    return { type: null, symbol: null, closePercent: null, newSL: null };
+  }
+  // "TP1/2/3/4 hit" = Info, kein Befehl
+  if (/tp\d?\s*hit/i.test(lower)) {
+    return { type: null, symbol: null, closePercent: null, newSL: null };
+  }
+  // "Seid ready" = Vorwarnung
+  if (/seid\s*ready/i.test(lower)) {
+    return { type: null, symbol: null, closePercent: null, newSL: null };
+  }
 
   // Symbol erkennen
   const symRegex = new RegExp(`(${Object.keys(SYMBOL_MAP).sort((a, b) => b.length - a.length).join("|")})`, "i");
   const symMatch = message.match(symRegex);
   const symbol = symMatch ? (SYMBOL_MAP[symMatch[1].toLowerCase()] || symMatch[1].toUpperCase()) : null;
 
-  // Break Even
-  if (lower.includes("break even") || lower.includes("breakeven") || lower.includes("be setzen") || /\bbe\b/.test(lower)) {
-    return { type: "BREAK_EVEN", symbol, closePercent: null };
+  // === Konkreter SL-Preis: "SL auf 4650" ===
+  const slPriceMatch = message.match(/sl\s+auf\s+(\d{3,5}(?:\.\d{1,3})?)/i);
+  if (slPriceMatch) {
+    return { type: "SL_UPDATE", symbol, closePercent: null, newSL: parseFloat(slPriceMatch[1]) };
   }
 
-  // SL nachziehen / Trail
+  // === Break Even (Phenex: "SL nach Belieben auf BE", "SL auf Break Even") ===
+  if (
+    /sl\s+(?:nach\s+belieben\s+)?auf\s+b(?:reak\s*)?e(?:ven)?/i.test(lower) ||
+    /break\s*even/i.test(lower) ||
+    lower.includes("be setzen") ||
+    (/\bauf\s+be\b/i.test(lower))
+  ) {
+    return { type: "BREAK_EVEN", symbol, closePercent: null, newSL: null };
+  }
+
+  // === SL nachziehen / Trail ===
   if (lower.includes("nachziehen") || lower.includes("trail") || lower.includes("sl nachziehen") || lower.includes("sl enger")) {
-    return { type: "TRAIL", symbol, closePercent: null };
+    return { type: "TRAIL", symbol, closePercent: null, newSL: null };
   }
 
-  // Absichern / Lock / Gewinne absichern
-  if (lower.includes("absichern") || lower.includes("sichern") || lower.includes("lock") || lower.includes("trade sichern") || lower.includes("gewinne absichern")) {
-    return { type: "SECURE", symbol, closePercent: null };
+  // === Absichern / Sichern / Laufen lassen (Phenex: "absichern und laufen lassen") ===
+  if (
+    lower.includes("absichern") || lower.includes("sichern") ||
+    lower.includes("lock") || lower.includes("gewinne absichern") ||
+    /laufen\s+lassen/i.test(lower)
+  ) {
+    return { type: "SECURE", symbol, closePercent: null, newSL: null };
   }
 
-  // Teilgewinn / Partial / Gewinne mitnehmen
-  if (lower.includes("teilgewinn") || lower.includes("partial") || lower.includes("tp1") || lower.includes("teil schliessen") || lower.includes("teil schließen") || lower.includes("gewinne mitnehmen") || lower.includes("profit nehmen")) {
-    return { type: "PARTIAL_CLOSE", symbol, closePercent: 30 };
+  // === Partial Close mit dynamischem Prozentsatz ===
+  // "50% raus", "30% schließen", etc.
+  const pctMatch = message.match(/(\d{1,3})\s*%\s*(?:raus|schlie[ßs]en|close)/i);
+  if (pctMatch) {
+    const pct = Math.min(100, Math.max(10, parseInt(pctMatch[1])));
+    return { type: "PARTIAL_CLOSE", symbol, closePercent: pct, newSL: null };
   }
 
-  return { type: null, symbol: null, closePercent: null };
+  // === Teilgewinn / Profit nehmen (Phenex: "Teilgewinne nehmen", "Profite nehmen", "bissl Profit mit") ===
+  if (
+    lower.includes("teilgewinn") || lower.includes("partial") ||
+    lower.includes("teil schliessen") || lower.includes("teil schließen") ||
+    lower.includes("gewinne mitnehmen") || lower.includes("profit nehmen") ||
+    /profite?\s+(nehmen|mitnehmen|mit\b)/i.test(lower) ||
+    /(?:im\s+profit|einstiege)\s+schlie[ßs]en/i.test(lower)
+  ) {
+    return { type: "PARTIAL_CLOSE", symbol, closePercent: 30, newSL: null };
+  }
+
+  return { type: null, symbol: null, closePercent: null, newSL: null };
 }
