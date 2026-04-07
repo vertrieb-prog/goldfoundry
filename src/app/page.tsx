@@ -16,6 +16,7 @@ import HoloPanel from "@/components/ui/HoloPanel";
 
 const HeroBackground3D = dynamic(() => import("@/components/landing/HeroBackground3D"), { ssr: false });
 const PerformanceChart = dynamic(() => import("@/components/landing/PerformanceChart"), { ssr: false });
+const LiveTerminal = dynamic(() => import("@/components/landing/LiveTerminal"), { ssr: false });
 
 interface MyfxAccount {
   id?: number;
@@ -525,6 +526,9 @@ export default function HomePage() {
 
       {/* ═══ 6. TRUST — Letzte Einwände beseitigen ═══ */}
       <TrustCards />
+
+      {/* ═══ 6b. LIVE TERMINAL — Echte Trades in Echtzeit ═══ */}
+      <LiveTerminal />
 
       {/* ═══ 7. BROKER-PARTNER — 3 Broker ═══ */}
       <section style={{ padding: "60px 20px", maxWidth: 1000, margin: "0 auto" }}>
