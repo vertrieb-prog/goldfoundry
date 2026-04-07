@@ -422,7 +422,7 @@ async function fetchStats() {
     balance: Math.round(mfxBalance * 100) / 100,
     todayPnl: mfxTodayPnl,
     todayTrades: myfx?.todayTradesMfx || allTodayTrades.length,
-    winrate: myfx?.todayWinrate || myfx?.winrate || winrate || 63,
+    winrate: myfx?.todayWinrate || myfx?.winrate || winrate || 0,
     maxDd: Math.round(mfxMaxDd * 10) / 10,
     gain: mfxGain,
     activePositions: myfx?.activePositions ?? totalPositions,

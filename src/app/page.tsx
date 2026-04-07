@@ -305,7 +305,8 @@ export default function HomePage() {
   const pnl72h = stats?.todayPnl ?? 0;
   const pct72h = mfx?.totalDaily ?? (stats?.balance ? Math.round(stats.todayPnl / stats.balance * 10000) / 100 : 0);
   const gain = mfx?.totalGain ?? stats?.gain ?? 0;
-  const winrate = stats?.winrate ?? 73;
+  const winrate = stats?.winrate ?? 0;
+  const fmtEquity = equity > 0 ? `$${Math.round(equity).toLocaleString("en-US")}` : "$0";
 
   return (
     <div style={{ background: "#040302", color: "#fafafa", minHeight: "100vh", fontFamily: "'Inter', sans-serif", position: "relative" }}>
@@ -337,7 +338,7 @@ export default function HomePage() {
 
           <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.15 }}
             style={{ fontSize: "clamp(32px, 6vw, 56px)", fontWeight: 800, lineHeight: 1.1, marginBottom: 16, maxWidth: 700 }}>
-            <span style={{ color: "#d4a537" }}>$47.633</span> Portfolio.
+            <span style={{ color: "#d4a537" }}>{fmtEquity}</span> Portfolio.
           </motion.h1>
 
           <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
@@ -471,7 +472,7 @@ export default function HomePage() {
                         );
                       })}
                       <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", padding: "10px 8px", fontWeight: 600, color: "#22c55e" }}>
-                        {stats.winrate || 63}%
+                        {stats.winrate || 0}%
                       </div>
                       <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", padding: "10px 8px", fontWeight: 700, color: nc(a.profit) }}>
                         <div>{a.profit >= 0 ? "+" : "-"}{fm(a.profit)}</div>
@@ -502,7 +503,7 @@ export default function HomePage() {
                     );
                   })}
                   <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", padding: "10px 8px", fontWeight: 700, color: "#22c55e" }}>
-                    {stats.winrate || 63}%
+                    {stats.winrate || 0}%
                   </div>
                   <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", padding: "10px 8px", fontWeight: 700, color: "#22c55e" }}>
                     +{`$${Math.abs(Math.round(stats.myfxbook.accounts.reduce((s, a) => s + a.profit, 0) * 100) / 100).toLocaleString("en-US", { minimumFractionDigits: 2 })}`}
@@ -518,6 +519,9 @@ export default function HomePage() {
         </section>
       )}
 
+      {/* ═══ LIVE TERMINAL — Echte Trades direkt nach Performance ═══ */}
+      <LiveTerminal />
+
       {/* ═══ 3. HOW IT WORKS — Wie starte ich? ═══ */}
       <HowItWorks />
 
@@ -526,9 +530,6 @@ export default function HomePage() {
 
       {/* ═══ 6. TRUST — Letzte Einwände beseitigen ═══ */}
       <TrustCards />
-
-      {/* ═══ 6b. LIVE TERMINAL — Echte Trades in Echtzeit ═══ */}
-      <LiveTerminal />
 
       {/* ═══ 7. BROKER-PARTNER — 3 Broker ═══ */}
       <section style={{ padding: "60px 20px", maxWidth: 1000, margin: "0 auto" }}>
