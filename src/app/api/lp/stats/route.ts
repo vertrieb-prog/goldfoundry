@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 // src/app/api/lp/stats/route.ts — LP stats 100% MetaApi (MetaStats + Account Info)
 import { NextResponse } from "next/server";
 import { TRADER_CONFIG } from "@/lib/trader-config";
+import { createSupabaseAdmin } from "@/lib/supabase/server";
 
 const CLIENT_BASE = "https://mt-client-api-v1.london.agiliumtrade.ai";
 const STATS_BASE = "https://metastats-api-v1.london.agiliumtrade.ai";
@@ -124,6 +125,68 @@ export async function GET() {
             traderColor: r.config.color,
           });
         }
+      }
+    }
+
+    // Supabase fallback for accounts with 0 MetaStats trades
+    const zeroAccounts = accounts.filter(a => a.trades === 0);
+    if (zeroAccounts.length > 0) {
+      try {
+        const db = createSupabaseAdmin();
+        const mfxIds: Record<string, string> = {
+          "50707464": "11992338", "50701398": "11993800", "68297968": "11994589",
+          "2100151348": "11994591", "23651610": "11994594", "50715676": "11995050",
+          "50713387": "11995344",
+        };
+        const traderByMfx: Record<string, string> = {};
+        for (const t of TRADER_CONFIG) {
+          const mid = mfxIds[t.mtLogin];
+          if (mid) traderByMfx[mid] = t.codename;
+        }
+        const missingIds = zeroAccounts
+          .map(a => { const t = TRADER_CONFIG.find(tc => tc.codename === a.name); return t ? mfxIds[t.mtLogin] : null; })
+          .filter(Boolean) as string[];
+
+        if (missingIds.length > 0) {
+          const { data: sbTrades } = await db
+            .from("trade_history")
+            .select("profit,commission,swap,close_time,myfxbook_account_id")
+            .in("myfxbook_account_id", missingIds)
+            .eq("status", "closed");
+
+          const now = Date.now();
+          for (const t of sbTrades ?? []) {
+            const traderName = traderByMfx[t.myfxbook_account_id];
+            const acc = accounts.find((a: any) => a.name === traderName);
+            if (!acc) continue;
+
+            const net = (t.profit ?? 0) + (t.commission ?? 0) + (t.swap ?? 0);
+            const ct = new Date(t.close_time).getTime();
+            acc.trades += 1;
+            acc.profit += net;
+            totalTrades += 1;
+            totalProfit += net;
+            if (net > 0) { acc._wins = (acc._wins ?? 0) + 1; totalWon += 1; }
+            if (now - ct < 86400000) acc.pnl24h += net;
+            if (now - ct < 3 * 86400000) acc.pnl72h += net;
+            if (now - ct < 7 * 86400000) acc.pnl7d += net;
+            if (now - ct < 30 * 86400000) acc.pnl30d += net;
+          }
+          // Recalc winrate per account
+          for (const acc of zeroAccounts) {
+            if (acc.trades > 0) {
+              acc.winrate = Math.round(((acc._wins ?? 0) / acc.trades) * 100);
+              acc.profit = Math.round(acc.profit * 100) / 100;
+              acc.pnl24h = Math.round(acc.pnl24h * 100) / 100;
+              acc.pnl72h = Math.round(acc.pnl72h * 100) / 100;
+              acc.pnl7d = Math.round(acc.pnl7d * 100) / 100;
+              acc.pnl30d = Math.round(acc.pnl30d * 100) / 100;
+            }
+            delete acc._wins;
+          }
+        }
+      } catch (err) {
+        console.warn("[lp/stats] Supabase fallback failed:", err);
       }
     }
 

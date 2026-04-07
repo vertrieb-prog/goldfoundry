@@ -236,12 +236,16 @@ export function parseManagementCommand(message: string): {
   const lower = message.toLowerCase();
 
   // === FALSE POSITIVES ausfiltern ===
-  // "Break Even Hit" = Status-Update, kein Befehl
-  if (/break\s*even\s*hit/i.test(lower)) {
+  // Aber NUR wenn kein Management-Befehl in der GLEICHEN Nachricht steckt
+  // (Cron kombiniert Nachrichten im 3-Min-Fenster: "TP1 hit\nSL auf BE")
+  const hasBeCommand = /auf\s+be|break\s*even(?!\s*hit)|auf\s+b(?:reak\s*)?e(?:ven)?|absichern|sichern|profite?\s+nehmen|teilgewinn|nachziehen|sl\s+auf\s+\d/i.test(lower);
+
+  // "Break Even Hit" = Status-Update, kein Befehl (ABER nur wenn kein Befehl dabei)
+  if (/break\s*even\s*hit/i.test(lower) && !hasBeCommand) {
     return { type: null, symbol: null, closePercent: null, newSL: null };
   }
-  // "TP1/2/3/4 hit" = Info, kein Befehl
-  if (/tp\d?\s*hit/i.test(lower)) {
+  // "TP1/2/3/4 hit" = Info, kein Befehl (ABER nur wenn kein Befehl dabei)
+  if (/tp\d?\s*hit/i.test(lower) && !hasBeCommand) {
     return { type: null, symbol: null, closePercent: null, newSL: null };
   }
   // "Seid ready" = Vorwarnung
