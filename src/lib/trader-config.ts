@@ -49,6 +49,18 @@ export const TRADER_CONFIG: TraderConfig[] = [
     mtLogin: "68297968",
   },
   {
+    codename: "SPECTRE",
+    asset: "XAUUSD",
+    assetLabel: "Gold",
+    color: "#f59e0b",
+    perf: "+1.6%",
+    wr: "70%",
+    maxDd: "0.7%",
+    since: "2025",
+    metaApiId: "2a729049-374d-496e-86dd-805b942f1e9d",
+    mtLogin: "2100151348",
+  },
+  {
     codename: "HYDRA",
     asset: "XAUUSD",
     assetLabel: "Gold",
