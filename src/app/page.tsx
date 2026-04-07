@@ -304,12 +304,13 @@ export default function HomePage() {
   }, []);
 
   const openFunnel = () => setFunnelOpen(true);
+  const isLoading = !stats;
   const equity = stats?.equity ?? 0;
   const pnl72h = stats?.todayPnl ?? 0;
   const pct72h = stats?.balance ? Math.round(stats.todayPnl / stats.balance * 10000) / 100 : 0;
   const gain = stats?.gain ?? 0;
   const winrate = stats?.winrate ?? 0;
-  const fmtEquity = equity > 0 ? `$${Math.round(equity).toLocaleString("en-US")}` : "$0";
+  const fmtEquity = equity > 0 ? `$${Math.round(equity).toLocaleString("en-US")}` : (isLoading ? "" : "$0");
   const accs = stats?.accounts ?? [];
 
   return (
@@ -342,14 +343,22 @@ export default function HomePage() {
 
           <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.15 }}
             style={{ fontSize: "clamp(32px, 6vw, 56px)", fontWeight: 800, lineHeight: 1.1, marginBottom: 16, maxWidth: 700 }}>
-            <span style={{ color: "#d4a537" }}>{fmtEquity}</span> Portfolio.
+            {isLoading ? (
+              <span style={{ color: "#d4a537" }}>
+                <span className="animate-pulse" style={{ display: "inline-block", width: "clamp(180px, 30vw, 280px)", height: "clamp(32px, 5vw, 56px)", background: "linear-gradient(90deg, rgba(212,165,55,0.1), rgba(212,165,55,0.2), rgba(212,165,55,0.1))", borderRadius: 8 }} />
+              </span>
+            ) : (
+              <><span style={{ color: "#d4a537" }}>{fmtEquity}</span> Portfolio.</>
+            )}
           </motion.h1>
 
           <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
             style={{ color: "#a1a1aa", fontSize: "clamp(16px, 2.5vw, 20px)", marginBottom: 40, maxWidth: 500, margin: "0 auto 40px" }}>
-            {equity > 0
-              ? <>{accs.length || 7} Strategien. <span style={{ color: "#22c55e", fontWeight: 700 }}>{winrate}% Winrate.</span> Live verifiziert.</>
-              : "Mehrere Strategien. 1 Engine. Live verifiziert."}
+            {isLoading
+              ? "Lade Live-Daten..."
+              : equity > 0
+                ? <>{accs.length || 7} Strategien. <span style={{ color: "#22c55e", fontWeight: 700 }}>{winrate}% Winrate.</span> Live verifiziert.</>
+                : "7 Strategien. 1 Engine. Live verifiziert."}
           </motion.p>
 
           {/* Live Counters */}
@@ -389,7 +398,7 @@ export default function HomePage() {
           {/* Trust line */}
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.2 }}
             style={{ marginTop: 32, display: "flex", justifyContent: "center", gap: 20, flexWrap: "wrap" }}>
-            {["Live verifiziert", `${winrate}% Winrate`, "100% Kostenlos"].map((t) => (
+            {["Live verifiziert", winrate > 0 ? `${winrate}% Winrate` : "Multi-Strategie", "100% Kostenlos"].map((t) => (
               <span key={t} style={{ fontSize: 11, color: "#52525b", display: "flex", alignItems: "center", gap: 4 }}>
                 <span style={{ color: "#22c55e" }}>&#x2713;</span> {t}
               </span>
