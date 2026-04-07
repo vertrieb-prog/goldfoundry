@@ -26,9 +26,9 @@ async function fetchMyFXBook() {
   const loginData = await loginRes.json();
   if (loginData.error) return null;
 
-  const session = loginData.session;
+  const session = decodeURIComponent(loginData.session);
   const accRes = await fetch(
-    `${MYFXBOOK_API}/get-my-accounts.json?session=${session}`,
+    `${MYFXBOOK_API}/get-my-accounts.json?session=${encodeURIComponent(session)}`,
     { signal: AbortSignal.timeout(10000), cache: "no-store" }
   );
   const accData = await accRes.json();
