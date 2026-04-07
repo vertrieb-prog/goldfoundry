@@ -44,7 +44,7 @@ export default function LiveTerminal() {
   const floatPnl = positions.reduce((sum: number, p: any) => sum + p.profit + (p.swap ?? 0) + (p.commission ?? 0), 0);
   const histPnl = history.reduce((sum: number, d: any) => sum + d.profit + (d.swap ?? 0) + (d.commission ?? 0), 0);
   const histWins = history.filter((d: any) => d.profit > 0).length;
-  const histWr = history.length > 0 ? Math.round((histWins / history.length) * 100) : 0;
+  const histWr = stats?.winrate ?? (history.length > 0 ? Math.round((histWins / history.length) * 100) : 0);
 
   return (
     <section style={{ padding: "80px 20px", maxWidth: 1200, margin: "0 auto" }}>
@@ -211,6 +211,7 @@ function PosRow({ pos }: { pos: any }) {
 function DealRow({ deal }: { deal: any }) {
   const net = deal.profit + (deal.swap ?? 0) + (deal.commission ?? 0);
   const nc = net > 0 ? "#4caf50" : net < 0 ? "#f44336" : "#9e9e9e";
+  const isDaily = deal.isDaily;
   return (
     <div className="flex" style={{ borderBottom: "1px solid #1e2235" }}>
       <div className="w-[3px] shrink-0" style={{ background: deal.traderColor, opacity: 0.6 }} />
@@ -221,7 +222,11 @@ function DealRow({ deal }: { deal: any }) {
               {deal.trader}
             </span>
             <span className="text-[11px] font-bold text-[#c8cdd8]">{deal.symbol}</span>
-            <span className="text-[9px]" style={{ color: deal.type === "BUY" ? "#2196f3" : "#f44336", opacity: 0.7 }}>{deal.type}</span>
+            {isDaily && deal.trades > 0 && (
+              <span className="text-[8px] text-[#5d6588] px-1 py-0.5 rounded" style={{ background: "#252a3a" }}>
+                {deal.trades} trades
+              </span>
+            )}
           </div>
           <span className="text-[11px] font-bold font-mono" style={{ color: nc }}>
             {net >= 0 ? "+" : ""}{fmt(net)}
@@ -229,7 +234,10 @@ function DealRow({ deal }: { deal: any }) {
         </div>
         <div className="flex items-center justify-between mt-0.5">
           <span className="text-[9px] font-mono text-[#5d6588]">{fmtDate(deal.closeTime)}</span>
-          <span className="text-[8px] text-[#5d6588]">{deal.volume}lot</span>
+          <div className="flex items-center gap-2">
+            {deal.volume > 0 && <span className="text-[8px] text-[#5d6588]">{deal.volume}lot</span>}
+            {isDaily && deal.pips > 0 && <span className="text-[8px] text-[#4caf50]">+{deal.pips}pips</span>}
+          </div>
         </div>
       </div>
     </div>
