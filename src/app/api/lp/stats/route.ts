@@ -36,7 +36,7 @@ async function fetchMyFXBook() {
     // Testen ob Session noch gueltig
     try {
       const testRes = await fetch(
-        `${MYFXBOOK_API}/get-my-accounts.json?session=${session}`,
+        `${MYFXBOOK_API}/get-my-accounts.json?session=${encodeURIComponent(session)}`,
         { signal: AbortSignal.timeout(8000), cache: "no-store" }
       );
       const testData = await testRes.json();
@@ -64,7 +64,7 @@ async function fetchMyFXBook() {
         );
         const loginData = await loginRes.json();
         if (!loginData.error && loginData.session) {
-          session = loginData.session;
+          session = decodeURIComponent(loginData.session);
           cachedMfxSession = { session, ts: Date.now() };
           console.log(`[MyFXBook] Login OK (attempt ${attempt})`);
           break;
@@ -91,7 +91,7 @@ async function fetchMyFXBook() {
 
   // Fetch accounts with session (same execution = same IP)
   const accRes = await fetch(
-    `${MYFXBOOK_API}/get-my-accounts.json?session=${session}`,
+    `${MYFXBOOK_API}/get-my-accounts.json?session=${encodeURIComponent(session)}`,
     { signal: AbortSignal.timeout(10000), cache: "no-store" }
   );
   const accData = await accRes.json();
@@ -113,7 +113,7 @@ async function fetchMyFXBook() {
     await Promise.allSettled(
       staleIds.map((id) =>
         fetch(
-          `${MYFXBOOK_API}/update-account.json?session=${session}&id=${id}`,
+          `${MYFXBOOK_API}/update-account.json?session=${encodeURIComponent(session)}&id=${id}`,
           { signal: AbortSignal.timeout(15000), cache: "no-store" }
         ).then((r) => r.json()).then((d) => {
           if (d.error) console.warn(`[MyFXBook] Update account ${id} failed: ${d.message}`);
@@ -125,7 +125,7 @@ async function fetchMyFXBook() {
     // Wait briefly for MyFXBook to process, then re-fetch accounts
     await new Promise((r) => setTimeout(r, 3000));
     const refreshRes = await fetch(
-      `${MYFXBOOK_API}/get-my-accounts.json?session=${session}`,
+      `${MYFXBOOK_API}/get-my-accounts.json?session=${encodeURIComponent(session)}`,
       { signal: AbortSignal.timeout(10000), cache: "no-store" }
     );
     const refreshData = await refreshRes.json();
@@ -163,7 +163,7 @@ async function fetchMyFXBook() {
 
   const dailyGainPromises = accounts.map((acc: any) =>
     fetch(
-      `${MYFXBOOK_API}/get-daily-gain.json?session=${session}&id=${acc.id}&start=${thirtyDaysAgo}&end=${today}`,
+      `${MYFXBOOK_API}/get-daily-gain.json?session=${encodeURIComponent(session)}&id=${acc.id}&start=${thirtyDaysAgo}&end=${today}`,
       { signal: AbortSignal.timeout(10000), cache: "no-store" }
     ).then((r) => r.json()).then((d) => ({
       accountId: acc.id,
@@ -178,7 +178,7 @@ async function fetchMyFXBook() {
 
   const dailyDataPromises = accounts.map((acc: any) =>
     fetch(
-      `${MYFXBOOK_API}/get-data-daily.json?session=${session}&id=${acc.id}&start=${thirtyDaysAgo}&end=${today}`,
+      `${MYFXBOOK_API}/get-data-daily.json?session=${encodeURIComponent(session)}&id=${acc.id}&start=${thirtyDaysAgo}&end=${today}`,
       { signal: AbortSignal.timeout(10000), cache: "no-store" }
     ).then((r) => r.json()).then((d) => ({
       accountId: acc.id,
@@ -195,7 +195,7 @@ async function fetchMyFXBook() {
   // Fetch trade history for winrate + open trades for active positions
   const historyPromises = accounts.map((acc: any) =>
     fetch(
-      `${MYFXBOOK_API}/get-history.json?session=${session}&id=${acc.id}`,
+      `${MYFXBOOK_API}/get-history.json?session=${encodeURIComponent(session)}&id=${acc.id}`,
       { signal: AbortSignal.timeout(10000), cache: "no-store" }
     ).then((r) => r.json()).then((d) => d.history ?? [])
       .catch(() => [])
@@ -203,7 +203,7 @@ async function fetchMyFXBook() {
 
   const openTradesPromises = accounts.map((acc: any) =>
     fetch(
-      `${MYFXBOOK_API}/get-open-trades.json?session=${session}&id=${acc.id}`,
+      `${MYFXBOOK_API}/get-open-trades.json?session=${encodeURIComponent(session)}&id=${acc.id}`,
       { signal: AbortSignal.timeout(10000), cache: "no-store" }
     ).then((r) => r.json()).then((d) => d.openTrades ?? [])
       .catch(() => [])
