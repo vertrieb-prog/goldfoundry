@@ -300,13 +300,13 @@ export default function HomePage() {
   }, []);
 
   const openFunnel = () => setFunnelOpen(true);
-  const mfx = stats?.myfxbook;
-  const equity = mfx?.totalEquity ?? stats?.equity ?? 0;
+  const equity = stats?.equity ?? 0;
   const pnl72h = stats?.todayPnl ?? 0;
-  const pct72h = mfx?.totalDaily ?? (stats?.balance ? Math.round(stats.todayPnl / stats.balance * 10000) / 100 : 0);
-  const gain = mfx?.totalGain ?? stats?.gain ?? 0;
+  const pct72h = stats?.balance ? Math.round(stats.todayPnl / stats.balance * 10000) / 100 : 0;
+  const gain = stats?.gain ?? 0;
   const winrate = stats?.winrate ?? 0;
   const fmtEquity = equity > 0 ? `$${Math.round(equity).toLocaleString("en-US")}` : "$0";
+  const accs = stats?.accounts ?? [];
 
   return (
     <div style={{ background: "#040302", color: "#fafafa", minHeight: "100vh", fontFamily: "'Inter', sans-serif", position: "relative" }}>
@@ -315,7 +315,7 @@ export default function HomePage() {
       <div style={{ position: "relative", zIndex: 1 }}>
       <LandingNavbar />
       <FloatingCTA onOpen={openFunnel} />
-      <FunnelOverlay open={funnelOpen} onClose={() => setFunnelOpen(false)} liveData={stats?.myfxbook ? { totalGain: stats.myfxbook.totalGain, totalMonthly: stats.myfxbook.totalMonthly, totalEquity: stats.myfxbook.totalEquity, totalProfit: stats.myfxbook.totalProfit, totalDrawdown: stats.myfxbook.totalDrawdown, totalDaily: stats.myfxbook.totalDaily } : null} />
+      <FunnelOverlay open={funnelOpen} onClose={() => setFunnelOpen(false)} liveData={stats ? { totalGain: gain, totalMonthly: 0, totalEquity: equity, totalProfit: pnl72h, totalDrawdown: stats.maxDd, totalDaily: pct72h } : null} />
 
       {/* ═══ HERO ═══ */}
       <section style={{ minHeight: "85vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "80px 20px 40px", position: "relative" }}>
@@ -344,7 +344,7 @@ export default function HomePage() {
           <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
             style={{ color: "#a1a1aa", fontSize: "clamp(16px, 2.5vw, 20px)", marginBottom: 40, maxWidth: 500, margin: "0 auto 40px" }}>
             {equity > 0
-              ? <>{mfx?.accounts?.length ?? stats?.myfxbook?.accounts?.length ?? 7} Strategien. <span style={{ color: "#22c55e", fontWeight: 700 }}>{winrate}% Winrate.</span> Live verifiziert.</>
+              ? <>{accs.length || 7} Strategien. <span style={{ color: "#22c55e", fontWeight: 700 }}>{winrate}% Winrate.</span> Live verifiziert.</>
               : "Mehrere Strategien. 1 Engine. Live verifiziert."}
           </motion.p>
 
@@ -401,16 +401,16 @@ export default function HomePage() {
       {stats && (
         <LiveStatsBar
           pnl72h={stats.todayPnl}
-          pct72h={stats.myfxbook?.totalDaily ?? (stats.balance > 0 ? Math.round(stats.todayPnl / stats.balance * 10000) / 100 : 0)}
+          pct72h={pct72h}
           winrate={stats.winrate}
-          dd72h={(stats.myfxbook as any)?.dd72h ?? 0}
-          maxDd={stats.myfxbook?.totalDrawdown ?? stats.maxDd}
+          dd72h={0}
+          maxDd={stats.maxDd}
           activePositions={stats.activePositions}
         />
       )}
 
       {/* ═══ 1. STRATEGY ENGINE — Was macht PHANTOM? (direkt nach Stats Bar) ═══ */}
-      <StrategyEngine accounts={stats?.myfxbook?.accounts ?? []} />
+      <StrategyEngine accounts={accs} />
 
       {/* ═══ 2. PERFORMANCE — Beweis dass es funktioniert ═══ */}
       <div id="performance">
@@ -419,12 +419,12 @@ export default function HomePage() {
           equityCurve={stats?.equityCurve ?? []} recentTrades={stats?.recentTrades ?? []}
           gain={stats?.gain ?? 0} maxDd={stats?.maxDd ?? 0}
           todayTrades={stats?.todayTrades ?? 0} winrate={stats?.winrate ?? 0}
-          myfxbook={stats?.myfxbook}
+          myfxbook={undefined}
         />
       </div>
 
-      {/* ═══ PROFIT TABELLE — 24h/72h/7d/30d pro Account ═══ */}
-      {stats?.myfxbook?.accounts && stats.myfxbook.accounts.length > 0 && (
+      {/* ═══ PROFIT TABELLE — 24h/72h/7d/30d pro Account (MetaApi) ═══ */}
+      {accs.length > 0 && (
         <section style={{ padding: "20px 20px 60px", maxWidth: 1100, margin: "0 auto" }}>
           <div style={{ background: "#0a0906", border: "1px solid rgba(212,165,55,0.08)", borderRadius: 10, overflow: "hidden" }}>
             <div style={{ padding: "12px 14px", fontSize: 12, fontWeight: 700, color: "#d4a537", borderBottom: "1px solid rgba(212,165,55,0.08)" }}>
@@ -432,51 +432,32 @@ export default function HomePage() {
             </div>
             <div style={{ overflowX: "auto" }}>
               <div style={{ display: "grid", gridTemplateColumns: "2fr 1.2fr 1.2fr 1.2fr 1.2fr 0.8fr 1.2fr", borderBottom: "1px solid rgba(212,165,55,0.08)", minWidth: 800 }}>
-                {["Name", "24h", "72h", "7 Tage", "30 Tage", "Win%", "Gesamt"].map((h) => (
+                {["Trader", "24h", "72h", "7 Tage", "30 Tage", "Win%", "Gesamt"].map((h) => (
                   <div key={h} style={{ fontSize: 10, fontWeight: 600, color: "#6d6045", textTransform: "uppercase", letterSpacing: "0.06em", padding: "10px 8px" }}>{h}</div>
                 ))}
               </div>
               <div style={{ minWidth: 800 }}>
-                {stats.myfxbook.accounts.map((a, i) => {
-                  const dg = stats.myfxbook?.dailyGains?.find((d: any) => d.accountId === a.id);
-                  const dgData = dg?.dailyGain || [];
-                  const getP = (days: number) => {
-                    if (dgData.length > 0) return Math.round(dgData.slice(-days).reduce((s: number, d: any) => s + (d.profit ?? 0), 0) * 100) / 100;
-                    if (days <= 1) return Math.round(a.balance * a.daily / 100 * 100) / 100;
-                    if (days <= 3) return Math.round(a.balance * a.daily / 100 * 3 * 100) / 100;
-                    return Math.round(a.profit * 100) / 100;
-                  };
-                  const getPct = (days: number) => {
-                    if (dgData.length > 0) {
-                      const end = dgData[dgData.length - 1]?.value ?? 0;
-                      const start = dgData.length > days ? (dgData[dgData.length - days - 1]?.value ?? 0) : 0;
-                      return Math.round((end - start) * 100) / 100;
-                    }
-                    if (days <= 1) return Math.round(a.daily * 100) / 100;
-                    if (days <= 3) return Math.round(a.daily * 3 * 100) / 100;
-                    return Math.round(a.gain * 100) / 100;
-                  };
+                {accs.map((a: any, i: number) => {
                   const nc = (v: number) => v > 0 ? "#22c55e" : v < 0 ? "#ef4444" : "#e0d4b8";
                   const fm = (v: number) => `$${Math.abs(v).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                  const periods = [a.pnl24h ?? 0, a.pnl72h ?? 0, a.pnl7d ?? 0, a.pnl30d ?? 0];
                   return (
                     <div key={a.name} style={{ display: "grid", gridTemplateColumns: "2fr 1.2fr 1.2fr 1.2fr 1.2fr 0.8fr 1.2fr", borderTop: i > 0 ? "1px solid rgba(255,255,255,0.03)" : "none" }}>
-                      <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", padding: "10px 8px", color: "#e0d4b8", fontWeight: 600 }}>{a.name}</div>
-                      {[1, 3, 7, 30].map((d, j) => {
-                        const p = getP(d);
-                        const pct = getPct(d);
-                        return (
-                          <div key={j} style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", padding: "10px 8px", fontWeight: 500, color: nc(p) }}>
-                            <div>{p >= 0 ? "+" : "-"}{fm(p)}</div>
-                            <div style={{ fontSize: 9, color: nc(pct), opacity: 0.8 }}>{pct >= 0 ? "+" : ""}{pct.toFixed(2)}%</div>
-                          </div>
-                        );
-                      })}
-                      <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", padding: "10px 8px", fontWeight: 600, color: "#22c55e" }}>
-                        {stats.winrate || 0}%
+                      <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", padding: "10px 8px", fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
+                        <span style={{ width: 6, height: 6, borderRadius: "50%", background: a.color ?? "#d4a537" }} />
+                        <span style={{ color: a.color ?? "#e0d4b8" }}>{a.name}</span>
+                      </div>
+                      {periods.map((p: number, j: number) => (
+                        <div key={j} style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", padding: "10px 8px", fontWeight: 500, color: nc(p) }}>
+                          {p >= 0 ? "+" : "-"}{fm(p)}
+                        </div>
+                      ))}
+                      <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", padding: "10px 8px", fontWeight: 600, color: (a.winrate ?? 0) >= 50 ? "#22c55e" : "#ef4444" }}>
+                        {a.winrate ?? 0}%
                       </div>
                       <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", padding: "10px 8px", fontWeight: 700, color: nc(a.profit) }}>
                         <div>{a.profit >= 0 ? "+" : "-"}{fm(a.profit)}</div>
-                        <div style={{ fontSize: 9, color: nc(a.gain), opacity: 0.8 }}>{a.gain >= 0 ? "+" : ""}{a.gain.toFixed(2)}%</div>
+                        <div style={{ fontSize: 9, color: nc(a.gain), opacity: 0.8 }}>{a.gain >= 0 ? "+" : ""}{(a.gain ?? 0).toFixed(2)}%</div>
                       </div>
                     </div>
                   );
@@ -484,29 +465,21 @@ export default function HomePage() {
                 {/* Total */}
                 <div style={{ display: "grid", gridTemplateColumns: "2fr 1.2fr 1.2fr 1.2fr 1.2fr 0.8fr 1.2fr", borderTop: "2px solid rgba(212,165,55,0.15)", background: "rgba(212,165,55,0.04)" }}>
                   <div style={{ fontSize: 13, fontFamily: "'JetBrains Mono', monospace", padding: "10px 8px", color: "#d4a537", fontWeight: 700 }}>Total:</div>
-                  {[1, 3, 7, 30].map((d, j) => {
-                    const accs = stats.myfxbook!.accounts;
-                    const totalP = accs.reduce((s, a) => {
-                      const dg = stats.myfxbook?.dailyGains?.find((x: any) => x.accountId === a.id);
-                      const dgD = dg?.dailyGain || [];
-                      if (dgD.length > 0) return s + dgD.slice(-d).reduce((ss: number, dd: any) => ss + (dd.profit ?? 0), 0);
-                      if (d <= 1) return s + a.balance * a.daily / 100;
-                      if (d <= 3) return s + a.balance * a.daily / 100 * 3;
-                      return s + a.profit;
-                    }, 0);
+                  {["pnl24h", "pnl72h", "pnl7d", "pnl30d"].map((key, j) => {
+                    const total = accs.reduce((s: number, a: any) => s + (a[key] ?? 0), 0);
                     const nc = (v: number) => v > 0 ? "#22c55e" : v < 0 ? "#ef4444" : "#e0d4b8";
                     const fm = (v: number) => `$${Math.abs(v).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
                     return (
-                      <div key={j} style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", padding: "10px 8px", fontWeight: 700, color: nc(totalP) }}>
-                        {Math.round(totalP) >= 0 ? "+" : "-"}{fm(Math.abs(Math.round(totalP * 100) / 100))}
+                      <div key={j} style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", padding: "10px 8px", fontWeight: 700, color: nc(total) }}>
+                        {total >= 0 ? "+" : "-"}{fm(total)}
                       </div>
                     );
                   })}
                   <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", padding: "10px 8px", fontWeight: 700, color: "#22c55e" }}>
-                    {stats.winrate || 0}%
+                    {winrate}%
                   </div>
                   <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", padding: "10px 8px", fontWeight: 700, color: "#22c55e" }}>
-                    +{`$${Math.abs(Math.round(stats.myfxbook.accounts.reduce((s, a) => s + a.profit, 0) * 100) / 100).toLocaleString("en-US", { minimumFractionDigits: 2 })}`}
+                    +${Math.abs(accs.reduce((s: number, a: any) => s + (a.profit ?? 0), 0)).toLocaleString("en-US", { minimumFractionDigits: 2 })}
                   </div>
                 </div>
               </div>
@@ -514,7 +487,7 @@ export default function HomePage() {
           </div>
           <div style={{ padding: "12px 14px", borderTop: "1px solid rgba(212,165,55,0.06)", display: "flex", justifyContent: "center", alignItems: "center", gap: 8 }}>
             <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#22c55e", display: "inline-block" }} />
-            <span style={{ fontSize: 11, color: "#6d6045" }}>Live-Daten — verifiziert und automatisch synchronisiert</span>
+            <span style={{ fontSize: 11, color: "#6d6045" }}>Live-Daten via MetaApi — direkt vom Broker synchronisiert</span>
           </div>
         </section>
       )}
