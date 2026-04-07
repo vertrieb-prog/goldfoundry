@@ -55,13 +55,23 @@ export default function TerminalPage() {
   );
   const pnlColor = totalFloating > 0 ? "#4caf50" : totalFloating < 0 ? "#f44336" : "#9e9e9e";
 
+  // Trader breakdown from positions
+  const traderMap: Record<string, { name: string; color: string; positions: number; pnl: number }> = {};
+  for (const p of positions) {
+    if (!traderMap[p.trader]) {
+      traderMap[p.trader] = { name: p.trader, color: p.traderColor, positions: 0, pnl: 0 };
+    }
+    traderMap[p.trader].positions += 1;
+    traderMap[p.trader].pnl += p.profit + (p.swap ?? 0) + (p.commission ?? 0);
+  }
+  const traders = Object.values(traderMap).sort((a, b) => b.positions - a.positions);
+
   return (
     <div className="flex flex-col max-w-2xl mx-auto rounded-xl overflow-hidden" style={{
       background: "#151929",
       boxShadow: "0 8px 40px rgba(0,0,0,0.5)",
       minHeight: "70vh",
     }}>
-      {/* Account metrics bar */}
       <AccountBar
         balance={s.balance}
         equity={s.equity}
@@ -69,9 +79,10 @@ export default function TerminalPage() {
         margin={margin}
         freeMargin={freeMargin}
         accounts={s.accounts}
+        traders={traders}
       />
 
-      {/* MT-style tab bar */}
+      {/* Tab bar */}
       <div className="flex" style={{ background: "#1c2030", borderBottom: "1px solid #252a3a" }}>
         {([
           { key: "trade" as Tab, label: "Trade", count: positions.length },
@@ -91,14 +102,14 @@ export default function TerminalPage() {
         ))}
       </div>
 
-      {/* Positions list */}
-      <div className="flex-1 overflow-y-auto" style={{ maxHeight: "calc(70vh - 180px)" }}>
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto" style={{ maxHeight: "calc(70vh - 220px)" }}>
         {tab === "trade" && (
           positions.length === 0 ? (
             <div className="py-20 text-center">
               <div className="text-[40px] opacity-20 mb-3">$</div>
-              <div className="text-[12px] text-[#5d6588]">No open positions</div>
-              <div className="text-[10px] text-[#3a3f52] mt-1">Market is closed or no active trades</div>
+              <div className="text-[12px] text-[#5d6588]">Keine offenen Positionen</div>
+              <div className="text-[10px] text-[#3a3f52] mt-1">Markt geschlossen oder keine aktiven Trades</div>
             </div>
           ) : (
             positions.map((pos: any) => <PositionCard key={pos.id} {...pos} />)
@@ -109,8 +120,8 @@ export default function TerminalPage() {
           history.length === 0 ? (
             <div className="py-20 text-center">
               <div className="text-[40px] opacity-20 mb-3">H</div>
-              <div className="text-[12px] text-[#5d6588]">No recent deals</div>
-              <div className="text-[10px] text-[#3a3f52] mt-1">Last 7 days trade history</div>
+              <div className="text-[12px] text-[#5d6588]">Keine geschlossenen Trades</div>
+              <div className="text-[10px] text-[#3a3f52] mt-1">Letzte 7 Tage</div>
             </div>
           ) : (
             history.map((deal: any) => <DealCard key={deal.id} {...deal} />)
@@ -118,7 +129,7 @@ export default function TerminalPage() {
         )}
       </div>
 
-      {/* Bottom P&L bar — sticky like MT */}
+      {/* Bottom sticky bar */}
       <div className="px-4 py-2.5 flex items-center justify-between" style={{
         background: "#1c2030",
         borderTop: "1px solid #252a3a",
@@ -136,7 +147,6 @@ export default function TerminalPage() {
         </span>
       </div>
 
-      {/* Risikohinweis */}
       <div className="px-3 py-2 text-[8px] text-[#3a3f52] text-center" style={{ background: "#151929" }}>
         Risikohinweis: Der Handel mit Finanzinstrumenten ist mit erheblichen Risiken verbunden
         und kann zum Verlust des eingesetzten Kapitals fuehren.
