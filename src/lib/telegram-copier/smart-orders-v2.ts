@@ -1,12 +1,12 @@
 // ═══════════════════════════════════════════════════════════════
 // src/lib/telegram-copier/smart-orders-v2.ts — 4-Split Order Calculator
-// 40% / 25% / 20% / 15% split with auto-BE and trailing runner
+// 25% / 25% / 25% / 25% equal split with auto-BE and trailing runner
 // ═══════════════════════════════════════════════════════════════
 
 import type { ParsedSignal, SmartOrder } from "./types";
 import { getBeBuffer } from "./sl-config";
 
-const SPLIT_PERCENTAGES = [40, 25, 20, 15];
+const SPLIT_PERCENTAGES = [25, 25, 25, 25];
 const SPLIT_LABELS = ["TP1 (Quick)", "TP2 (Standard)", "TP3 (Extended)", "TP4 (Runner)"];
 
 /**
@@ -68,7 +68,7 @@ function generateTakeProfits(signal: ParsedSignal): number[] {
 /**
  * Calculate 4-split smart orders from a parsed signal.
  *
- * - 4 TPs: 40% / 25% / 20% / 15%
+ * - 4 TPs: 25% / 25% / 25% / 25% (equal split)
  * - Auto-breakeven after TP1
  * - Trailing stop on runner (last split)
  */

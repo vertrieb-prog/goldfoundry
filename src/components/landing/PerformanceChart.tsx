@@ -689,7 +689,7 @@ export default function PerformanceChart({ growthCurve, drawdownCurve, equityCur
           <div style={{ marginTop: 12, color: "#6d6045", fontSize: 12, lineHeight: 1.8 }}>
             <p><strong style={{ color: "#a1a1aa" }}>R-Multiple Trailing SL</strong> — Stop Loss wird als Vielfaches des initialen Risikos nachgezogen</p>
             <p><strong style={{ color: "#a1a1aa" }}>ATR-basierter Trail</strong> — Chandelier Exit mit 14-Perioden Average True Range</p>
-            <p><strong style={{ color: "#a1a1aa" }}>4-Split Position Sizing</strong> — Jeder Trade wird in 4 Teile gesplittet (40/25/20/15%)</p>
+            <p><strong style={{ color: "#a1a1aa" }}>4-Split Position Sizing</strong> — Jeder Trade wird in 4 gleiche Teile gesplittet (25/25/25/25%)</p>
             <p><strong style={{ color: "#a1a1aa" }}>TP-Hit Floor System</strong> — Nach TP1 springt SL auf Breakeven, dann Profit-Lock</p>
             <p><strong style={{ color: "#a1a1aa" }}>DD Shield</strong> — Max 5% Drawdown, Notfall-Close bei Momentum gegen Position</p>
           </div>

@@ -14,7 +14,7 @@ export interface SmartOrderConfig {
 }
 
 export const DEFAULT_SMART_CONFIG: SmartOrderConfig = {
-  splitMode: "pyramid",
+  splitMode: "equal",
   autoBreakeven: true,
   beAfterTP: 1,
   trailingRunner: true,

@@ -7,11 +7,12 @@ export const maxDuration = 300;
 // ═══════════════════════════════════════════════════════════════
 import { NextResponse } from "next/server";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
-import { parseSignal, isLikelySignal } from "@/lib/telegram-copier/parser";
+import { parseSignal, isLikelySignal, parseManagementCommand } from "@/lib/telegram-copier/parser";
 import { resolveSymbol } from "@/lib/telegram-copier/symbol-resolver";
 import { calculateLotSize } from "@/lib/telegram-copier/lot-calculator";
 import { sendTradeNotification } from "@/lib/telegram-copier/notifier";
 import { MasterStrategyEngine, DEFAULT_CONFIG } from "@/lib/strategy-engine";
+import { executeManagementCommand } from "@/lib/telegram-copier/management-executor";
 
 // Dynamic: use account region (london, new-york, etc.) — fallback to default
 function getClientBase(region?: string): string {
@@ -420,6 +421,58 @@ async function processChannel(db: any, channel: any) {
   // Process each new signal
   for (const msg of newMessages) {
     try {
+      // ── MANAGEMENT COMMANDS ZUERST (BE, Trail, Secure, Partial, SL) ──
+      // Phenex schreibt z.B. "SL auf BE", "Profite nehmen", "absichern und laufen lassen"
+      const mgmtCmd = parseManagementCommand(msg.message);
+      if (mgmtCmd.type) {
+        log("INFO", `[MGMT] ${channelName}: ${mgmtCmd.type} erkannt (Symbol: ${mgmtCmd.symbol || "alle"})`);
+
+        // Log to DB
+        await db.from("telegram_signals").insert({
+          channel_id: channelId,
+          user_id: userId,
+          telegram_message_id: msg.id,
+          raw_message: msg.message.slice(0, 2000),
+          parsed: { action: "MODIFY", ...mgmtCmd } as any,
+          status: "parsed",
+        });
+
+        if (metaApiToken && account) {
+          try {
+            let clientBase = META_CLIENT_BASE;
+            const cachedR = getCachedRegion(account.metaapi_account_id);
+            if (cachedR) clientBase = getClientBase(cachedR);
+
+            const positions = await metaApiFetch(
+              `${clientBase}/users/current/accounts/${account.metaapi_account_id}/positions`,
+              metaApiToken
+            );
+
+            const mgmtApi = createEngineMetaApi(metaApiToken, account.metaapi_account_id);
+            const mgmtResult = await executeManagementCommand(
+              mgmtCmd as { type: "BREAK_EVEN" | "TRAIL" | "SECURE" | "PARTIAL_CLOSE" | "SL_UPDATE"; symbol: string | null; closePercent: number | null; newSL: number | null },
+              positions, mgmtApi, channelId
+            );
+
+            await db.from("telegram_signals")
+              .update({
+                status: mgmtResult.modified > 0 ? "executed" : "skipped",
+                execution_result: { ...mgmtResult, type: mgmtCmd.type },
+              })
+              .eq("channel_id", channelId)
+              .eq("telegram_message_id", msg.id);
+
+            signalResults.push({ type: mgmtCmd.type, ...mgmtResult });
+            log("INFO", `[MGMT] ${mgmtCmd.type}: ${mgmtResult.modified} modifiziert, ${mgmtResult.skipped} übersprungen`);
+          } catch (mgmtErr: any) {
+            log("ERROR", `[MGMT] ${mgmtCmd.type} fehlgeschlagen: ${mgmtErr.message}`);
+            signalResults.push({ type: mgmtCmd.type, error: mgmtErr.message });
+          }
+        }
+        continue; // Kein BUY/SELL → nächste Nachricht
+      }
+
+      // ── BUY/SELL SIGNALE ──────────────────────────────────────
       const signal = await parseSignal(msg.message);
 
       // Log to DB (with Telegram message ID for deduplication)
@@ -642,7 +695,7 @@ interface SplitOrder {
 }
 
 /**
- * IMMER 4 Split-Orders: 40% TP1, 25% TP2, 20% TP3, 15% Runner
+ * IMMER 4 Split-Orders: 25% TP1, 25% TP2, 25% TP3, 25% Runner (equal)
  * Fehlende TPs werden automatisch berechnet (1.5x, 2.5x, 3.5x SL-Distanz)
  */
 function buildSplitOrders(totalLots: number, takeProfits: number[], entryPrice?: number | null, stopLoss?: number | null, action?: string): SplitOrder[] {
@@ -665,12 +718,12 @@ function buildSplitOrders(totalLots: number, takeProfits: number[], entryPrice?:
     return [{ lots: totalLots, takeProfit: null, label: "full" }];
   }
 
-  // IMMER 4-Split: 40/25/20/15
+  // IMMER 4-Split: 25/25/25/25 (equal)
   const rawSplits = [
-    { pct: 0.40, tp: tps[0], label: "TP1" },
+    { pct: 0.25, tp: tps[0], label: "TP1" },
     { pct: 0.25, tp: tps[1] || tps[0], label: "TP2" },
-    { pct: 0.20, tp: tps[2] || tps[1] || tps[0], label: "TP3" },
-    { pct: 0.15, tp: tps[3] || tps[2] || tps[1] || tps[0], label: "Runner" },
+    { pct: 0.25, tp: tps[2] || tps[1] || tps[0], label: "TP3" },
+    { pct: 0.25, tp: tps[3] || tps[2] || tps[1] || tps[0], label: "Runner" },
   ];
   return rawSplits
     .map(s => ({
