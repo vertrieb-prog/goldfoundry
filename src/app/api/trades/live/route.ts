@@ -51,10 +51,19 @@ function stripSuffix(s: string) {
   return s.replace(/\.pro$/i, "");
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const range = searchParams.get("range") ?? "7d";
+    const rangeMs: Record<string, number> = {
+      "24h": 86400000,
+      "72h": 3 * 86400000,
+      "7d": 7 * 86400000,
+      "30d": 30 * 86400000,
+      "all": 365 * 86400000,
+    };
     const now = new Date();
-    const sevenDaysAgo = new Date(now.getTime() - 7 * 86400000);
+    const sevenDaysAgo = new Date(now.getTime() - (rangeMs[range] ?? 7 * 86400000));
 
     const results = await Promise.all(
       TRADER_CONFIG.map(async (trader) => {
@@ -134,7 +143,8 @@ export async function GET() {
         accounts: results.length,
       },
       positions: openPositions,
-      history: closedDeals.slice(0, 100),
+      history: closedDeals.slice(0, 200),
+      range,
     });
   } catch (err) {
     console.error("[trades/live]", err);

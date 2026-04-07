@@ -37,7 +37,7 @@ export const TRADER_CONFIG: TraderConfig[] = [
     mtLogin: "50701398",
   },
   {
-    codename: "TITAN",
+    codename: "APEX",
     asset: "XAUUSD",
     assetLabel: "Gold",
     color: "#3b82f6",
@@ -73,7 +73,7 @@ export const TRADER_CONFIG: TraderConfig[] = [
     mtLogin: "23651610",
   },
   {
-    codename: "PHANTOM-V4",
+    codename: "AEGIS",
     asset: "XAUUSD",
     assetLabel: "Gold",
     color: "#e8785e",
@@ -85,7 +85,7 @@ export const TRADER_CONFIG: TraderConfig[] = [
     mtLogin: "50715676",
   },
   {
-    codename: "SHADOW",
+    codename: "RONIN",
     asset: "XAUUSD",
     assetLabel: "Gold",
     color: "#ef4444",
