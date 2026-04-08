@@ -5,14 +5,17 @@ import { TRADER_CONFIG } from "@/lib/trader-config";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { getPortfolio, type MyfxAccount } from "@/lib/myfxbook";
 
-const CLIENT_BASE = "https://mt-client-api-v1.london.agiliumtrade.ai";
-const STATS_BASE = "https://metastats-api-v1.london.agiliumtrade.ai";
 const TOKEN = process.env.METAAPI_TOKEN ?? "";
+const META_PROV = "https://mt-provisioning-api-v1.agiliumtrade.agiliumtrade.ai";
+const REGIONS = ["london", "new-york", "singapore", "vint-hill"];
 
 // Persistent fallback cache — NEVER show zeros
 let lastGoodResponse: any = null;
 let cache: { data: any; ts: number } | null = null;
+let regionCache: Record<string, string> = {};
+let regionCacheTs = 0;
 const CACHE_TTL = 30_000;
+const REGION_CACHE_TTL = 300_000; // 5 min
 
 async function metaFetch(url: string) {
   try {
@@ -30,11 +33,39 @@ async function metaFetch(url: string) {
 
 function strip(s: string) { return s.replace(/\.pro$/i, ""); }
 
-async function fetchTrader(t: typeof TRADER_CONFIG[0]) {
+function clientBase(region: string) {
+  return `https://mt-client-api-v1.${region}.agiliumtrade.ai`;
+}
+function statsBase(region: string) {
+  return `https://metastats-api-v1.${region}.agiliumtrade.ai`;
+}
+
+async function resolveRegions(): Promise<Record<string, string>> {
+  if (regionCacheTs && Date.now() - regionCacheTs < REGION_CACHE_TTL) return regionCache;
+  try {
+    const res = await fetch(`${META_PROV}/users/current/accounts`, {
+      headers: { "auth-token": TOKEN },
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!res.ok) return regionCache;
+    const accounts = await res.json();
+    const map: Record<string, string> = {};
+    for (const a of accounts) map[a._id] = a.region || "london";
+    regionCache = map;
+    regionCacheTs = Date.now();
+    return map;
+  } catch {
+    return regionCache;
+  }
+}
+
+async function fetchTrader(t: typeof TRADER_CONFIG[0], region: string) {
+  const cb = clientBase(region);
+  const sb = statsBase(region);
   const [info, positions, metrics] = await Promise.all([
-    metaFetch(`${CLIENT_BASE}/users/current/accounts/${t.metaApiId}/account-information`),
-    metaFetch(`${CLIENT_BASE}/users/current/accounts/${t.metaApiId}/positions`),
-    metaFetch(`${STATS_BASE}/users/current/accounts/${t.metaApiId}/metrics`),
+    metaFetch(`${cb}/users/current/accounts/${t.metaApiId}/account-information`),
+    metaFetch(`${cb}/users/current/accounts/${t.metaApiId}/positions`),
+    metaFetch(`${sb}/users/current/accounts/${t.metaApiId}/metrics`),
   ]);
   return { config: t, info, positions: positions ?? [], metrics: metrics?.metrics ?? null };
 }
@@ -46,8 +77,10 @@ export async function GET() {
     }
 
     // Fetch MetaApi + MyFXBook in parallel
+    // Resolve regions + fetch MetaApi + MyFXBook in parallel
+    const regions = await resolveRegions();
     const [results, myfxData] = await Promise.all([
-      Promise.all(TRADER_CONFIG.map(fetchTrader)),
+      Promise.all(TRADER_CONFIG.map(t => fetchTrader(t, regions[t.metaApiId] || "london"))),
       getPortfolio().catch(() => null),
     ]);
 
