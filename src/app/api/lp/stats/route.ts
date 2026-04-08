@@ -51,14 +51,23 @@ export async function GET() {
       getPortfolio().catch(() => null),
     ]);
 
-    // Build MyFXBook lookup by account name → MyfxAccount
+    // Build MyFXBook lookup by codename → MyfxAccount
+    // Match via MyFXBook account ID (from mfxIds mapping)
+    const mfxIdToCodename: Record<number, string> = {
+      11992338: "PHANTOM", 11993800: "VIPER", 11994589: "APEX",
+      11994591: "SPECTRE", 11994594: "HYDRA", 11995050: "AEGIS",
+      11995344: "RONIN",
+    };
     const mfxByName: Record<string, MyfxAccount> = {};
     if (myfxData?.accounts) {
-      // Map MT login → codename for matching
-      const loginToName: Record<string, string> = {};
-      for (const t of TRADER_CONFIG) loginToName[t.mtLogin] = t.codename;
       for (const a of myfxData.accounts) {
-        // Match by name or by ID via trader-config
+        // Match by MyFXBook account ID
+        const codename = mfxIdToCodename[a.id];
+        if (codename) {
+          mfxByName[codename] = a;
+          continue;
+        }
+        // Fallback: match by name containing codename
         const matched = TRADER_CONFIG.find(t =>
           a.name?.toLowerCase().includes(t.codename.toLowerCase())
         );
@@ -230,6 +239,14 @@ export async function GET() {
         }
       } catch (err) {
         console.warn("[lp/stats] Supabase fallback failed:", err);
+      }
+    }
+
+    // Final pass: calculate gain for any account still at 0 but with profit
+    for (const acc of accounts) {
+      if (acc.gain === 0 && acc.profit !== 0 && acc.balance > 0) {
+        const deposit = acc.deposits > 0 ? acc.deposits : (acc.balance - acc.profit);
+        if (deposit > 0) acc.gain = Math.round((acc.profit / deposit) * 10000) / 100;
       }
     }
 
