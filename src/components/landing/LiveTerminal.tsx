@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 type Range = "24h" | "72h" | "7d" | "all";
 
 function fmt(n: number) {
-  return n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return n.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 function fmtDate(iso: string) {
   try { return new Date(iso).toLocaleString("de-DE", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }); }
@@ -87,7 +87,7 @@ export default function LiveTerminal() {
           <div className="flex justify-between items-center px-4 py-2" style={{ background: "#1c2030", borderTop: "1px solid #252a3a" }}>
             <span className="text-[9px] text-[#5d6588] uppercase">Float P/L</span>
             <span className="text-[14px] font-bold font-mono" style={{ color: floatPnl >= 0 ? "#4caf50" : "#f44336" }}>
-              {floatPnl >= 0 ? "+" : ""}${fmt(floatPnl)}
+              {floatPnl >= 0 ? "+" : ""}{fmt(floatPnl)}€
             </span>
           </div>
         </div>
@@ -99,9 +99,9 @@ export default function LiveTerminal() {
             <span className="text-[10px] font-bold text-[#d4a537] uppercase tracking-wider">Portfolio</span>
           </div>
           <div className="px-4 py-3 space-y-3">
-            <StatRow label="Balance" value={`$${fmt(s.balance)}`} />
-            <StatRow label="Equity" value={`$${fmt(s.equity)}`} />
-            <StatRow label="Floating" value={`${floatPnl >= 0 ? "+" : ""}$${fmt(floatPnl)}`} color={floatPnl >= 0 ? "#4caf50" : "#f44336"} />
+            <StatRow label="Balance" value={`${fmt(s.balance)}€`} />
+            <StatRow label="Equity" value={`${fmt(s.equity)}€`} />
+            <StatRow label="Floating" value={`${floatPnl >= 0 ? "+" : ""}${fmt(floatPnl)}€`} color={floatPnl >= 0 ? "#4caf50" : "#f44336"} />
             <StatRow label="Positionen" value={`${positions.length}`} />
             <StatRow label="Accounts" value={`${s.accounts}`} />
             <div style={{ borderTop: "1px solid #252a3a", paddingTop: 12, marginTop: 8 }}>
@@ -114,7 +114,7 @@ export default function LiveTerminal() {
                   <span className="text-[10px] font-bold" style={{ color: a.color }}>{a.name}</span>
                 </div>
                 <span className="text-[10px] font-mono" style={{ color: a.pnl24h >= 0 ? "#4caf50" : a.pnl24h < 0 ? "#f44336" : "#5d6588" }}>
-                  {a.pnl24h >= 0 ? "+" : ""}${fmt(a.pnl24h)}
+                  {a.pnl24h >= 0 ? "+" : ""}{fmt(a.pnl24h)}€
                 </span>
               </div>
             ))}
@@ -155,7 +155,7 @@ export default function LiveTerminal() {
           <div className="flex justify-between items-center px-4 py-2" style={{ background: "#1c2030", borderTop: "1px solid #252a3a" }}>
             <span className="text-[9px] text-[#5d6588]">{history.length} Trades</span>
             <span className="text-[14px] font-bold font-mono" style={{ color: histPnl >= 0 ? "#4caf50" : "#f44336" }}>
-              {histPnl >= 0 ? "+" : ""}${fmt(histPnl)}
+              {histPnl >= 0 ? "+" : ""}{fmt(histPnl)}€
             </span>
           </div>
         </div>

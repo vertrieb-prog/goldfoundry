@@ -16,7 +16,7 @@ const steps = [
   {
     icon: "\u2197",
     title: "Live verdienen",
-    desc: "Sieh jeden Trade in Echtzeit. 73% Winrate, verifiziert über MyFXBook. Auszahlung jederzeit.",
+    desc: "Sieh jeden Trade in Echtzeit. 70%+ Winrate, verifiziert über MyFXBook. Auszahlung jederzeit.",
   },
 ];
 

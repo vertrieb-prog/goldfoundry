@@ -1,8 +1,9 @@
 export const dynamic = "force-dynamic";
-// src/app/api/lp/stats/route.ts — LP stats 100% MetaApi (MetaStats + Account Info)
+// src/app/api/lp/stats/route.ts — LP stats: MetaApi (live) + MyFXBook (enrichment)
 import { NextResponse } from "next/server";
 import { TRADER_CONFIG } from "@/lib/trader-config";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
+import { getPortfolio, type MyfxAccount } from "@/lib/myfxbook";
 
 const CLIENT_BASE = "https://mt-client-api-v1.london.agiliumtrade.ai";
 const STATS_BASE = "https://metastats-api-v1.london.agiliumtrade.ai";
@@ -44,7 +45,26 @@ export async function GET() {
       return NextResponse.json(cache.data);
     }
 
-    const results = await Promise.all(TRADER_CONFIG.map(fetchTrader));
+    // Fetch MetaApi + MyFXBook in parallel
+    const [results, myfxData] = await Promise.all([
+      Promise.all(TRADER_CONFIG.map(fetchTrader)),
+      getPortfolio().catch(() => null),
+    ]);
+
+    // Build MyFXBook lookup by account name → MyfxAccount
+    const mfxByName: Record<string, MyfxAccount> = {};
+    if (myfxData?.accounts) {
+      // Map MT login → codename for matching
+      const loginToName: Record<string, string> = {};
+      for (const t of TRADER_CONFIG) loginToName[t.mtLogin] = t.codename;
+      for (const a of myfxData.accounts) {
+        // Match by name or by ID via trader-config
+        const matched = TRADER_CONFIG.find(t =>
+          a.name?.toLowerCase().includes(t.codename.toLowerCase())
+        );
+        if (matched) mfxByName[matched.codename] = a;
+      }
+    }
 
     let totalEquity = 0;
     let totalBalance = 0;
@@ -68,11 +88,19 @@ export async function GET() {
       const trades = m?.trades ?? 0;
       const won = m?.wonTrades ?? 0;
       const profit = m?.profit ?? 0;
-      const dd = m?.maxDrawdown ?? 0;
+      let dd = m?.maxDrawdown ?? 0;
+      // Fallback: calculate DD from dailyGrowth if MetaStats returns 0
+      if (dd === 0 && (m?.dailyGrowth?.length ?? 0) > 0) {
+        let peak = 0;
+        for (const d of m.dailyGrowth) {
+          const b = d.balance ?? 0;
+          if (b > peak) peak = b;
+          if (peak > 0) { const drawdown = ((peak - b) / peak) * 100; if (drawdown > dd) dd = drawdown; }
+        }
+      }
       totalTrades += trades;
       totalWon += won;
       totalProfit += profit;
-      if (dd > worstDd) worstDd = dd;
 
       // Period PnL from MetaStats
       const periods = m?.periods ?? {};
@@ -86,14 +114,29 @@ export async function GET() {
 
       const wr = trades > 0 ? Math.round((won / trades) * 100) : 0;
 
+      // Enrich with MyFXBook data (gain, drawdown, daily, monthly)
+      const mfx = mfxByName[r.config.codename];
+      const accGain = m?.absoluteGain
+        ? Math.round(m.absoluteGain * 100) / 100
+        : mfx?.gain
+          ? Math.round(mfx.gain * 100) / 100
+          : (bal > 0 && profit !== 0 ? Math.round((profit / (bal - profit)) * 10000) / 100 : 0);
+      const accDd = dd > 0 ? Math.round(dd * 100) / 100
+        : mfx?.drawdown ? Math.round(mfx.drawdown * 100) / 100 : 0;
+      if (accDd > worstDd) worstDd = accDd;
+
       accounts.push({
         name: r.config.codename,
         color: r.config.color,
         equity: Math.round(eq * 100) / 100,
         balance: Math.round(bal * 100) / 100,
         profit: Math.round(profit * 100) / 100,
-        gain: m?.absoluteGain ? Math.round(m.absoluteGain * 100) / 100 : 0,
-        drawdown: Math.round(dd * 100) / 100,
+        gain: accGain,
+        drawdown: accDd,
+        daily: mfx?.daily ? Math.round(mfx.daily * 100) / 100 : 0,
+        monthly: mfx?.monthly ? Math.round(mfx.monthly * 100) / 100 : 0,
+        deposits: mfx?.deposits ? Math.round(mfx.deposits * 100) / 100 : 0,
+        pips: mfx?.pips ?? 0,
         pnl24h: Math.round(pnl24h * 100) / 100,
         pnl72h: Math.round(pnl72h * 100) / 100,
         pnl7d: Math.round(pnl7d * 100) / 100,
@@ -191,9 +234,15 @@ export async function GET() {
     }
 
     const winrate = totalTrades > 0 ? Math.round((totalWon / totalTrades) * 100) : 0;
-    const gain = totalBalance > 0
-      ? Math.round(((totalEquity - totalBalance) / totalBalance) * 10000) / 100
-      : 0;
+    // Use MyFXBook weighted gain if available, otherwise calculate
+    const gain = myfxData?.totalGain
+      ? Math.round(myfxData.totalGain * 100) / 100
+      : (() => {
+          const initialDeposit = totalBalance - totalProfit;
+          return initialDeposit > 0
+            ? Math.round((totalProfit / initialDeposit) * 10000) / 100
+            : 0;
+        })();
 
     // Build equity curve
     const sortedDays = Object.keys(equityCurveMap).sort();
@@ -223,7 +272,7 @@ export async function GET() {
       todayPnl: Math.round(todayPnl * 100) / 100,
       todayTrades: accounts.reduce((s, a) => s + (a.trades > 0 ? 1 : 0), 0),
       winrate,
-      maxDd: Math.round(worstDd * 10) / 10,
+      maxDd: Math.round((worstDd > 0 ? worstDd : (myfxData?.totalDrawdown ?? 0)) * 10) / 10,
       gain,
       activePositions: totalPositions,
       equityCurve,

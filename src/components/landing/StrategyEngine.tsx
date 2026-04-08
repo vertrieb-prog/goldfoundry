@@ -26,7 +26,7 @@ interface Props {
 }
 
 function numColor(v: number) { return v >= 0 ? "#22c55e" : "#ef4444"; }
-function fmtMoney(v: number) { return `$${Math.abs(Math.round(v)).toLocaleString("en-US")}`; }
+function fmtMoney(v: number) { return `${Math.abs(Math.round(v)).toLocaleString("de-DE")}€`; }
 
 const cardVariants = {
   hidden: { opacity: 0, y: 30 },
@@ -76,20 +76,20 @@ export default function StrategyEngine({ accounts }: Props) {
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px 16px" }}>
                 <div>
                   <div style={{ fontSize: 10, color: "#6d6045", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>Gain</div>
-                  <div style={{ fontSize: 18, fontWeight: 800, fontFamily: "'JetBrains Mono', monospace", color: numColor(acc.gain) }}>
-                    {acc.gain >= 0 ? "+" : ""}{acc.gain.toFixed(1)}%
+                  <div style={{ fontSize: 18, fontWeight: 800, fontFamily: "'JetBrains Mono', monospace", color: isNew ? "#6d6045" : numColor(acc.gain) }}>
+                    {isNew ? "—" : `${acc.gain >= 0 ? "+" : ""}${acc.gain.toFixed(1)}%`}
                   </div>
                 </div>
                 <div>
                   <div style={{ fontSize: 10, color: "#6d6045", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>Profit</div>
-                  <div style={{ fontSize: 18, fontWeight: 800, fontFamily: "'JetBrains Mono', monospace", color: numColor(acc.profit) }}>
-                    {acc.profit >= 0 ? "+" : "-"}{fmtMoney(acc.profit)}
+                  <div style={{ fontSize: 18, fontWeight: 800, fontFamily: "'JetBrains Mono', monospace", color: isNew ? "#6d6045" : numColor(acc.profit) }}>
+                    {isNew ? "—" : <>{acc.profit >= 0 ? "+" : "-"}{fmtMoney(acc.profit)}</>}
                   </div>
                 </div>
                 <div>
                   <div style={{ fontSize: 10, color: "#6d6045", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>Drawdown</div>
                   <div style={{ fontSize: 14, fontWeight: 600, fontFamily: "'JetBrains Mono', monospace", color: (acc.drawdown ?? 0) > 10 ? "#ef4444" : "#a1a1aa" }}>
-                    {(acc.drawdown ?? 0).toFixed(1)}%
+                    {(acc.drawdown ?? 0) === 0 ? "—" : `${(acc.drawdown ?? 0).toFixed(1)}%`}
                   </div>
                 </div>
                 <div>
@@ -104,7 +104,7 @@ export default function StrategyEngine({ accounts }: Props) {
               {(acc.daily ?? acc.pnl24h ?? 0) !== 0 && (
                 <div style={{ marginTop: 12, display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 10px", background: "rgba(34,197,94,0.06)", borderRadius: 6, border: "1px solid rgba(34,197,94,0.1)" }}>
                   <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: numColor(acc.pnl24h ?? acc.daily ?? 0), fontWeight: 600 }}>
-                    {(acc.pnl24h ?? acc.daily ?? 0) >= 0 ? "+" : ""}${Math.abs(acc.pnl24h ?? 0).toFixed(2)} heute
+                    {(acc.pnl24h ?? acc.daily ?? 0) >= 0 ? "+" : ""}{Math.abs(acc.pnl24h ?? 0).toFixed(2)}€ heute
                   </span>
                 </div>
               )}

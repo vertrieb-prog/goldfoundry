@@ -78,7 +78,7 @@ function AnimCounter({ end, prefix = "", suffix = "", duration = 2000 }: { end: 
     }, 16);
     return () => clearInterval(timer);
   }, [end, duration]);
-  return <>{prefix}{val.toLocaleString("en-US")}{suffix}</>;
+  return <>{prefix}{val.toLocaleString("de-DE")}{suffix}</>;
 }
 
 /* ─── Floating Funnel CTA ─── */
@@ -259,10 +259,10 @@ function SocialProof({ gain, equity, accounts }: { gain: number; equity: number;
 
   const totalProfit = accs.reduce((s, a) => s + a.profit, 0);
   const spStats = [
-    { label: "Verwaltetes Kapital", value: `$${Math.round(equity).toLocaleString("en-US")}`, color: "#d4a537" },
+    { label: "Verwaltetes Kapital", value: `${Math.round(equity).toLocaleString("de-DE")}€`, color: "#d4a537" },
     { label: "Gesamt-Gain", value: `${gain >= 0 ? "+" : ""}${gain.toFixed(2)}%`, color: "#22c55e" },
     { label: "Aktive Strategien", value: String(accs.length || 7), color: "#fafafa" },
-    { label: "Gesamt-Profit", value: `${totalProfit >= 0 ? "+" : ""}$${Math.abs(Math.round(totalProfit)).toLocaleString("en-US")}`, color: totalProfit >= 0 ? "#22c55e" : "#ef4444" },
+    { label: "Gesamt-Profit", value: `${totalProfit >= 0 ? "+" : ""}${Math.abs(Math.round(totalProfit)).toLocaleString("de-DE")}€`, color: totalProfit >= 0 ? "#22c55e" : "#ef4444" },
   ];
 
   return (
@@ -310,7 +310,7 @@ export default function HomePage() {
   const pct72h = stats?.balance ? Math.round(stats.todayPnl / stats.balance * 10000) / 100 : 0;
   const gain = stats?.gain ?? 0;
   const winrate = stats?.winrate ?? 0;
-  const fmtEquity = equity > 0 ? `$${Math.round(equity).toLocaleString("en-US")}` : (isLoading ? "" : "$0");
+  const fmtEquity = equity > 0 ? `${Math.round(equity).toLocaleString("de-DE")}€` : (isLoading ? "" : "0€");
   const accs = stats?.accounts ?? [];
 
   return (
@@ -366,8 +366,8 @@ export default function HomePage() {
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}
               style={{ display: "flex", gap: 20, justifyContent: "center", marginBottom: 40, flexWrap: "wrap" }}>
               {[
-                { label: "Portfolio", value: <><span>$</span><AnimCounter end={equity} /></>, color: "#d4a537" },
-                { label: "72h Profit", value: <><span>{pnl72h >= 0 ? "+" : "-"}$</span><AnimCounter end={Math.abs(pnl72h)} /></>, color: pnl72h >= 0 ? "#22c55e" : "#ef4444" },
+                { label: "Portfolio", value: <><AnimCounter end={equity} suffix="€" /></>, color: "#d4a537" },
+                { label: "72h Profit", value: <><span>{pnl72h >= 0 ? "+" : "-"}</span><AnimCounter end={Math.abs(pnl72h)} suffix="€" /></>, color: pnl72h >= 0 ? "#22c55e" : "#ef4444" },
                 { label: "Winrate", value: <><AnimCounter end={winrate} suffix="%" /></>, color: "#22c55e" },
               ].map((stat) => (
                 <Card3D key={stat.label} intensity={10}>
@@ -416,7 +416,7 @@ export default function HomePage() {
           pnl72h={stats.todayPnl}
           pct72h={pct72h}
           winrate={stats.winrate}
-          dd72h={0}
+          dd72h={stats.maxDd}
           maxDd={stats.maxDd}
           activePositions={stats.activePositions}
         />
@@ -452,7 +452,7 @@ export default function HomePage() {
               <div style={{ minWidth: 800 }}>
                 {accs.map((a: any, i: number) => {
                   const nc = (v: number) => v > 0 ? "#22c55e" : v < 0 ? "#ef4444" : "#e0d4b8";
-                  const fm = (v: number) => `$${Math.abs(v).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                  const fm = (v: number) => `${Math.abs(v).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€`;
                   const periods = [a.pnl24h ?? 0, a.pnl72h ?? 0, a.pnl7d ?? 0, a.pnl30d ?? 0];
                   return (
                     <div key={a.name} style={{ display: "grid", gridTemplateColumns: "2fr 1.2fr 1.2fr 1.2fr 1.2fr 0.8fr 1.2fr", borderTop: i > 0 ? "1px solid rgba(255,255,255,0.03)" : "none" }}>
@@ -461,16 +461,16 @@ export default function HomePage() {
                         <span style={{ color: a.color ?? "#e0d4b8" }}>{a.name}</span>
                       </div>
                       {periods.map((p: number, j: number) => (
-                        <div key={j} style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", padding: "10px 8px", fontWeight: 500, color: nc(p) }}>
-                          {p >= 0 ? "+" : "-"}{fm(p)}
+                        <div key={j} style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", padding: "10px 8px", fontWeight: 500, color: p === 0 ? "#6d6045" : nc(p) }}>
+                          {p === 0 ? "—" : <>{p >= 0 ? "+" : "-"}{fm(p)}</>}
                         </div>
                       ))}
-                      <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", padding: "10px 8px", fontWeight: 600, color: (a.winrate ?? 0) >= 50 ? "#22c55e" : "#ef4444" }}>
-                        {a.winrate ?? 0}%
+                      <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", padding: "10px 8px", fontWeight: 600, color: (a.winrate ?? 0) === 0 ? "#6d6045" : (a.winrate ?? 0) >= 50 ? "#22c55e" : "#ef4444" }}>
+                        {(a.winrate ?? 0) === 0 && (a.trades ?? 0) === 0 ? "—" : `${a.winrate ?? 0}%`}
                       </div>
                       <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", padding: "10px 8px", fontWeight: 700, color: nc(a.profit) }}>
-                        <div>{a.profit >= 0 ? "+" : "-"}{fm(a.profit)}</div>
-                        <div style={{ fontSize: 9, color: nc(a.gain), opacity: 0.8 }}>{a.gain >= 0 ? "+" : ""}{(a.gain ?? 0).toFixed(2)}%</div>
+                        <div>{a.profit === 0 && (a.trades ?? 0) === 0 ? "—" : <>{a.profit >= 0 ? "+" : "-"}{fm(a.profit)}</>}</div>
+                        {(a.gain ?? 0) !== 0 && <div style={{ fontSize: 9, color: nc(a.gain), opacity: 0.8 }}>{a.gain >= 0 ? "+" : ""}{(a.gain ?? 0).toFixed(2)}%</div>}
                       </div>
                     </div>
                   );
@@ -481,7 +481,7 @@ export default function HomePage() {
                   {["pnl24h", "pnl72h", "pnl7d", "pnl30d"].map((key, j) => {
                     const total = accs.reduce((s: number, a: any) => s + (a[key] ?? 0), 0);
                     const nc = (v: number) => v > 0 ? "#22c55e" : v < 0 ? "#ef4444" : "#e0d4b8";
-                    const fm = (v: number) => `$${Math.abs(v).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                    const fm = (v: number) => `${Math.abs(v).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€`;
                     return (
                       <div key={j} style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", padding: "10px 8px", fontWeight: 700, color: nc(total) }}>
                         {total >= 0 ? "+" : "-"}{fm(total)}
@@ -492,7 +492,7 @@ export default function HomePage() {
                     {winrate}%
                   </div>
                   <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", padding: "10px 8px", fontWeight: 700, color: "#22c55e" }}>
-                    +${Math.abs(accs.reduce((s: number, a: any) => s + (a.profit ?? 0), 0)).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                    +{Math.abs(accs.reduce((s: number, a: any) => s + (a.profit ?? 0), 0)).toLocaleString("de-DE", { minimumFractionDigits: 2 })}€
                   </div>
                 </div>
               </div>
@@ -515,7 +515,12 @@ export default function HomePage() {
       <LeverageCards onStart={openFunnel} />
 
       {/* ═══ 6. TRUST — Letzte Einwände beseitigen ═══ */}
-      <TrustCards />
+      <TrustCards
+        equity={equity}
+        winrate={winrate}
+        maxDd={stats?.maxDd}
+        totalProfit={accs.reduce((s, a) => s + a.profit, 0)}
+      />
 
       {/* ═══ 7. BROKER-PARTNER — 3 Broker ═══ */}
       <section style={{ padding: "60px 20px", maxWidth: 1000, margin: "0 auto" }}>

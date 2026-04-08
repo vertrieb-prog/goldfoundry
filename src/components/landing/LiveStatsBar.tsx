@@ -44,7 +44,7 @@ export default function LiveStatsBar({ pnl72h, pct72h, winrate, dd72h, maxDd, ac
             boxShadow: "0 0 8px #22c55e", animation: "glow-pulse 2s infinite", flexShrink: 0,
           }}
         />
-        <Stat label="72h P&L" value={`${pnlSign}$${Math.abs(pnl72h).toLocaleString("en-US", { maximumFractionDigits: 0 })}`} color={pnlColor} />
+        <Stat label="72h P&L" value={`${pnlSign}${Math.abs(pnl72h).toLocaleString("de-DE", { maximumFractionDigits: 0 })}€`} color={pnlColor} />
         <Stat label="72h %" value={`${pnlSign}${pct72h.toFixed(2)}%`} color={pnlColor} />
         <Stat label="Winrate" value={`${winrate}%`} color={winrate >= 50 ? "#22c55e" : "#ef4444"} />
         <Stat label="72h DD" value={`${dd72h.toFixed(2)}%`} color="#ef4444" />

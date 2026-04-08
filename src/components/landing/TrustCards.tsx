@@ -4,37 +4,50 @@ import { motion } from "framer-motion";
 
 const BULLET = "\u2022";
 
-const cards = [
-  {
-    icon: "\u26E8",
-    title: "Risk Shield",
-    items: [
-      "Max 17.68% Drawdown \u2014 automatisch gesteuert",
-      "Trailing Stop-Loss nach TP1 auf Breakeven",
-      "Notfall-Close bei extremer Volatilität",
-    ],
-  },
-  {
-    icon: "\u2197",
-    title: "Verifizierte Performance",
-    items: [
-      "Alle Trades live auf MyFXBook einsehbar",
-      "$47.633 verwaltetes Portfolio-Volumen",
-      "+10.86% Gesamt-Gain in unter 2 Wochen",
-    ],
-  },
-  {
-    icon: "\u2713",
-    title: "100% Kostenlos",
-    items: [
-      "Keine Gebühren, kein Abo, keine Provision",
-      "Tegas FX (MISA-lizenziert) vergütet uns",
-      "Auszahlung jederzeit \u2014 dein Geld, dein Konto",
-    ],
-  },
-];
+interface TrustCardsProps {
+  equity?: number;
+  winrate?: number;
+  maxDd?: number;
+  totalProfit?: number;
+}
 
-export default function TrustCards() {
+function buildCards(p: TrustCardsProps) {
+  const eq = p.equity ? `${Math.round(p.equity).toLocaleString("de-DE")}€` : "49.000€+";
+  const dd = p.maxDd ? `${p.maxDd.toFixed(1)}%` : "6.7%";
+  const profit = p.totalProfit ? `${p.totalProfit >= 0 ? "+" : ""}${Math.round(p.totalProfit).toLocaleString("de-DE")}€` : "+8.600€";
+  return [
+    {
+      icon: "\u26E8",
+      title: "Risk Shield",
+      items: [
+        `Max ${dd} Drawdown \u2014 automatisch gesteuert`,
+        "Trailing Stop-Loss nach TP1 auf Breakeven",
+        "Notfall-Close bei extremer Volatilität",
+      ],
+    },
+    {
+      icon: "\u2197",
+      title: "Verifizierte Performance",
+      items: [
+        "Alle Trades live auf MyFXBook einsehbar",
+        `${eq} verwaltetes Portfolio-Volumen`,
+        `${profit} Gesamt-Profit über alle Strategien`,
+      ],
+    },
+    {
+      icon: "\u2713",
+      title: "100% Kostenlos",
+      items: [
+        "Keine Gebühren, kein Abo, keine Provision",
+        "Tegas FX (MISA-lizenziert) vergütet uns",
+        "Auszahlung jederzeit \u2014 dein Geld, dein Konto",
+      ],
+    },
+  ];
+}
+
+export default function TrustCards({ equity, winrate, maxDd, totalProfit }: TrustCardsProps) {
+  const cards = buildCards({ equity, winrate, maxDd, totalProfit });
   return (
     <section style={{ padding: "80px 20px", maxWidth: 1000, margin: "0 auto" }}>
       <h2
@@ -46,7 +59,7 @@ export default function TrustCards() {
           marginBottom: 48,
         }}
       >
-        Warum <span style={{ color: "#22c55e" }}>73%</span> aller Trades{" "}
+        Warum <span style={{ color: "#22c55e" }}>{winrate ?? 70}%</span> aller Trades{" "}
         <span style={{ color: "#d4a537" }}>im Plus</span> landen
       </h2>
 

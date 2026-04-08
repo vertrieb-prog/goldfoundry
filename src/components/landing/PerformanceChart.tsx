@@ -54,7 +54,7 @@ type ChartTab = "growth" | "balance" | "profit" | "drawdown";
 
 const MONO = "'JetBrains Mono', monospace";
 const numColor = (v: number) => v > 0 ? "#22c55e" : v < 0 ? "#ef4444" : "#e0d4b8";
-const fmtMoney = (v: number) => `$${v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+const fmtMoney = (v: number) => `${v.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€`;
 const fmtPct = (v: number) => `${v >= 0 ? "+" : ""}${v.toFixed(2)}%`;
 
 /* ─── Growth Comparison Chart (multi-line, like MyFXBook) ─── */
@@ -203,8 +203,8 @@ function SingleChart({ data, tab }: { data: { date: string; value: number }[]; t
   const gridLines = Array.from({ length: gridCount + 1 }, (_, i) => ({ y: padT + (i / gridCount) * chartH, val: vMax - (i / gridCount) * range }));
   const dateIdxs = [0, Math.floor(n / 2), n - 1].filter((v, i, a) => a.indexOf(v) === i && v < n);
 
-  const formatAxis = (v: number) => tab === "balance" ? `$${(v / 1000).toFixed(1)}k` : tab === "profit" ? `$${Math.round(v)}` : `${v.toFixed(1)}%`;
-  const formatVal = (v: number) => tab === "balance" ? `$${Math.round(v).toLocaleString("en-US")}` : tab === "profit" ? `${v >= 0 ? "+" : ""}$${Math.abs(Math.round(v))}` : `${v >= 0 ? "+" : ""}${v.toFixed(2)}%`;
+  const formatAxis = (v: number) => tab === "balance" ? `${(v / 1000).toFixed(1)}k€` : tab === "profit" ? `${Math.round(v)}€` : `${v.toFixed(1)}%`;
+  const formatVal = (v: number) => tab === "balance" ? `${Math.round(v).toLocaleString("de-DE")}€` : tab === "profit" ? `${v >= 0 ? "+" : ""}${Math.abs(Math.round(v))}€` : `${v >= 0 ? "+" : ""}${v.toFixed(2)}%`;
 
   return (
     <svg viewBox={`0 0 ${w} ${h}`} style={{ width: "100%", display: "block" }} onMouseLeave={() => setHover(null)}>
@@ -377,7 +377,7 @@ function StatsPanel({ account, total }: { account: MyfxAccount | null; total: My
     ],
     [
       { label: "Deposits", value: fmtMoney(a.deposits), color: "#e0d4b8" },
-      { label: "Withdrawals", value: "$0.00", color: "#e0d4b8" },
+      { label: "Withdrawals", value: "0,00€", color: "#e0d4b8" },
     ],
   ];
 
@@ -557,13 +557,13 @@ export default function PerformanceChart({ growthCurve, drawdownCurve, equityCur
       position: t.direction === "BUY" ? "belowBar" as const : "aboveBar" as const,
       color: t.direction === "BUY" ? "#22c55e" : "#ef4444",
       shape: t.direction === "BUY" ? "arrowUp" as const : "arrowDown" as const,
-      text: `${t.direction} ${t.symbol} ${t.pnl >= 0 ? "+" : ""}$${t.pnl.toFixed(0)}`,
+      text: `${t.direction} ${t.symbol} ${t.pnl >= 0 ? "+" : ""}${t.pnl.toFixed(0)}€`,
     })).filter((m) => m.time);
   }, [recentTrades]);
 
   const priceFormatter = useMemo(() => {
-    if (tab === "balance") return (v: number) => `$${Math.round(v).toLocaleString("en-US")}`;
-    if (tab === "profit") return (v: number) => `${v >= 0 ? "+" : ""}$${Math.round(v).toLocaleString("en-US")}`;
+    if (tab === "balance") return (v: number) => `${Math.round(v).toLocaleString("de-DE")}€`;
+    if (tab === "profit") return (v: number) => `${v >= 0 ? "+" : ""}${Math.round(v).toLocaleString("de-DE")}€`;
     return (v: number) => `${v.toFixed(2)}%`;
   }, [tab]);
 
@@ -673,7 +673,7 @@ export default function PerformanceChart({ growthCurve, drawdownCurve, equityCur
               <span style={{ color: t.direction === "BUY" ? "#22c55e" : "#ef4444", fontWeight: 700, width: 32 }}>{t.direction}</span>
               <span style={{ color: "#e0d4b8", flex: 1 }}>{t.symbol}</span>
               <span style={{ color: "#6d6045" }}>{t.lots}L</span>
-              <span style={{ color: t.pnl >= 0 ? "#22c55e" : "#ef4444", fontWeight: 600 }}>{t.pnl >= 0 ? "+" : ""}${t.pnl.toFixed(2)}</span>
+              <span style={{ color: t.pnl >= 0 ? "#22c55e" : "#ef4444", fontWeight: 600 }}>{t.pnl >= 0 ? "+" : ""}{t.pnl.toFixed(2)}€</span>
             </div>
           ))}
         </div>

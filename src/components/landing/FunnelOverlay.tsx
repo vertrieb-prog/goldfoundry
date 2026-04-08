@@ -72,8 +72,8 @@ export default function FunnelOverlay({ open, onClose, liveData }: Props) {
   const [capital, setCapital] = useState(1000);
   const [risk, setRisk] = useState<Risk>(null);
 
-  const totalGain = liveData?.totalGain ?? 28;
-  const maxDd = liveData?.totalDrawdown ?? 6.76;
+  const totalGain = liveData?.totalGain ?? 0;
+  const maxDd = liveData?.totalDrawdown ?? 0;
 
   const recommendation = getRecommendation(experience);
 
