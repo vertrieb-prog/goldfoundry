@@ -97,7 +97,7 @@ export const TRADER_CONFIG: TraderConfig[] = [
     mtLogin: "50713387",
   },
   {
-    codename: "PROCENT8",
+    codename: "TITAN",
     asset: "Multi",
     assetLabel: "Multi-Asset",
     color: "#06b6d4",
