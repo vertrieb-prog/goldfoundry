@@ -96,18 +96,6 @@ export const TRADER_CONFIG: TraderConfig[] = [
     metaApiId: "e4098442-dbb5-47d0-8864-014ed934bcd6",
     mtLogin: "50713387",
   },
-  {
-    codename: "TITAN",
-    asset: "Multi",
-    assetLabel: "Multi-Asset",
-    color: "#06b6d4",
-    perf: "0%",
-    wr: "0%",
-    maxDd: "0%",
-    since: "2026",
-    metaApiId: "362ebf46-1d5a-4eba-b4e5-82ba03cd345d",
-    mtLogin: "38063584",
-  },
 ];
 
 export function getTraderByMetaApiId(id: string): TraderConfig | undefined {
