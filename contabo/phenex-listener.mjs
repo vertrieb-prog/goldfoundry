@@ -422,11 +422,25 @@ async function executeMgmtCommand(cmd) {
   }
 }
 
+// ═══ WATCHDOG STATE ══════════════════════════════════════════
+// lastMessageAt = letzter erfolgreich verarbeiteter Telegram-Update
+// errorCount/errorWindowStart = Rolling-Window Error Counter
+// lastStaleAlert = Dedup damit wir nicht jede Runde alerten
+let lastMessageAt = Date.now();
+let errorCount = 0;
+let errorWindowStart = Date.now();
+let lastStaleAlert = 0;
+const ERROR_WINDOW_MS = 60 * 1000;
+const ERROR_THRESHOLD = 10;                      // >10 Errors/min → exit
+const STALE_ALERT_MS = 3 * 60 * 60 * 1000;       // >3h keine Msg → alert
+const STALE_ALERT_COOLDOWN_MS = 60 * 60 * 1000;  // max 1 Alert/h
+
 // ═══ MESSAGE HANDLER ═════════════════════════════════════════
 const processedMessages = new Set();
 const DEDUP_TTL = 10 * 60 * 1000;
 
 async function handleMessage(event) {
+  lastMessageAt = Date.now(); // Watchdog: Liveness-Ping
   try {
     const msg = event.message;
     if (!msg?.message) return;
@@ -510,11 +524,53 @@ async function main() {
   log("INFO", `📡 Phenex Channel: ${phenex.title} (ID: ${phenex.id})`);
 
   // Event Handler — ECHTZEIT!
-  client.addEventHandler(handleMessage, new NewMessage({ chats: [phenex.inputEntity] }));
-  log("INFO", "🚀 LISTENER AKTIV — warte auf Signale...");
+  // FIX 2026-04-09: gramjs "Cannot find any entity corresponding to [object Object]"
+  // Wenn man phenex.inputEntity als chats-Filter übergibt scheitert das Update-Polling.
+  // Lösung: KEIN chats-Filter + manuell im Handler auf die Channel-ID prüfen.
+  const phenexChannelIdStr = CONFIG.telegram.channelId.replace(/^-100/, "");
+  client.addEventHandler(async (event) => {
+    const id = event.message?.peerId?.channelId?.toString();
+    if (id !== phenexChannelIdStr) return;
+    await handleMessage(event);
+  }, new NewMessage({}));
+  log("INFO", `🚀 LISTENER AKTIV — warte auf Signale... (Filter: channel ${phenexChannelIdStr})`);
 
   // Health Check alle 5 Minuten
   setInterval(healthCheck, 5 * 60 * 1000);
+
+  // ═══ WATCHDOG — alle 10min prüfen ob Listener stumm ist ══════
+  // Während Marktzeiten (Mo–Fr, ~06–22 UTC) sollten regelmäßig Messages
+  // kommen. Wenn >3h Stille → Telegram-Alert an "Saved Messages" (me).
+  async function watchdog() {
+    try {
+      const sinceLast = Date.now() - lastMessageAt;
+      const now = new Date();
+      const utcHour = now.getUTCHours();
+      const utcDay = now.getUTCDay(); // 0 Sun, 6 Sat
+      const isWeekday = utcDay >= 1 && utcDay <= 5;
+      const isActiveHours = utcHour >= 6 && utcHour <= 22;
+      const isMarketActive = isWeekday && isActiveHours;
+
+      if (sinceLast > STALE_ALERT_MS && isMarketActive) {
+        if (Date.now() - lastStaleAlert > STALE_ALERT_COOLDOWN_MS) {
+          const mins = Math.round(sinceLast / 60000);
+          log("WARN", `🚨 Watchdog: ${mins}min keine Nachricht während Marktzeit`);
+          try {
+            await client.sendMessage("me", {
+              message: `🚨 Gold Foundry Watchdog\n\nPhenex Listener hat seit ${mins}min keine Nachricht verarbeitet.\n\nZeit (UTC): ${now.toISOString()}\nServer: Contabo phenex-listener\n\nBitte pm2 logs prüfen: pm2 logs phenex-listener --lines 50`,
+            });
+            lastStaleAlert = Date.now();
+            log("INFO", "✅ Watchdog-Alert via Telegram gesendet");
+          } catch (e) {
+            log("ERROR", `Watchdog alert failed: ${e.message}`);
+          }
+        }
+      }
+    } catch (e) {
+      log("ERROR", `Watchdog check failed: ${e.message}`);
+    }
+  }
+  setInterval(watchdog, 10 * 60 * 1000);
 
   // Keep alive
   process.on("SIGINT", async () => {
@@ -529,9 +585,28 @@ async function main() {
     process.exit(0);
   });
 
-  // Reconnect bei Disconnect
+  // ═══ ERROR COUNTER — bei Error-Storm selbst-killen ═══════════
+  // Wenn gramjs-Update-Loop kaputt ist (z.B. chats-Filter Bug),
+  // kommen Errors alle ~9s. >10 Errors/min → exit → pm2 restart.
   process.on("unhandledRejection", (err) => {
     log("ERROR", `Unhandled rejection: ${err}`);
+
+    const now = Date.now();
+    if (now - errorWindowStart > ERROR_WINDOW_MS) {
+      errorWindowStart = now;
+      errorCount = 0;
+    }
+    errorCount++;
+
+    if (errorCount > ERROR_THRESHOLD) {
+      log("ERROR", `🚨 ${errorCount} Errors in ${Math.round((now - errorWindowStart) / 1000)}s — exit(1) → pm2 restart`);
+      // Best-effort Telegram-Alert vor dem Exit
+      client.sendMessage("me", {
+        message: `🚨 Gold Foundry Phenex Listener Error-Storm\n\n${errorCount} Unhandled Rejections in 60s.\nLetzter Error: ${err}\n\nProzess wird neugestartet via pm2.`,
+      }).catch(() => {}).finally(() => {
+        setTimeout(() => process.exit(1), 2000);
+      });
+    }
   });
 }
 

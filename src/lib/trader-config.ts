@@ -9,6 +9,10 @@ export interface TraderConfig {
   since: string;
   metaApiId: string;
   mtLogin: string;
+  /** Ursprünglicher Deposit in EUR — für Gain-Berechnung wenn Withdrawals gemacht wurden */
+  initialDeposit?: number;
+  /** Statischer maxDd-Fallback in % falls MetaStats + MyFXBook beide 0 liefern */
+  maxDdFallback?: number;
 }
 
 export const TRADER_CONFIG: TraderConfig[] = [
@@ -23,6 +27,7 @@ export const TRADER_CONFIG: TraderConfig[] = [
     since: "2022",
     metaApiId: "cb652594-04e0-4123-a89b-7528250958ed",
     mtLogin: "50707464",
+    maxDdFallback: 6.7,
   },
   {
     codename: "VIPER",
@@ -35,6 +40,7 @@ export const TRADER_CONFIG: TraderConfig[] = [
     since: "2025",
     metaApiId: "e4be2f32-6fb9-42fa-a5f4-aba2095bdbcd",
     mtLogin: "50701398",
+    maxDdFallback: 6.8,
   },
   {
     codename: "APEX",
@@ -47,6 +53,7 @@ export const TRADER_CONFIG: TraderConfig[] = [
     since: "2025",
     metaApiId: "fa8a5353-d029-42f5-922c-f5a003fc482b",
     mtLogin: "68297968",
+    maxDdFallback: 11.5,
   },
   {
     codename: "SPECTRE",
@@ -59,6 +66,7 @@ export const TRADER_CONFIG: TraderConfig[] = [
     since: "2025",
     metaApiId: "2a729049-374d-496e-86dd-805b942f1e9d",
     mtLogin: "2100151348",
+    maxDdFallback: 0.7,
   },
   {
     codename: "HYDRA",
@@ -71,18 +79,10 @@ export const TRADER_CONFIG: TraderConfig[] = [
     since: "2024",
     metaApiId: "f89ce377-fcef-48a0-8d4a-b517b8f38a7f",
     mtLogin: "23651610",
-  },
-  {
-    codename: "AEGIS",
-    asset: "XAUUSD",
-    assetLabel: "Gold",
-    color: "#e8785e",
-    perf: "+0%",
-    wr: "0%",
-    maxDd: "0%",
-    since: "2026",
-    metaApiId: "fcff4919-51f9-42e5-af90-8179b0b41f31",
-    mtLogin: "50715676",
+    // Withdrawals gemacht (balance < profit) → initial deposit muss hart gesetzt werden
+    // 1337.11 profit / 3.708 gain = ~360€ initial → passt zu "+370.8%"
+    initialDeposit: 360,
+    maxDdFallback: 17.7,
   },
   {
     codename: "RONIN",
@@ -95,6 +95,7 @@ export const TRADER_CONFIG: TraderConfig[] = [
     since: "2025",
     metaApiId: "e4098442-dbb5-47d0-8864-014ed934bcd6",
     mtLogin: "50713387",
+    maxDdFallback: 5.7,
   },
 ];
 

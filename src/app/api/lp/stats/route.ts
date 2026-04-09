@@ -158,13 +158,22 @@ export async function GET() {
 
       // Enrich with MyFXBook data (gain, drawdown, daily, monthly)
       const mfx = mfxByName[r.config.codename];
-      const accGain = m?.absoluteGain
-        ? Math.round(m.absoluteGain * 100) / 100
-        : mfx?.gain
-          ? Math.round(mfx.gain * 100) / 100
-          : (bal > 0 && profit !== 0 ? Math.round((profit / (bal - profit)) * 10000) / 100 : 0);
+      // Gain: MetaStats absoluteGain → MyFXBook gain → profit/initialDeposit (config)
+      //       → profit/(balance-profit) Fallback (nur ohne Withdrawals korrekt)
+      let accGain = 0;
+      if (m?.absoluteGain) {
+        accGain = Math.round(m.absoluteGain * 100) / 100;
+      } else if (mfx?.gain) {
+        accGain = Math.round(mfx.gain * 100) / 100;
+      } else if (r.config.initialDeposit && profit !== 0) {
+        accGain = Math.round((profit / r.config.initialDeposit) * 10000) / 100;
+      } else if (bal > 0 && profit !== 0 && bal > profit) {
+        accGain = Math.round((profit / (bal - profit)) * 10000) / 100;
+      }
+      // maxDd: MetaStats → MyFXBook → statischer Config-Fallback
       const accDd = dd > 0 ? Math.round(dd * 100) / 100
-        : mfx?.drawdown ? Math.round(mfx.drawdown * 100) / 100 : 0;
+        : mfx?.drawdown ? Math.round(mfx.drawdown * 100) / 100
+        : r.config.maxDdFallback ?? 0;
       if (accDd > worstDd) worstDd = accDd;
 
       accounts.push({
@@ -257,7 +266,7 @@ export async function GET() {
             if (now - ct < 7 * 86400000) acc.pnl7d += net;
             if (now - ct < 30 * 86400000) acc.pnl30d += net;
           }
-          // Recalc winrate per account
+          // Recalc winrate + gain per account nach Supabase-Merge
           for (const acc of zeroAccounts) {
             if (acc.trades > 0) {
               acc.winrate = Math.round(((acc._wins ?? 0) / acc.trades) * 100);
@@ -266,6 +275,13 @@ export async function GET() {
               acc.pnl72h = Math.round(acc.pnl72h * 100) / 100;
               acc.pnl7d = Math.round(acc.pnl7d * 100) / 100;
               acc.pnl30d = Math.round(acc.pnl30d * 100) / 100;
+              // Gain neu berechnen — wichtig für Accounts wie HYDRA mit Withdrawals
+              const cfg = TRADER_CONFIG.find(t => t.codename === acc.name);
+              if (cfg?.initialDeposit && acc.profit !== 0) {
+                acc.gain = Math.round((acc.profit / cfg.initialDeposit) * 10000) / 100;
+              } else if (acc.balance > 0 && acc.profit !== 0 && acc.balance > acc.profit) {
+                acc.gain = Math.round((acc.profit / (acc.balance - acc.profit)) * 10000) / 100;
+              }
             }
             delete acc._wins;
           }
@@ -278,19 +294,35 @@ export async function GET() {
     // Final pass: calculate gain for any account still at 0 but with profit
     for (const acc of accounts) {
       if (acc.gain === 0 && acc.profit !== 0 && acc.balance > 0) {
-        const deposit = acc.deposits > 0 ? acc.deposits : (acc.balance - acc.profit);
+        const cfg = TRADER_CONFIG.find(t => t.codename === acc.name);
+        // Priorität: MyFXBook deposits → config initialDeposit → balance-profit
+        let deposit = 0;
+        if (acc.deposits > 0) deposit = acc.deposits;
+        else if (cfg?.initialDeposit) deposit = cfg.initialDeposit;
+        else if (acc.balance > acc.profit) deposit = acc.balance - acc.profit;
         if (deposit > 0) acc.gain = Math.round((acc.profit / deposit) * 10000) / 100;
       }
     }
 
     const winrate = totalTrades > 0 ? Math.round((totalWon / totalTrades) * 100) : 0;
-    // Use MyFXBook weighted gain if available, otherwise calculate
+    // Global Gain: MyFXBook totalGain → Summe über initialDeposits + (balance-profit) Fallback
+    // Wichtig: einzelne Accounts mit Withdrawals (HYDRA) würden die globale Formel kippen.
     const gain = myfxData?.totalGain
       ? Math.round(myfxData.totalGain * 100) / 100
       : (() => {
-          const initialDeposit = totalBalance - totalProfit;
-          return initialDeposit > 0
-            ? Math.round((totalProfit / initialDeposit) * 10000) / 100
+          let portfolioDeposit = 0;
+          for (const acc of accounts) {
+            const cfg = TRADER_CONFIG.find(t => t.codename === acc.name);
+            if (cfg?.initialDeposit) {
+              portfolioDeposit += cfg.initialDeposit;
+            } else if (acc.balance > acc.profit) {
+              portfolioDeposit += acc.balance - acc.profit;
+            } else {
+              portfolioDeposit += acc.balance; // Worst-Case-Fallback
+            }
+          }
+          return portfolioDeposit > 0
+            ? Math.round((totalProfit / portfolioDeposit) * 10000) / 100
             : 0;
         })();
 
