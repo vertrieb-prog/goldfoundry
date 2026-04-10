@@ -204,20 +204,7 @@ export async function GET() {
         equityCurveMap[day] = (equityCurveMap[day] ?? 0) + (d.balance ?? 0);
       }
 
-      // Collect recent trades from dailyGrowth (real trade data, not currency summary)
-      const recent = dg.slice(-7);
-      for (const day of recent) {
-        if (!day.date || ((day.profit ?? 0) === 0 && (day.lots ?? 0) === 0)) continue;
-        recentTrades.push({
-          direction: (day.profit ?? 0) >= 0 ? "BUY" : "SELL",
-          symbol: strip(r.config.asset ?? "XAUUSD"),
-          lots: Math.round((day.lots ?? 0) * 100) / 100,
-          pnl: Math.round((day.profit ?? 0) * 100) / 100,
-          time: day.date,
-          trader: r.config.codename,
-          traderColor: r.config.color,
-        });
-      }
+      // recentTrades loaded from Supabase below (individual trades, not daily aggregates)
     }
 
     // Supabase fallback for accounts with 0 MetaStats trades
@@ -287,6 +274,50 @@ export async function GET() {
       } catch (err) {
         console.warn("[lp/stats] Supabase fallback failed:", err);
       }
+    }
+
+    // Load recent individual trades from Supabase (not daily aggregates)
+    try {
+      const db = createSupabaseAdmin();
+      const { data: sbRecent } = await db
+        .from("trade_history")
+        .select("symbol,direction,profit,lots,close_time,myfxbook_account_id,pips")
+        .eq("status", "closed")
+        .order("close_time", { ascending: false })
+        .limit(10);
+      for (const t of sbRecent ?? []) {
+        const traderName = Object.entries(mfxIdToCodename).find(([mfxId]) => {
+          const cfg = TRADER_CONFIG.find(tc => {
+            const mfxIds: Record<string, string> = {
+              "50707464": "11992338", "50701398": "11993800", "68297968": "11994589",
+              "2100151348": "11994591", "23651610": "11994594", "50715676": "11995050",
+              "50713387": "11995344",
+            };
+            return mfxIds[tc.mtLogin] === t.myfxbook_account_id;
+          });
+          return !!cfg;
+        });
+        const cfg = TRADER_CONFIG.find(tc => {
+          const mfxIds: Record<string, string> = {
+            "50707464": "11992338", "50701398": "11993800", "68297968": "11994589",
+            "2100151348": "11994591", "23651610": "11994594", "50715676": "11995050",
+            "50713387": "11995344",
+          };
+          return mfxIds[tc.mtLogin] === t.myfxbook_account_id;
+        });
+        if (!cfg) continue;
+        recentTrades.push({
+          direction: (t.direction ?? "").toUpperCase().includes("BUY") ? "BUY" : "SELL",
+          symbol: (t.symbol ?? "XAUUSD").replace(/\.pro$/i, ""),
+          lots: Math.round((t.lots ?? 0) * 100) / 100,
+          pnl: Math.round((t.profit ?? 0) * 100) / 100,
+          time: t.close_time,
+          trader: cfg.codename,
+          traderColor: cfg.color,
+        });
+      }
+    } catch (err) {
+      console.warn("[lp/stats] Supabase recent trades failed:", err);
     }
 
     // Final pass: calculate gain for any account still at 0 but with profit
