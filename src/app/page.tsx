@@ -432,7 +432,21 @@ export default function HomePage() {
           equityCurve={stats?.equityCurve ?? []} recentTrades={stats?.recentTrades ?? []}
           gain={stats?.gain ?? 0} maxDd={stats?.maxDd ?? 0}
           todayTrades={stats?.todayTrades ?? 0} winrate={stats?.winrate ?? 0}
-          myfxbook={undefined}
+          myfxbook={accs.length > 0 ? {
+            accounts: accs.map((a: any) => ({
+              name: a.name, gain: a.gain ?? 0, absGain: a.gain ?? 0,
+              daily: a.daily ?? 0, monthly: a.monthly ?? 0, drawdown: a.drawdown ?? 0,
+              balance: a.balance ?? 0, equity: a.equity ?? 0, profit: a.profit ?? 0,
+              pips: a.pips ?? 0, deposits: a.deposits ?? 0,
+            })),
+            totalGain: stats?.gain ?? 0,
+            totalBalance: stats?.balance ?? 0,
+            totalEquity: stats?.equity ?? 0,
+            totalProfit: accs.reduce((s: number, a: any) => s + (a.profit ?? 0), 0),
+            totalDrawdown: stats?.maxDd ?? 0,
+            totalDaily: 0,
+            totalMonthly: 0,
+          } : undefined}
         />
       </div>
 
