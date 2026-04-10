@@ -204,21 +204,19 @@ export async function GET() {
         equityCurveMap[day] = (equityCurveMap[day] ?? 0) + (d.balance ?? 0);
       }
 
-      // Collect today's info for recent trades display
-      const todayDeals = m?.currencySummary ?? [];
-      for (const cs of todayDeals) {
-        const lastDay = cs.history?.[cs.history.length - 1];
-        if (lastDay) {
-          recentTrades.push({
-            direction: (lastDay.longProfit ?? 0) > (lastDay.shortProfit ?? 0) ? "BUY" : "SELL",
-            symbol: strip(cs.currency ?? ""),
-            lots: 0,
-            pnl: Math.round((lastDay.totalProfit ?? 0) * 100) / 100,
-            time: new Date().toISOString(),
-            trader: r.config.codename,
-            traderColor: r.config.color,
-          });
-        }
+      // Collect recent trades from dailyGrowth (real trade data, not currency summary)
+      const recent = dg.slice(-7);
+      for (const day of recent) {
+        if (!day.date || ((day.profit ?? 0) === 0 && (day.lots ?? 0) === 0)) continue;
+        recentTrades.push({
+          direction: (day.profit ?? 0) >= 0 ? "BUY" : "SELL",
+          symbol: strip(r.config.asset ?? "XAUUSD"),
+          lots: Math.round((day.lots ?? 0) * 100) / 100,
+          pnl: Math.round((day.profit ?? 0) * 100) / 100,
+          time: day.date,
+          trader: r.config.codename,
+          traderColor: r.config.color,
+        });
       }
     }
 

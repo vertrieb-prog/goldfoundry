@@ -4,9 +4,30 @@ import { TRADER_CONFIG } from "@/lib/trader-config";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
-const CLIENT = "https://mt-client-api-v1.london.agiliumtrade.ai";
-const STATS = "https://metastats-api-v1.london.agiliumtrade.ai";
 const TOKEN = process.env.METAAPI_TOKEN ?? "";
+const META_PROV = "https://mt-provisioning-api-v1.agiliumtrade.agiliumtrade.ai";
+
+let regionCache: Record<string, string> = {};
+let regionCacheTs = 0;
+
+async function resolveRegions(): Promise<Record<string, string>> {
+  if (regionCacheTs && Date.now() - regionCacheTs < 300_000) return regionCache;
+  try {
+    const res = await fetch(`${META_PROV}/users/current/accounts`, {
+      headers: { "auth-token": TOKEN }, signal: AbortSignal.timeout(10000),
+    });
+    if (!res.ok) return regionCache;
+    const accounts = await res.json();
+    const map: Record<string, string> = {};
+    for (const a of accounts) map[a._id] = a.region || "london";
+    regionCache = map;
+    regionCacheTs = Date.now();
+    return map;
+  } catch { return regionCache; }
+}
+
+function clientBase(region: string) { return `https://mt-client-api-v1.${region}.agiliumtrade.ai`; }
+function statsBase(region: string) { return `https://metastats-api-v1.${region}.agiliumtrade.ai`; }
 
 const MFX_IDS: Record<string, string> = {
   "50707464": "11992338", "50701398": "11993800", "68297968": "11994589",
@@ -43,13 +64,17 @@ export async function GET(request: Request) {
     };
     const cutoff = new Date(Date.now() - (rangeMs[range] ?? 7 * 86400000));
 
-    // Fetch MetaApi data for all traders
+    // Resolve regions + fetch MetaApi data for all traders
+    const regions = await resolveRegions();
     const results = await Promise.all(
       TRADER_CONFIG.map(async (trader) => {
+        const region = regions[trader.metaApiId] || "london";
+        const cb = clientBase(region);
+        const sb = statsBase(region);
         const [info, positions, metrics] = await Promise.all([
-          metaFetch(`${CLIENT}/users/current/accounts/${trader.metaApiId}/account-information`),
-          metaFetch(`${CLIENT}/users/current/accounts/${trader.metaApiId}/positions`),
-          metaFetch(`${STATS}/users/current/accounts/${trader.metaApiId}/metrics`),
+          metaFetch(`${cb}/users/current/accounts/${trader.metaApiId}/account-information`),
+          metaFetch(`${cb}/users/current/accounts/${trader.metaApiId}/positions`),
+          metaFetch(`${sb}/users/current/accounts/${trader.metaApiId}/metrics`),
         ]);
         return { trader, info, positions: positions ?? [], metrics: metrics?.metrics ?? null };
       })
