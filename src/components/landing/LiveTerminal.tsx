@@ -21,7 +21,7 @@ function elapsed(iso: string): string {
 }
 
 export default function LiveTerminal() {
-  const [range, setRange] = useState<Range>("24h");
+  const [range, setRange] = useState<Range>("72h");
   const [data, setData] = useState<any>(null);
   const [stats, setStats] = useState<any>(null);
 
