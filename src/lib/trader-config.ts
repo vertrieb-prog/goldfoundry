@@ -65,6 +65,18 @@ export const TRADER_CONFIG: TraderConfig[] = [
     mtLogin: "50713387",
   },
   {
+    codename: "AEGIS",
+    asset: "XAUUSD",
+    assetLabel: "Gold",
+    color: "#e8785e",
+    perf: "0%",
+    wr: "0%",
+    maxDd: "0%",
+    since: "2026",
+    metaApiId: "fcff4919-51f9-42e5-af90-8179b0b41f31",
+    mtLogin: "50715676",
+  },
+  {
     codename: "TITAN",
     asset: "Multi",
     assetLabel: "Multi-Asset",
