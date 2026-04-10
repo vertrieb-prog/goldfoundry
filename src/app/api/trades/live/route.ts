@@ -109,63 +109,38 @@ export async function GET(request: Request) {
         });
       }
 
-      // MetaStats daily history
-      if (metrics?.dailyGrowth?.length > 0) {
-        tradersWithMetaStats.add(trader.mtLogin);
-        for (const day of metrics.dailyGrowth) {
-          if (!day.date) continue;
-          if (new Date(day.date) < cutoff) continue;
-          if ((day.profit ?? 0) === 0 && (day.lots ?? 0) === 0) continue;
-          closedDeals.push({
-            id: `ms-${trader.mtLogin}-${day.date.substring(0, 10)}`,
-            symbol: "XAUUSD", type: (day.profit ?? 0) >= 0 ? "BUY" : "SELL",
-            volume: Math.round((day.lots ?? 0) * 100) / 100,
-            profit: Math.round((day.profit ?? 0) * 100) / 100,
-            swap: 0, commission: 0, closeTime: day.date,
-            trader: trader.codename, traderColor: trader.color,
-            pips: Math.round((day.pips ?? 0) * 100) / 100,
-            trades: day.trades ?? 0, isDaily: true,
-          });
-        }
-      }
     }
 
-    // Supabase fallback for traders without MetaStats
-    const missingMfxIds = TRADER_CONFIG
-      .filter(t => !tradersWithMetaStats.has(t.mtLogin))
-      .map(t => MFX_IDS[t.mtLogin])
-      .filter(Boolean);
+    // History: Supabase als PRIMARY (einzelne Trades, nicht Tages-Aggregate)
+    const allMfxIds = TRADER_CONFIG.map(t => MFX_IDS[t.mtLogin]).filter(Boolean);
+    try {
+      const db = createSupabaseAdmin();
+      const { data: sbTrades } = await db
+        .from("trade_history")
+        .select("symbol,direction,profit,commission,swap,lots,close_time,myfxbook_account_id,pips")
+        .in("myfxbook_account_id", allMfxIds)
+        .eq("status", "closed")
+        .gte("close_time", cutoff.toISOString())
+        .order("close_time", { ascending: false })
+        .limit(200);
 
-    if (missingMfxIds.length > 0) {
-      try {
-        const db = createSupabaseAdmin();
-        const { data: sbTrades } = await db
-          .from("trade_history")
-          .select("symbol,direction,profit,commission,swap,lots,close_time,myfxbook_account_id,pips,raw_data")
-          .in("myfxbook_account_id", missingMfxIds)
-          .eq("status", "closed")
-          .gte("close_time", cutoff.toISOString())
-          .order("close_time", { ascending: false })
-          .limit(200);
-
-        for (const t of sbTrades ?? []) {
-          const traderInfo = TRADER_BY_MFX[t.myfxbook_account_id] ?? { name: "UNKNOWN", color: "#888" };
-          closedDeals.push({
-            id: `sb-${t.myfxbook_account_id}-${t.close_time}`,
-            symbol: strip(t.symbol ?? ""),
-            type: (t.direction ?? "").toUpperCase().includes("BUY") ? "BUY" : "SELL",
-            volume: t.lots ?? 0,
-            profit: Math.round((t.profit ?? 0) * 100) / 100,
-            swap: Math.round((t.swap ?? 0) * 100) / 100,
-            commission: Math.round((t.commission ?? 0) * 100) / 100,
-            closeTime: t.close_time,
-            trader: traderInfo.name, traderColor: traderInfo.color,
-            pips: t.pips ?? 0, trades: 1, isDaily: false,
-          });
-        }
-      } catch (err) {
-        console.warn("[trades/live] Supabase fallback failed:", err);
+      for (const t of sbTrades ?? []) {
+        const traderInfo = TRADER_BY_MFX[t.myfxbook_account_id] ?? { name: "UNKNOWN", color: "#888" };
+        closedDeals.push({
+          id: `sb-${t.myfxbook_account_id}-${t.close_time}`,
+          symbol: strip(t.symbol ?? ""),
+          type: (t.direction ?? "").toUpperCase().includes("BUY") ? "BUY" : "SELL",
+          volume: Math.round((t.lots ?? 0) * 100) / 100,
+          profit: Math.round((t.profit ?? 0) * 100) / 100,
+          swap: Math.round((t.swap ?? 0) * 100) / 100,
+          commission: Math.round((t.commission ?? 0) * 100) / 100,
+          closeTime: t.close_time,
+          trader: traderInfo.name, traderColor: traderInfo.color,
+          pips: Math.round((t.pips ?? 0) * 10) / 10, trades: 1, isDaily: false,
+        });
       }
+    } catch (err) {
+      console.warn("[trades/live] Supabase trades failed:", err);
     }
 
     openPositions.sort((a, b) => new Date(b.openTime).getTime() - new Date(a.openTime).getTime());
