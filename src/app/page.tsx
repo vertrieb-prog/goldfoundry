@@ -438,6 +438,7 @@ export default function HomePage() {
               daily: a.daily ?? 0, monthly: a.monthly ?? 0, drawdown: a.drawdown ?? 0,
               balance: a.balance ?? 0, equity: a.equity ?? 0, profit: a.profit ?? 0,
               pips: a.pips ?? 0, deposits: a.deposits ?? 0,
+              winrate: a.winrate ?? 0, trades: a.trades ?? 0,
             })),
             totalGain: stats?.gain ?? 0,
             totalBalance: stats?.balance ?? 0,
@@ -446,6 +447,7 @@ export default function HomePage() {
             totalDrawdown: stats?.maxDd ?? 0,
             totalDaily: 0,
             totalMonthly: 0,
+            dailyGains: (stats as any)?.dailyGains ?? [],
           } : undefined}
         />
       </div>

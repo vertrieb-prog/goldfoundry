@@ -404,8 +404,8 @@ function SystemsTable({ accounts, total, selectedName, onSelect }: {
   selectedName: string | null;
   onSelect: (name: string | null) => void;
 }) {
-  const cols = ["Name", "Gain", "72h", "Daily", "Monthly", "Drawdown", "Balance", "Equity", "Profit", "Pips"];
-  const colWidths = "2.2fr 1fr 1.2fr 0.8fr 1fr 1fr 1.3fr 1.3fr 1.2fr 1fr";
+  const cols = ["Name", "Gain", "Drawdown", "Winrate", "Trades", "Balance", "Equity", "Profit"];
+  const colWidths = "2.2fr 1fr 1fr 0.8fr 0.8fr 1.3fr 1.3fr 1.2fr";
   const headerStyle = { fontSize: 10, fontWeight: 600 as const, color: "#6d6045", textTransform: "uppercase" as const, letterSpacing: "0.06em", padding: "8px 8px" };
   const cellStyle = { fontSize: 12, fontFamily: MONO, padding: "8px 8px", fontWeight: 500 as const };
 
@@ -429,9 +429,6 @@ function SystemsTable({ accounts, total, selectedName, onSelect }: {
   };
 
   const renderRow = (a: MyfxAccount, isTotal: boolean, idx?: number) => {
-    const todayPnl = isTotal
-      ? accounts.reduce((s, acc) => s + get72hProfit(acc), 0)
-      : get72hProfit(a);
     return (
     <div
       key={a.name + (isTotal ? "-total" : "")}
@@ -446,15 +443,13 @@ function SystemsTable({ accounts, total, selectedName, onSelect }: {
       <div style={{ ...cellStyle, color: isTotal ? "#d4a537" : selectedName === a.name ? "#d4a537" : "#e0d4b8", fontWeight: isTotal ? 700 : 600 }}>
         {isTotal ? (selectedName ? "\u2190 Alle anzeigen" : "Total:") : a.name}
       </div>
-      <div style={{ ...cellStyle, color: "#22c55e" }}>+{a.gain.toFixed(2)}%</div>
-      <div style={{ ...cellStyle, color: numColor(todayPnl) }}>{todayPnl >= 0 ? "+" : ""}{fmtMoney(todayPnl)}</div>
-      <div style={{ ...cellStyle, color: numColor(a.daily) }}>{a.daily.toFixed(2)}%</div>
-      <div style={{ ...cellStyle, color: numColor(a.monthly) }}>{a.monthly.toFixed(2)}%</div>
-      <div style={{ ...cellStyle, color: "#ef4444" }}>{a.drawdown.toFixed(2)}%</div>
+      <div style={{ ...cellStyle, color: numColor(a.gain) }}>{a.gain >= 0 ? "+" : ""}{a.gain.toFixed(2)}%</div>
+      <div style={{ ...cellStyle, color: a.drawdown > 0 ? "#ef4444" : "#6d6045" }}>{a.drawdown > 0 ? a.drawdown.toFixed(2) + "%" : "\u2014"}</div>
+      <div style={{ ...cellStyle, color: (a as any).winrate >= 50 ? "#22c55e" : "#6d6045" }}>{(a as any).winrate ? (a as any).winrate + "%" : "\u2014"}</div>
+      <div style={{ ...cellStyle, color: "#e0d4b8" }}>{(a as any).trades || "\u2014"}</div>
       <div style={{ ...cellStyle, color: "#e0d4b8" }}>{fmtMoney(a.balance)}</div>
       <div style={{ ...cellStyle, color: "#e0d4b8" }}>{fmtMoney(a.equity)}</div>
-      <div style={{ ...cellStyle, color: numColor(a.profit) }}>{fmtMoney(a.profit)}</div>
-      <div style={{ ...cellStyle, color: "#e0d4b8" }}>{a.pips.toLocaleString("en-US")}</div>
+      <div style={{ ...cellStyle, color: numColor(a.profit) }}>{a.profit >= 0 ? "+" : ""}{fmtMoney(a.profit)}</div>
     </div>
     );
   };
@@ -487,7 +482,6 @@ function SystemsTable({ accounts, total, selectedName, onSelect }: {
 export default function PerformanceChart({ growthCurve, drawdownCurve, equityCurve, recentTrades, gain, maxDd, todayTrades, winrate, myfxbook }: Props) {
   const [tab, setTab] = useState<ChartTab>("growth");
   const [selectedAccount, setSelectedAccount] = useState<string | null>(null);
-  const [techOpen, setTechOpen] = useState(false);
 
   const mfx = myfxbook;
   const tabs: { id: ChartTab; label: string }[] = [
@@ -679,22 +673,6 @@ export default function PerformanceChart({ growthCurve, drawdownCurve, equityCur
         </div>
       )}
 
-      {/* Tech Accordion */}
-      <div onClick={() => setTechOpen(!techOpen)} style={{ background: "#0a0906", border: "1px solid rgba(212,165,55,0.08)", borderRadius: 10, padding: "12px 16px", cursor: "pointer", marginTop: 16 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ color: "#a1a1aa", fontSize: 13 }}>Wie funktioniert PHANTOM technisch?</span>
-          <span style={{ color: "#d4a537", fontSize: 16, transform: techOpen ? "rotate(45deg)" : "none", transition: "0.2s" }}>+</span>
-        </div>
-        {techOpen && (
-          <div style={{ marginTop: 12, color: "#6d6045", fontSize: 12, lineHeight: 1.8 }}>
-            <p><strong style={{ color: "#a1a1aa" }}>R-Multiple Trailing SL</strong> — Stop Loss wird als Vielfaches des initialen Risikos nachgezogen</p>
-            <p><strong style={{ color: "#a1a1aa" }}>ATR-basierter Trail</strong> — Chandelier Exit mit 14-Perioden Average True Range</p>
-            <p><strong style={{ color: "#a1a1aa" }}>4-Split Position Sizing</strong> — Jeder Trade wird in 4 gleiche Teile gesplittet (25/25/25/25%)</p>
-            <p><strong style={{ color: "#a1a1aa" }}>TP-Hit Floor System</strong> — Nach TP1 springt SL auf Breakeven, dann Profit-Lock</p>
-            <p><strong style={{ color: "#a1a1aa" }}>DD Shield</strong> — Max 5% Drawdown, Notfall-Close bei Momentum gegen Position</p>
-          </div>
-        )}
-      </div>
     </section>
   );
 }

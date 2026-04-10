@@ -118,6 +118,7 @@ export async function GET() {
     const accounts: any[] = [];
     const equityCurveMap: Record<string, number> = {};
     const recentTrades: any[] = [];
+    const dailyGains: any[] = [];
 
     for (const r of results) {
       const eq = r.info?.equity ?? 0;
@@ -202,6 +203,23 @@ export async function GET() {
         if (!d.date) continue;
         const day = d.date.substring(0, 10);
         equityCurveMap[day] = (equityCurveMap[day] ?? 0) + (d.balance ?? 0);
+      }
+
+      // Per-account dailyGains for individual charts
+      if (dg.length > 0) {
+        let cumGain = 0;
+        dailyGains.push({
+          accountName: r.config.codename,
+          dailyGain: dg.filter((d: any) => d.date).map((d: any) => {
+            cumGain += (d.profit ?? 0);
+            const startBal = (bal - profit) || bal;
+            return {
+              date: d.date,
+              value: startBal > 0 ? Math.round((cumGain / startBal) * 10000) / 100 : 0,
+              profit: Math.round((d.profit ?? 0) * 100) / 100,
+            };
+          }),
+        });
       }
 
       // recentTrades loaded from Supabase below (individual trades, not daily aggregates)
@@ -390,6 +408,7 @@ export async function GET() {
       growthCurve,
       drawdownCurve,
       recentTrades: recentTrades.slice(0, 8),
+      dailyGains,
       lastUpdated: new Date().toISOString(),
       accounts,
       source: "metaapi",
