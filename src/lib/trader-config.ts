@@ -29,18 +29,6 @@ export const TRADER_CONFIG: TraderConfig[] = [
     mtLogin: "50707464",
   },
   {
-    codename: "VIPER",
-    asset: "XAUUSD",
-    assetLabel: "Gold",
-    color: "#22c55e",
-    perf: "0%",
-    wr: "0%",
-    maxDd: "0%",
-    since: "2025",
-    metaApiId: "e4be2f32-6fb9-42fa-a5f4-aba2095bdbcd",
-    mtLogin: "50701398",
-  },
-  {
     codename: "APEX",
     asset: "XAUUSD",
     assetLabel: "Gold",
