@@ -124,6 +124,9 @@ export default function ChatWidget() {
   const pathname = usePathname();
   const prevPathRef = useRef(pathname);
 
+  // Hide on sentinel pages — PHANTOM has its own layout
+  if (pathname === "/sentinel" || pathname.startsWith("/sentinel/")) return null;
+
   // ── Page context greeting (runs on every page) ────────────────
   useEffect(() => {
     const ctx = getPageContext(pathname);

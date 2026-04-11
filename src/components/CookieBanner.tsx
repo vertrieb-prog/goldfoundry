@@ -1,9 +1,11 @@
 "use client";
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 
 export default function CookieBanner() {
   const [show, setShow] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     const accepted = localStorage.getItem("gf_cookies_accepted");
@@ -16,6 +18,9 @@ export default function CookieBanner() {
     localStorage.setItem("gf_cookies_accepted", "true");
     setShow(false);
   }
+
+  // Hide on sentinel pages — PHANTOM has its own layout
+  if (pathname === "/sentinel" || pathname.startsWith("/sentinel/")) return null;
 
   if (!show) return null;
 

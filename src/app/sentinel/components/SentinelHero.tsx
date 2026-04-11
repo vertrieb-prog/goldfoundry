@@ -213,9 +213,9 @@ export default function SentinelHero() {
             }}
           >
             {[
-              "41 AI Checks per Signal",
-              "13 Trading Strategies",
-              "24/7 Learning Active",
+              "5 Products",
+              "41 AI Checks",
+              "14-Day Free Trial",
             ].map((stat) => (
               <div
                 key={stat}
