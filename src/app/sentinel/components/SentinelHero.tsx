@@ -1,3 +1,5 @@
+'use client'
+
 export default function SentinelHero() {
   const terminalLines = [
     { text: "[PHANTOM] Signal detected", color: "#d4af37" },
