@@ -46,7 +46,7 @@ export default function SentinelEcosystem() {
         <div style={{ textAlign: "center", marginBottom: 56 }}>
           <div
             style={{
-              fontFamily: "var(--font-jetbrains), monospace",
+              fontFamily: "'JetBrains Mono', monospace",
               fontSize: 11,
               fontWeight: 600,
               letterSpacing: "2px",
@@ -59,7 +59,7 @@ export default function SentinelEcosystem() {
           </div>
           <h2
             style={{
-              fontFamily: "var(--font-fraunces), serif",
+              fontFamily: "'Inter', sans-serif",
               fontWeight: 900,
               fontSize: "clamp(28px, 4vw, 52px)",
               letterSpacing: "-0.02em",
@@ -72,7 +72,7 @@ export default function SentinelEcosystem() {
           </h2>
           <p
             style={{
-              fontFamily: "var(--font-inter), sans-serif",
+              fontFamily: "'Inter', sans-serif",
               fontSize: 16,
               color: "#888888",
               maxWidth: 620,
@@ -107,7 +107,7 @@ export default function SentinelEcosystem() {
                 display: "inline-flex",
                 alignItems: "center",
                 gap: 8,
-                fontFamily: "var(--font-jetbrains), monospace",
+                fontFamily: "'JetBrains Mono', monospace",
                 fontSize: 10,
                 fontWeight: 600,
                 letterSpacing: "2px",
@@ -136,7 +136,7 @@ export default function SentinelEcosystem() {
             </div>
             <p
               style={{
-                fontFamily: "var(--font-inter), sans-serif",
+                fontFamily: "'Inter', sans-serif",
                 fontSize: 13,
                 color: "#666666",
                 marginBottom: 24,
@@ -156,7 +156,7 @@ export default function SentinelEcosystem() {
                     gap: 10,
                     fontSize: 13,
                     color: "#f5f5f5",
-                    fontFamily: "var(--font-inter), sans-serif",
+                    fontFamily: "'Inter', sans-serif",
                   }}
                 >
                   <span
@@ -192,7 +192,7 @@ export default function SentinelEcosystem() {
             >
               <div
                 style={{
-                  fontFamily: "var(--font-jetbrains), monospace",
+                  fontFamily: "'JetBrains Mono', monospace",
                   fontSize: 9,
                   fontWeight: 600,
                   letterSpacing: "1.5px",
@@ -210,12 +210,12 @@ export default function SentinelEcosystem() {
                     style={{
                       display: "flex",
                       justifyContent: "space-between",
-                      fontFamily: "var(--font-inter), sans-serif",
+                      fontFamily: "'Inter', sans-serif",
                       fontSize: 13,
                     }}
                   >
                     <span style={{ color: "#f5f5f5" }}>{item.name}</span>
-                    <span style={{ color: "#44ff88", fontFamily: "var(--font-jetbrains), monospace", fontWeight: 600, fontSize: 13 }}>
+                    <span style={{ color: "#44ff88", fontFamily: "'JetBrains Mono', monospace", fontWeight: 600, fontSize: 13 }}>
                       {item.price}
                     </span>
                   </div>
@@ -238,7 +238,7 @@ export default function SentinelEcosystem() {
                 display: "inline-flex",
                 alignItems: "center",
                 gap: 8,
-                fontFamily: "var(--font-jetbrains), monospace",
+                fontFamily: "'JetBrains Mono', monospace",
                 fontSize: 10,
                 fontWeight: 600,
                 letterSpacing: "2px",
@@ -267,7 +267,7 @@ export default function SentinelEcosystem() {
             </div>
             <p
               style={{
-                fontFamily: "var(--font-inter), sans-serif",
+                fontFamily: "'Inter', sans-serif",
                 fontSize: 13,
                 color: "#666666",
                 marginBottom: 24,
@@ -287,7 +287,7 @@ export default function SentinelEcosystem() {
                     gap: 10,
                     fontSize: 13,
                     color: "#f5f5f5",
-                    fontFamily: "var(--font-inter), sans-serif",
+                    fontFamily: "'Inter', sans-serif",
                   }}
                 >
                   <span
@@ -323,7 +323,7 @@ export default function SentinelEcosystem() {
             >
               <div
                 style={{
-                  fontFamily: "var(--font-jetbrains), monospace",
+                  fontFamily: "'JetBrains Mono', monospace",
                   fontSize: 9,
                   fontWeight: 600,
                   letterSpacing: "1.5px",
@@ -341,12 +341,12 @@ export default function SentinelEcosystem() {
                     style={{
                       display: "flex",
                       justifyContent: "space-between",
-                      fontFamily: "var(--font-inter), sans-serif",
+                      fontFamily: "'Inter', sans-serif",
                       fontSize: 13,
                     }}
                   >
                     <span style={{ color: "#f5f5f5" }}>{item.name}</span>
-                    <span style={{ color: "#d4af37", fontFamily: "var(--font-jetbrains), monospace", fontWeight: 600, fontSize: 13 }}>
+                    <span style={{ color: "#d4af37", fontFamily: "'JetBrains Mono', monospace", fontWeight: 600, fontSize: 13 }}>
                       {item.price}
                     </span>
                   </div>
@@ -361,7 +361,7 @@ export default function SentinelEcosystem() {
           style={{
             textAlign: "center",
             marginTop: 48,
-            fontFamily: "var(--font-inter), sans-serif",
+            fontFamily: "'Inter', sans-serif",
             fontSize: 15,
             color: "#888888",
             lineHeight: 1.7,

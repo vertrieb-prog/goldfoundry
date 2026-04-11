@@ -24,7 +24,7 @@ export default function SentinelFooter() {
           {/* Logo */}
           <div
             style={{
-              fontFamily: "var(--font-fraunces), serif",
+              fontFamily: "'Inter', sans-serif",
               fontWeight: 900,
               fontSize: 22,
               color: "#f5f5f5",
@@ -42,7 +42,7 @@ export default function SentinelFooter() {
                 color: "#888888",
                 textDecoration: "none",
                 fontSize: 13,
-                fontFamily: "var(--font-jetbrains), monospace",
+                fontFamily: "'JetBrains Mono', monospace",
                 transition: "color 0.2s",
               }}
               onMouseEnter={(e) => ((e.target as HTMLElement).style.color = "#d4af37")}
@@ -56,7 +56,7 @@ export default function SentinelFooter() {
                 color: "#888888",
                 textDecoration: "none",
                 fontSize: 13,
-                fontFamily: "var(--font-jetbrains), monospace",
+                fontFamily: "'JetBrains Mono', monospace",
                 transition: "color 0.2s",
               }}
               onMouseEnter={(e) => ((e.target as HTMLElement).style.color = "#d4af37")}
@@ -70,7 +70,7 @@ export default function SentinelFooter() {
                 color: "#888888",
                 textDecoration: "none",
                 fontSize: 13,
-                fontFamily: "var(--font-jetbrains), monospace",
+                fontFamily: "'JetBrains Mono', monospace",
                 transition: "color 0.2s",
               }}
               onMouseEnter={(e) => ((e.target as HTMLElement).style.color = "#d4af37")}
@@ -95,7 +95,7 @@ export default function SentinelFooter() {
           style={{
             fontSize: 13,
             color: "#888888",
-            fontFamily: "var(--font-jetbrains), monospace",
+            fontFamily: "'JetBrains Mono', monospace",
             marginBottom: 16,
           }}
         >
@@ -109,7 +109,7 @@ export default function SentinelFooter() {
             color: "#444444",
             lineHeight: 1.7,
             maxWidth: 800,
-            fontFamily: "var(--font-inter), sans-serif",
+            fontFamily: "'Inter', sans-serif",
           }}
         >
           Risk Disclaimer: Trading foreign exchange, metals, and other financial instruments involves substantial risk of loss and is not suitable for all investors.

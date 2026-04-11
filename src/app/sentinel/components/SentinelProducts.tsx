@@ -186,7 +186,7 @@ function ProductCard({ product }: { product: typeof products[0] }) {
             display: "inline-flex",
             alignItems: "center",
             gap: 6,
-            fontFamily: "var(--font-jetbrains), monospace",
+            fontFamily: "'JetBrains Mono', monospace",
             fontSize: 10,
             fontWeight: 600,
             letterSpacing: "1.5px",
@@ -215,7 +215,7 @@ function ProductCard({ product }: { product: typeof products[0] }) {
             display: "inline-flex",
             alignItems: "center",
             gap: 6,
-            fontFamily: "var(--font-jetbrains), monospace",
+            fontFamily: "'JetBrains Mono', monospace",
             fontSize: 10,
             fontWeight: 600,
             letterSpacing: "1.5px",
@@ -245,7 +245,7 @@ function ProductCard({ product }: { product: typeof products[0] }) {
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 4 }}>
         <h3
           style={{
-            fontFamily: "var(--font-fraunces), serif",
+            fontFamily: "'Inter', sans-serif",
             fontWeight: 900,
             fontSize: 22,
             letterSpacing: "-0.02em",
@@ -258,7 +258,7 @@ function ProductCard({ product }: { product: typeof products[0] }) {
         <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
           <span
             style={{
-              fontFamily: "var(--font-fraunces), serif",
+              fontFamily: "'Inter', sans-serif",
               fontWeight: 900,
               fontSize: 28,
               color: "#f5f5f5",
@@ -269,7 +269,7 @@ function ProductCard({ product }: { product: typeof products[0] }) {
           </span>
           <span
             style={{
-              fontFamily: "var(--font-jetbrains), monospace",
+              fontFamily: "'JetBrains Mono', monospace",
               fontSize: 11,
               color: "#888888",
             }}
@@ -279,7 +279,7 @@ function ProductCard({ product }: { product: typeof products[0] }) {
           <span style={{ color: "#333333", fontSize: 14 }}>|</span>
           <span
             style={{
-              fontFamily: "var(--font-jetbrains), monospace",
+              fontFamily: "'JetBrains Mono', monospace",
               fontSize: 12,
               color: "#d4af37",
               fontWeight: 600,
@@ -289,7 +289,7 @@ function ProductCard({ product }: { product: typeof products[0] }) {
           </span>
           <span
             style={{
-              fontFamily: "var(--font-jetbrains), monospace",
+              fontFamily: "'JetBrains Mono', monospace",
               fontSize: 11,
               color: "#888888",
             }}
@@ -302,7 +302,7 @@ function ProductCard({ product }: { product: typeof products[0] }) {
       {/* Tagline */}
       <p
         style={{
-          fontFamily: "var(--font-inter), sans-serif",
+          fontFamily: "'Inter', sans-serif",
           fontSize: 15,
           fontStyle: "italic",
           color: "#d4af37",
@@ -316,7 +316,7 @@ function ProductCard({ product }: { product: typeof products[0] }) {
       {/* Description */}
       <p
         style={{
-          fontFamily: "var(--font-inter), sans-serif",
+          fontFamily: "'Inter', sans-serif",
           fontSize: 14,
           color: "#888888",
           lineHeight: 1.7,
@@ -329,7 +329,7 @@ function ProductCard({ product }: { product: typeof products[0] }) {
       {/* Who needs it */}
       <p
         style={{
-          fontFamily: "var(--font-jetbrains), monospace",
+          fontFamily: "'JetBrains Mono', monospace",
           fontSize: 11,
           color: "#666666",
           margin: "0 0 24px",
@@ -342,7 +342,7 @@ function ProductCard({ product }: { product: typeof products[0] }) {
       {/* What you get */}
       <div
         style={{
-          fontFamily: "var(--font-jetbrains), monospace",
+          fontFamily: "'JetBrains Mono', monospace",
           fontSize: 10,
           fontWeight: 600,
           letterSpacing: "1.5px",
@@ -372,7 +372,7 @@ function ProductCard({ product }: { product: typeof products[0] }) {
               gap: 10,
               fontSize: 13,
               color: "#f5f5f5",
-              fontFamily: "var(--font-inter), sans-serif",
+              fontFamily: "'Inter', sans-serif",
             }}
           >
             <span
@@ -400,7 +400,7 @@ function ProductCard({ product }: { product: typeof products[0] }) {
       {/* Good to know */}
       <div
         style={{
-          fontFamily: "var(--font-jetbrains), monospace",
+          fontFamily: "'JetBrains Mono', monospace",
           fontSize: 10,
           fontWeight: 600,
           letterSpacing: "1.5px",
@@ -430,7 +430,7 @@ function ProductCard({ product }: { product: typeof products[0] }) {
               gap: 10,
               fontSize: 12,
               color: "#888888",
-              fontFamily: "var(--font-inter), sans-serif",
+              fontFamily: "'Inter', sans-serif",
             }}
           >
             <span
@@ -461,7 +461,7 @@ function ProductCard({ product }: { product: typeof products[0] }) {
       >
         <div
           style={{
-            fontFamily: "var(--font-jetbrains), monospace",
+            fontFamily: "'JetBrains Mono', monospace",
             fontSize: 10,
             fontWeight: 600,
             letterSpacing: "1.5px",
@@ -491,7 +491,7 @@ function ProductCard({ product }: { product: typeof products[0] }) {
                 gap: 10,
                 fontSize: 12,
                 color: "#d4af37",
-                fontFamily: "var(--font-inter), sans-serif",
+                fontFamily: "'Inter', sans-serif",
               }}
             >
               <span
@@ -529,7 +529,7 @@ function ProductCard({ product }: { product: typeof products[0] }) {
           color: product.featured ? "#0a0a0a" : "#f5f5f5",
           fontWeight: 700,
           fontSize: 13,
-          fontFamily: "var(--font-jetbrains), monospace",
+          fontFamily: "'JetBrains Mono', monospace",
           borderRadius: 12,
           textDecoration: "none",
           textAlign: "center",
@@ -590,7 +590,7 @@ export default function SentinelProducts() {
         <div style={{ textAlign: "center", marginBottom: 64 }}>
           <div
             style={{
-              fontFamily: "var(--font-jetbrains), monospace",
+              fontFamily: "'JetBrains Mono', monospace",
               fontSize: 11,
               fontWeight: 600,
               letterSpacing: "2px",
@@ -603,7 +603,7 @@ export default function SentinelProducts() {
           </div>
           <h2
             style={{
-              fontFamily: "var(--font-fraunces), serif",
+              fontFamily: "'Inter', sans-serif",
               fontWeight: 900,
               fontSize: "clamp(32px, 4vw, 56px)",
               letterSpacing: "-0.02em",
@@ -615,7 +615,7 @@ export default function SentinelProducts() {
           </h2>
           <p
             style={{
-              fontFamily: "var(--font-inter), sans-serif",
+              fontFamily: "'Inter', sans-serif",
               fontSize: 16,
               color: "#888888",
               maxWidth: 640,

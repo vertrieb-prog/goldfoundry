@@ -75,7 +75,7 @@ export default function SentinelHero() {
               display: "inline-flex",
               alignItems: "center",
               gap: 8,
-              fontFamily: "var(--font-jetbrains), monospace",
+              fontFamily: "'JetBrains Mono', monospace",
               fontSize: 11,
               fontWeight: 600,
               letterSpacing: "2px",
@@ -100,7 +100,7 @@ export default function SentinelHero() {
           {/* H1 */}
           <h1
             style={{
-              fontFamily: "var(--font-fraunces), serif",
+              fontFamily: "'Inter', sans-serif",
               fontWeight: 900,
               fontSize: "clamp(36px, 5vw, 64px)",
               lineHeight: 1.05,
@@ -149,7 +149,7 @@ export default function SentinelHero() {
                 color: "#0a0a0a",
                 fontWeight: 700,
                 fontSize: 14,
-                fontFamily: "var(--font-jetbrains), monospace",
+                fontFamily: "'JetBrains Mono', monospace",
                 borderRadius: 12,
                 textDecoration: "none",
                 transition: "all 0.25s",
@@ -182,7 +182,7 @@ export default function SentinelHero() {
                 color: "#f5f5f5",
                 fontWeight: 600,
                 fontSize: 14,
-                fontFamily: "var(--font-jetbrains), monospace",
+                fontFamily: "'JetBrains Mono', monospace",
                 borderRadius: 12,
                 textDecoration: "none",
                 transition: "all 0.25s",
@@ -220,7 +220,7 @@ export default function SentinelHero() {
               <div
                 key={stat}
                 style={{
-                  fontFamily: "var(--font-jetbrains), monospace",
+                  fontFamily: "'JetBrains Mono', monospace",
                   fontSize: 11,
                   color: "#888888",
                   letterSpacing: "0.05em",
@@ -279,7 +279,7 @@ export default function SentinelHero() {
               <span
                 style={{
                   marginLeft: 8,
-                  fontFamily: "var(--font-jetbrains), monospace",
+                  fontFamily: "'JetBrains Mono', monospace",
                   fontSize: 11,
                   color: "#444444",
                 }}
@@ -294,7 +294,7 @@ export default function SentinelHero() {
                 <div
                   key={i}
                   style={{
-                    fontFamily: "var(--font-jetbrains), monospace",
+                    fontFamily: "'JetBrains Mono', monospace",
                     fontSize: 13,
                     lineHeight: 1.8,
                     color: line.color,

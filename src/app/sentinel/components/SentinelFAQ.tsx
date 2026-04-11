@@ -62,7 +62,7 @@ export default function SentinelFAQ() {
         <div style={{ textAlign: "center", marginBottom: 56 }}>
           <div
             style={{
-              fontFamily: "var(--font-jetbrains), monospace",
+              fontFamily: "'JetBrains Mono', monospace",
               fontSize: 11,
               fontWeight: 600,
               letterSpacing: "2px",
@@ -75,7 +75,7 @@ export default function SentinelFAQ() {
           </div>
           <h2
             style={{
-              fontFamily: "var(--font-fraunces), serif",
+              fontFamily: "'Inter', sans-serif",
               fontWeight: 900,
               fontSize: "clamp(28px, 3.5vw, 48px)",
               letterSpacing: "-0.02em",
@@ -119,7 +119,7 @@ export default function SentinelFAQ() {
                 >
                   <span
                     style={{
-                      fontFamily: "var(--font-fraunces), serif",
+                      fontFamily: "'Inter', sans-serif",
                       fontWeight: 600,
                       fontSize: 16,
                       color: isOpen ? "#f5f5f5" : "#f5f5f5",
@@ -143,7 +143,7 @@ export default function SentinelFAQ() {
                       fontWeight: 300,
                       transition: "all 0.2s",
                       transform: isOpen ? "rotate(45deg)" : "rotate(0deg)",
-                      fontFamily: "var(--font-inter), sans-serif",
+                      fontFamily: "'Inter', sans-serif",
                     }}
                   >
                     +
@@ -157,7 +157,7 @@ export default function SentinelFAQ() {
                       fontSize: 15,
                       color: "#888888",
                       lineHeight: 1.75,
-                      fontFamily: "var(--font-inter), sans-serif",
+                      fontFamily: "'Inter', sans-serif",
                     }}
                   >
                     {faq.a}

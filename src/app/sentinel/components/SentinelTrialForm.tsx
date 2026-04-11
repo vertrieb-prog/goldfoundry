@@ -73,7 +73,7 @@ export default function SentinelTrialForm() {
         {/* Eyebrow */}
         <div
           style={{
-            fontFamily: "var(--font-jetbrains), monospace",
+            fontFamily: "'JetBrains Mono', monospace",
             fontSize: 11,
             fontWeight: 600,
             letterSpacing: "2px",
@@ -88,7 +88,7 @@ export default function SentinelTrialForm() {
         {/* H2 */}
         <h2
           style={{
-            fontFamily: "var(--font-fraunces), serif",
+            fontFamily: "'Inter', sans-serif",
             fontWeight: 900,
             fontSize: "clamp(28px, 4vw, 52px)",
             letterSpacing: "-0.02em",
@@ -142,7 +142,7 @@ export default function SentinelTrialForm() {
               </div>
               <h3
                 style={{
-                  fontFamily: "var(--font-fraunces), serif",
+                  fontFamily: "'Inter', sans-serif",
                   fontWeight: 700,
                   fontSize: 22,
                   color: "#f5f5f5",
@@ -167,7 +167,7 @@ export default function SentinelTrialForm() {
                     border: "1px solid rgba(68,255,136,0.2)",
                     borderRadius: 10,
                     padding: "12px 16px",
-                    fontFamily: "var(--font-jetbrains), monospace",
+                    fontFamily: "'JetBrains Mono', monospace",
                     fontSize: 14,
                     color: "#44ff88",
                     letterSpacing: "0.1em",
@@ -185,7 +185,7 @@ export default function SentinelTrialForm() {
                   color: "#0a0a0a",
                   fontWeight: 700,
                   fontSize: 14,
-                  fontFamily: "var(--font-jetbrains), monospace",
+                  fontFamily: "'JetBrains Mono', monospace",
                   borderRadius: 12,
                   letterSpacing: "0.01em",
                 }}
@@ -210,7 +210,7 @@ export default function SentinelTrialForm() {
                     border: "1px solid #222222",
                     borderRadius: 12,
                     color: "#f5f5f5",
-                    fontFamily: "var(--font-inter), sans-serif",
+                    fontFamily: "'Inter', sans-serif",
                     fontSize: 15,
                     outline: "none",
                     transition: "border-color 0.2s",
@@ -233,7 +233,7 @@ export default function SentinelTrialForm() {
                     color: "#0a0a0a",
                     fontWeight: 700,
                     fontSize: 14,
-                    fontFamily: "var(--font-jetbrains), monospace",
+                    fontFamily: "'JetBrains Mono', monospace",
                     border: "none",
                     borderRadius: 12,
                     cursor: state === "loading" ? "not-allowed" : "pointer",
@@ -268,7 +268,7 @@ export default function SentinelTrialForm() {
                     background: "rgba(255,68,68,0.08)",
                     border: "1px solid rgba(255,68,68,0.2)",
                     borderRadius: 8,
-                    fontFamily: "var(--font-jetbrains), monospace",
+                    fontFamily: "'JetBrains Mono', monospace",
                     fontSize: 13,
                     color: "#ff4444",
                     display: "flex",
@@ -300,7 +300,7 @@ export default function SentinelTrialForm() {
               <div
                 style={{
                   marginTop: 16,
-                  fontFamily: "var(--font-jetbrains), monospace",
+                  fontFamily: "'JetBrains Mono', monospace",
                   fontSize: 11,
                   color: "#444444",
                   letterSpacing: "0.03em",

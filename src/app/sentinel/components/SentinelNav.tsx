@@ -60,7 +60,7 @@ export default function SentinelNav() {
         href="#hero"
         onClick={(e) => handleAnchorClick(e, "#hero")}
         style={{
-          fontFamily: "var(--font-fraunces), serif",
+          fontFamily: "'Inter', sans-serif",
           fontWeight: 900,
           fontSize: 16,
           color: "#f5f5f5",
@@ -84,7 +84,7 @@ export default function SentinelNav() {
             href={link.href}
             onClick={(e) => handleAnchorClick(e, link.href)}
             style={{
-              fontFamily: "var(--font-jetbrains), monospace",
+              fontFamily: "'JetBrains Mono', monospace",
               fontSize: 12,
               fontWeight: 400,
               color: "#888888",
@@ -120,7 +120,7 @@ export default function SentinelNav() {
           color: "#0a0a0a",
           fontWeight: 700,
           fontSize: 12,
-          fontFamily: "var(--font-jetbrains), monospace",
+          fontFamily: "'JetBrains Mono', monospace",
           borderRadius: 999,
           textDecoration: "none",
           transition: "all 0.2s",

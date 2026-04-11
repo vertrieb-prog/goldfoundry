@@ -32,7 +32,7 @@ export default function SentinelPricing() {
         <div style={{ textAlign: "center", marginBottom: 64 }}>
           <div
             style={{
-              fontFamily: "var(--font-jetbrains), monospace",
+              fontFamily: "'JetBrains Mono', monospace",
               fontSize: 11,
               fontWeight: 600,
               letterSpacing: "2px",
@@ -45,7 +45,7 @@ export default function SentinelPricing() {
           </div>
           <h2
             style={{
-              fontFamily: "var(--font-fraunces), serif",
+              fontFamily: "'Inter', sans-serif",
               fontWeight: 900,
               fontSize: "clamp(32px, 4vw, 56px)",
               letterSpacing: "-0.02em",
@@ -57,7 +57,7 @@ export default function SentinelPricing() {
           </h2>
           <p
             style={{
-              fontFamily: "var(--font-inter), sans-serif",
+              fontFamily: "'Inter', sans-serif",
               fontSize: 16,
               color: "#888888",
               maxWidth: 580,
@@ -124,7 +124,7 @@ export default function SentinelPricing() {
                       transform: "translateX(-50%)",
                       background: "#d4af37",
                       color: "#0a0a0a",
-                      fontFamily: "var(--font-jetbrains), monospace",
+                      fontFamily: "'JetBrains Mono', monospace",
                       fontSize: 9,
                       fontWeight: 700,
                       letterSpacing: "2px",
@@ -140,7 +140,7 @@ export default function SentinelPricing() {
                 {/* Plan name */}
                 <div
                   style={{
-                    fontFamily: "var(--font-fraunces), serif",
+                    fontFamily: "'Inter', sans-serif",
                     fontWeight: 900,
                     fontSize: 18,
                     color: "#f5f5f5",
@@ -154,7 +154,7 @@ export default function SentinelPricing() {
                 {/* Tagline */}
                 <div
                   style={{
-                    fontFamily: "var(--font-inter), sans-serif",
+                    fontFamily: "'Inter', sans-serif",
                     fontSize: 12,
                     color: "#666666",
                     marginBottom: 20,
@@ -175,7 +175,7 @@ export default function SentinelPricing() {
                 >
                   <div
                     style={{
-                      fontFamily: "var(--font-jetbrains), monospace",
+                      fontFamily: "'JetBrains Mono', monospace",
                       fontSize: 9,
                       fontWeight: 600,
                       letterSpacing: "1.5px",
@@ -189,7 +189,7 @@ export default function SentinelPricing() {
                   <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
                     <span
                       style={{
-                        fontFamily: "var(--font-fraunces), serif",
+                        fontFamily: "'Inter', sans-serif",
                         fontWeight: 900,
                         fontSize: 32,
                         color: "#f5f5f5",
@@ -200,7 +200,7 @@ export default function SentinelPricing() {
                     </span>
                     <span
                       style={{
-                        fontFamily: "var(--font-jetbrains), monospace",
+                        fontFamily: "'JetBrains Mono', monospace",
                         fontSize: 11,
                         color: "#888888",
                       }}
@@ -210,7 +210,7 @@ export default function SentinelPricing() {
                   </div>
                   <div
                     style={{
-                      fontFamily: "var(--font-inter), sans-serif",
+                      fontFamily: "'Inter', sans-serif",
                       fontSize: 11,
                       color: "#666666",
                       marginTop: 4,
@@ -232,7 +232,7 @@ export default function SentinelPricing() {
                 >
                   <div
                     style={{
-                      fontFamily: "var(--font-jetbrains), monospace",
+                      fontFamily: "'JetBrains Mono', monospace",
                       fontSize: 9,
                       fontWeight: 600,
                       letterSpacing: "1.5px",
@@ -246,7 +246,7 @@ export default function SentinelPricing() {
                   <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
                     <span
                       style={{
-                        fontFamily: "var(--font-fraunces), serif",
+                        fontFamily: "'Inter', sans-serif",
                         fontWeight: 900,
                         fontSize: 24,
                         color: "#d4af37",
@@ -258,7 +258,7 @@ export default function SentinelPricing() {
                   </div>
                   <div
                     style={{
-                      fontFamily: "var(--font-inter), sans-serif",
+                      fontFamily: "'Inter', sans-serif",
                       fontSize: 11,
                       color: "#666666",
                       marginTop: 4,
@@ -280,7 +280,7 @@ export default function SentinelPricing() {
                     color: isFeatured ? "#0a0a0a" : "#f5f5f5",
                     fontWeight: 700,
                     fontSize: 12,
-                    fontFamily: "var(--font-jetbrains), monospace",
+                    fontFamily: "'JetBrains Mono', monospace",
                     borderRadius: 10,
                     textDecoration: "none",
                     textAlign: "center",
@@ -337,7 +337,7 @@ export default function SentinelPricing() {
           <div>
             <div
               style={{
-                fontFamily: "var(--font-jetbrains), monospace",
+                fontFamily: "'JetBrains Mono', monospace",
                 fontSize: 10,
                 fontWeight: 600,
                 letterSpacing: "2px",
@@ -350,7 +350,7 @@ export default function SentinelPricing() {
             </div>
             <div
               style={{
-                fontFamily: "var(--font-fraunces), serif",
+                fontFamily: "'Inter', sans-serif",
                 fontWeight: 900,
                 fontSize: 24,
                 color: "#f5f5f5",
@@ -362,7 +362,7 @@ export default function SentinelPricing() {
             </div>
             <div
               style={{
-                fontFamily: "var(--font-inter), sans-serif",
+                fontFamily: "'Inter', sans-serif",
                 fontSize: 14,
                 color: "#888888",
               }}
@@ -374,7 +374,7 @@ export default function SentinelPricing() {
             <div style={{ display: "flex", alignItems: "baseline", gap: 8, justifyContent: "center" }}>
               <span
                 style={{
-                  fontFamily: "var(--font-fraunces), serif",
+                  fontFamily: "'Inter', sans-serif",
                   fontWeight: 900,
                   fontSize: 40,
                   color: "#d4af37",
@@ -385,7 +385,7 @@ export default function SentinelPricing() {
               </span>
               <span
                 style={{
-                  fontFamily: "var(--font-jetbrains), monospace",
+                  fontFamily: "'JetBrains Mono', monospace",
                   fontSize: 12,
                   color: "#888888",
                 }}
@@ -395,7 +395,7 @@ export default function SentinelPricing() {
               <span style={{ color: "#333333", fontSize: 16 }}>+</span>
               <span
                 style={{
-                  fontFamily: "var(--font-fraunces), serif",
+                  fontFamily: "'Inter', sans-serif",
                   fontWeight: 900,
                   fontSize: 28,
                   color: "#d4af37",
@@ -406,7 +406,7 @@ export default function SentinelPricing() {
               </span>
               <span
                 style={{
-                  fontFamily: "var(--font-jetbrains), monospace",
+                  fontFamily: "'JetBrains Mono', monospace",
                   fontSize: 12,
                   color: "#888888",
                 }}
@@ -416,7 +416,7 @@ export default function SentinelPricing() {
             </div>
             <div
               style={{
-                fontFamily: "var(--font-jetbrains), monospace",
+                fontFamily: "'JetBrains Mono', monospace",
                 fontSize: 11,
                 color: "#666666",
                 marginTop: 4,
@@ -432,7 +432,7 @@ export default function SentinelPricing() {
           style={{
             textAlign: "center",
             marginTop: 40,
-            fontFamily: "var(--font-jetbrains), monospace",
+            fontFamily: "'JetBrains Mono', monospace",
             fontSize: 12,
             color: "#444444",
             letterSpacing: "0.03em",

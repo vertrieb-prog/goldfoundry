@@ -61,7 +61,7 @@ export default function SentinelHowItWorks() {
         <div style={{ textAlign: "center", marginBottom: 72 }}>
           <div
             style={{
-              fontFamily: "var(--font-jetbrains), monospace",
+              fontFamily: "'JetBrains Mono', monospace",
               fontSize: 11,
               fontWeight: 600,
               letterSpacing: "2px",
@@ -74,7 +74,7 @@ export default function SentinelHowItWorks() {
           </div>
           <h2
             style={{
-              fontFamily: "var(--font-fraunces), serif",
+              fontFamily: "'Inter', sans-serif",
               fontWeight: 900,
               fontSize: "clamp(32px, 4vw, 56px)",
               letterSpacing: "-0.02em",
@@ -121,7 +121,7 @@ export default function SentinelHowItWorks() {
               {/* Step number */}
               <div
                 style={{
-                  fontFamily: "var(--font-fraunces), serif",
+                  fontFamily: "'Inter', sans-serif",
                   fontWeight: 900,
                   fontSize: 40,
                   color: "rgba(212,175,55,0.12)",
@@ -151,7 +151,7 @@ export default function SentinelHowItWorks() {
 
               <h3
                 style={{
-                  fontFamily: "var(--font-fraunces), serif",
+                  fontFamily: "'Inter', sans-serif",
                   fontWeight: 600,
                   fontSize: 18,
                   color: "#f5f5f5",
@@ -178,7 +178,7 @@ export default function SentinelHowItWorks() {
         <div style={{ textAlign: "center", marginBottom: 32 }}>
           <div
             style={{
-              fontFamily: "var(--font-jetbrains), monospace",
+              fontFamily: "'JetBrains Mono', monospace",
               fontSize: 11,
               color: "#444444",
               letterSpacing: "1px",
@@ -200,7 +200,7 @@ export default function SentinelHowItWorks() {
               <div
                 key={check}
                 style={{
-                  fontFamily: "var(--font-jetbrains), monospace",
+                  fontFamily: "'JetBrains Mono', monospace",
                   fontSize: 12,
                   color: check === "+ 26 More" ? "#d4af37" : "#888888",
                   background: check === "+ 26 More" ? "rgba(212,175,55,0.06)" : "#0a0a0a",
