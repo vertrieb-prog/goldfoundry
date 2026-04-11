@@ -9,7 +9,6 @@ export const metadata: Metadata = {
 
 const fraunces = Fraunces({
   subsets: ["latin"],
-  weight: ["400", "600", "900"],
   variable: "--font-fraunces",
   axes: ["opsz"],
   display: "swap",
@@ -31,29 +30,19 @@ const jetbrainsMono = JetBrains_Mono({
 
 export default function SentinelLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html
-      lang="en"
+    <div
       className={`${fraunces.variable} ${inter.variable} ${jetbrainsMono.variable}`}
+      style={{
+        fontFamily: "var(--font-inter), -apple-system, BlinkMacSystemFont, sans-serif",
+        background: "#0a0a0a",
+        color: "#f5f5f5",
+        minHeight: "100vh",
+        WebkitFontSmoothing: "antialiased",
+        lineHeight: "1.6",
+        scrollBehavior: "smooth",
+      }}
     >
-      <head>
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-        <meta name="theme-color" content="#d4af37" />
-      </head>
-      <body
-        style={{
-          fontFamily: "var(--font-inter), -apple-system, BlinkMacSystemFont, sans-serif",
-          background: "#0a0a0a",
-          color: "#f5f5f5",
-          margin: 0,
-          padding: 0,
-          WebkitFontSmoothing: "antialiased",
-          MozOsxFontSmoothing: "grayscale",
-          lineHeight: "1.6",
-          scrollBehavior: "smooth",
-        }}
-      >
-        {children}
-      </body>
-    </html>
+      {children}
+    </div>
   );
 }
