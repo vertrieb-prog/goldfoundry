@@ -362,22 +362,19 @@ function StatsPanel({ account, total }: { account: MyfxAccount | null; total: My
     pips: total.accounts.reduce((s, x) => s + x.pips, 0), name: "Portfolio",
   };
 
+  const wr = (a as any).winrate;
+  const trades = (a as any).trades;
   const sections = [
     [
       { label: "Gain", value: fmtPct(a.gain), color: numColor(a.gain) },
-      { label: "Abs. Gain", value: fmtPct(a.absGain), color: numColor(a.absGain) },
-      { label: "Daily", value: `${a.daily.toFixed(2)}%`, color: numColor(a.daily) },
-      { label: "Monthly", value: `${a.monthly.toFixed(2)}%`, color: numColor(a.monthly) },
-      { label: "Drawdown", value: `${a.drawdown.toFixed(2)}%`, color: "#ef4444" },
+      { label: "Drawdown", value: a.drawdown > 0 ? `${a.drawdown.toFixed(2)}%` : "\u2014", color: a.drawdown > 0 ? "#ef4444" : "#6d6045" },
+      { label: "Winrate", value: wr ? `${wr}%` : "\u2014", color: wr >= 50 ? "#22c55e" : "#6d6045" },
+      { label: "Trades", value: trades ? String(trades) : "\u2014", color: "#e0d4b8" },
     ],
     [
       { label: "Balance", value: fmtMoney(a.balance), color: "#e0d4b8" },
-      { label: "Equity", value: `(100.00%) ${fmtMoney(a.equity)}`, color: "#e0d4b8" },
-      { label: "Profit", value: fmtMoney(a.profit), color: numColor(a.profit) },
-    ],
-    [
-      { label: "Deposits", value: fmtMoney(a.deposits), color: "#e0d4b8" },
-      { label: "Withdrawals", value: "0,00€", color: "#e0d4b8" },
+      { label: "Equity", value: fmtMoney(a.equity), color: "#e0d4b8" },
+      { label: "Profit", value: `${a.profit >= 0 ? "+" : ""}${fmtMoney(a.profit)}`, color: numColor(a.profit) },
     ],
   ];
 
@@ -512,13 +509,39 @@ export default function PerformanceChart({ growthCurve, drawdownCurve, equityCur
     if (tab === "growth" && gainData?.dailyGain?.length) {
       return gainData.dailyGain.filter((d) => d.date).map((d) => ({ date: d.date, value: d.value }));
     }
-    if (tab === "balance" && balData?.dataDaily?.length) {
-      return balData.dataDaily.filter((d) => d.date).map((d) => ({ date: d.date, value: d.balance }));
+    if (tab === "balance") {
+      // Pro-Account Balance aus dailyGain berechnen
+      if (gainData?.dailyGain?.length) {
+        const acc = accName ? mfx?.accounts.find((a) => a.name === accName) : null;
+        const startBal = acc ? (acc.balance - acc.profit) || acc.balance : 10000;
+        let cumProfit = 0;
+        return gainData.dailyGain.filter((d) => d.date).map((d) => {
+          cumProfit += d.profit;
+          return { date: d.date, value: Math.round((startBal + cumProfit) * 100) / 100 };
+        });
+      }
+      if (balData?.dataDaily?.length) {
+        return balData.dataDaily.filter((d) => d.date).map((d) => ({ date: d.date, value: d.balance }));
+      }
     }
     if (tab === "profit" && gainData?.dailyGain?.length) {
-      return gainData.dailyGain.filter((d) => d.date).map((d) => ({ date: d.date, value: d.profit }));
+      // Kumulativer Profit in %
+      let cumProfit = 0;
+      const acc = accName ? mfx?.accounts.find((a) => a.name === accName) : null;
+      const startBal = acc ? (acc.balance - acc.profit) || acc.balance : 10000;
+      return gainData.dailyGain.filter((d) => d.date).map((d) => {
+        cumProfit += d.profit;
+        return { date: d.date, value: startBal > 0 ? Math.round((cumProfit / startBal) * 10000) / 100 : 0 };
+      });
     }
     if (tab === "drawdown") {
+      // Pro-Account DD wenn ausgewählt
+      if (accName && mfx?.dailyGains) {
+        const accDg = (mfx.dailyGains as any[]).find((d: any) => d.accountName === accName);
+        if (accDg?.drawdownCurve?.length) {
+          return accDg.drawdownCurve.map((d: any) => ({ date: d.date, value: -d.dd }));
+        }
+      }
       return drawdownCurve.map((d) => ({ date: d.date, value: -d.dd }));
     }
 
@@ -579,8 +602,7 @@ export default function PerformanceChart({ growthCurve, drawdownCurve, equityCur
 
   const priceFormatter = useMemo(() => {
     if (tab === "balance") return (v: number) => `${Math.round(v).toLocaleString("de-DE")}€`;
-    if (tab === "profit") return (v: number) => `${v >= 0 ? "+" : ""}${Math.round(v).toLocaleString("de-DE")}€`;
-    return (v: number) => `${v.toFixed(2)}%`;
+    return (v: number) => `${v >= 0 ? "+" : ""}${v.toFixed(2)}%`;
   }, [tab]);
 
   return (
