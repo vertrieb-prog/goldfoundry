@@ -18,7 +18,7 @@ export default function SentinelTrialForm() {
     setErrorMsg("");
 
     try {
-      const res = await fetch("https://api.goldfoundry.de/sentinel/trial/create", {
+      const res = await fetch("/api/sentinel/trial/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, product: "AIRBAG" }),
