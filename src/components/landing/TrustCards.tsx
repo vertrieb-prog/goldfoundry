@@ -12,9 +12,9 @@ interface TrustCardsProps {
 }
 
 function buildCards(p: TrustCardsProps) {
-  const eq = p.equity ? `${Math.round(p.equity).toLocaleString("de-DE")}€` : "49.000€+";
-  const dd = p.maxDd ? `${p.maxDd.toFixed(1)}%` : "6.7%";
-  const profit = p.totalProfit ? `${p.totalProfit >= 0 ? "+" : ""}${Math.round(p.totalProfit).toLocaleString("de-DE")}€` : "+8.600€";
+  const eq = p.equity && p.equity > 0 ? `${Math.round(p.equity).toLocaleString("de-DE")}€` : "—";
+  const dd = p.maxDd && p.maxDd > 0 ? `${p.maxDd.toFixed(1)}%` : "—";
+  const profit = p.totalProfit && p.totalProfit !== 0 ? `${p.totalProfit >= 0 ? "+" : ""}${Math.round(p.totalProfit).toLocaleString("de-DE")}€` : "—";
   return [
     {
       icon: "\u26E8",
