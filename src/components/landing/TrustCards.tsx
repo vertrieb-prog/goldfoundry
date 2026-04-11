@@ -20,7 +20,7 @@ function buildCards(p: TrustCardsProps) {
       icon: "\u26E8",
       title: "Risk Shield",
       items: [
-        `Max ${dd} Drawdown \u2014 automatisch gesteuert`,
+        "Automatisches Drawdown-Management mit Kill Switch",
         "Trailing Stop-Loss nach TP1 auf Breakeven",
         "Notfall-Close bei extremer Volatilität",
       ],
