@@ -10,7 +10,6 @@ export const metadata: Metadata = {
 const fraunces = Fraunces({
   subsets: ["latin"],
   variable: "--font-fraunces",
-  axes: ["opsz"],
   display: "swap",
 });
 
