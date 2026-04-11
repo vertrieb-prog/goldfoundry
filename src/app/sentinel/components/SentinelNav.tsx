@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from "react";
 
-const navLinks = [
+const navLinks: { label: string; href: string; external?: boolean }[] = [
   { label: "Products", href: "#products" },
   { label: "How it Works", href: "#how-it-works" },
   { label: "Pricing", href: "#pricing" },
   { label: "Trial", href: "#trial" },
   { label: "FAQ", href: "#faq" },
+  { label: "Compare", href: "/sentinel/compare", external: true },
+  { label: "Blog", href: "/sentinel/blog", external: true },
 ];
 
 export default function SentinelNav() {
@@ -82,7 +84,7 @@ export default function SentinelNav() {
           <a
             key={link.href}
             href={link.href}
-            onClick={(e) => handleAnchorClick(e, link.href)}
+            onClick={link.external ? undefined : (e) => handleAnchorClick(e, link.href)}
             style={{
               fontFamily: "'JetBrains Mono', monospace",
               fontSize: 12,
