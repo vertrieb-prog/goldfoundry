@@ -541,7 +541,29 @@ export default function PerformanceChart({ growthCurve, drawdownCurve, equityCur
     }
     const data = getSingleChartData();
     const color = tab === "drawdown" ? "#ef4444" : tab === "balance" ? "#d4a537" : "#22c55e";
-    return [{ name: selectedAccount || "Portfolio", color, data: data.map((d) => ({ time: d.date, value: d.value })) }];
+    const series: ChartSeries[] = [{ name: selectedAccount || "Portfolio", color, data: data.map((d) => ({ time: d.date, value: d.value })) }];
+
+    // Add DD overlay when viewing growth for a specific account
+    if (tab === "growth" && selectedAccount && mfx?.dailyGains) {
+      const accDg = (mfx.dailyGains as any[]).find((d: any) => d.accountName === selectedAccount);
+      if (accDg?.drawdownCurve?.length) {
+        series.push({
+          name: "Drawdown",
+          color: "#ef4444",
+          data: accDg.drawdownCurve.map((d: any) => ({ time: d.date, value: -d.dd })),
+        });
+      }
+    }
+    // Add DD overlay for portfolio view
+    if (tab === "growth" && !selectedAccount && drawdownCurve.length > 0) {
+      series.push({
+        name: "Drawdown",
+        color: "#ef4444",
+        data: drawdownCurve.map((d) => ({ time: d.date, value: -d.dd })),
+      });
+    }
+
+    return series;
   }, [mfx, selectedAccount, tab, growthCurve, equityCurve, drawdownCurve]);
 
   // Trade markers from recent trades

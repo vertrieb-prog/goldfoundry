@@ -205,20 +205,30 @@ export async function GET() {
         equityCurveMap[day] = (equityCurveMap[day] ?? 0) + (d.balance ?? 0);
       }
 
-      // Per-account dailyGains for individual charts
+      // Per-account dailyGains + drawdown for individual charts
       if (dg.length > 0) {
         let cumGain = 0;
+        let accPeak = 0;
+        const startBal = (bal - profit) || bal;
+        const gains: any[] = [];
+        const ddCurve: any[] = [];
+        for (const d of dg) {
+          if (!d.date) continue;
+          cumGain += (d.profit ?? 0);
+          const curBal = startBal + cumGain;
+          if (curBal > accPeak) accPeak = curBal;
+          const ddPct = accPeak > 0 ? Math.round(((accPeak - curBal) / accPeak) * 10000) / 100 : 0;
+          gains.push({
+            date: d.date,
+            value: startBal > 0 ? Math.round((cumGain / startBal) * 10000) / 100 : 0,
+            profit: Math.round((d.profit ?? 0) * 100) / 100,
+          });
+          ddCurve.push({ date: d.date, dd: ddPct });
+        }
         dailyGains.push({
           accountName: r.config.codename,
-          dailyGain: dg.filter((d: any) => d.date).map((d: any) => {
-            cumGain += (d.profit ?? 0);
-            const startBal = (bal - profit) || bal;
-            return {
-              date: d.date,
-              value: startBal > 0 ? Math.round((cumGain / startBal) * 10000) / 100 : 0,
-              profit: Math.round((d.profit ?? 0) * 100) / 100,
-            };
-          }),
+          dailyGain: gains,
+          drawdownCurve: ddCurve,
         });
       }
 
