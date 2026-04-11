@@ -1,28 +1,39 @@
 'use client'
 
-const standaloneProducts = [
+const products = [
   {
     name: "PHANTOM News Shield",
-    price: "$39",
-    period: " once",
+    basePrice: "$39",
+    aiPrice: "$19/mo",
     tagline: "Never get caught by news again",
     description:
       "Automatically closes or protects your trades before high-impact news events. Reads MT5's built-in economic calendar. Set it and forget it.",
     whoNeedsIt: "Every MT5 trader who has ever been burned by a news spike.",
     features: [
       "Auto-close before NFP, FOMC, CPI",
-      "Tighten SL or pause other EAs",
+      "SL tightening + EA pause during events",
       "High / Medium / Low impact filter",
       "Customizable buffer minutes",
       "Works with any broker",
     ],
-    badge: "Standalone — No Internet",
+    goodToKnow: [
+      "Only covers scheduled news events",
+      "Works best when calendar data is available",
+      "Simple but effective — no complex config",
+    ],
+    aiAdds: [
+      "Post-news analysis",
+      "Historical impact scoring",
+      "Smart re-entry timing",
+      "Weekly news report",
+    ],
+    badge: "base",
     cta: "Start Free Trial",
   },
   {
     name: "PHANTOM Trail Pro",
-    price: "$49",
-    period: " once",
+    basePrice: "$49",
+    aiPrice: "$19/mo",
     tagline: "The SL manager your EA should have built in",
     description:
       "Intelligent trailing stop that gives your trades room to breathe. Stepped ATR trailing, break even with buffer, partial profit taking.",
@@ -30,17 +41,28 @@ const standaloneProducts = [
     features: [
       "4-step ATR trailing (not continuous)",
       "Break Even with configurable buffer",
-      "Minimum SL distance protection",
       "Partial closes at profit targets",
+      "Minimum SL distance protection",
       "Cooldown between SL changes",
     ],
-    badge: "Standalone — No Internet",
+    goodToKnow: [
+      "Most effective in trending markets",
+      "Stepped trail moves in jumps, not continuously — by design",
+      "Less effective in ranging/choppy conditions",
+    ],
+    aiAdds: [
+      "Context-aware trailing (wider in breakouts)",
+      "Exhaustion detection",
+      "Optimal TP levels",
+      "Performance reports",
+    ],
+    badge: "base",
     cta: "Start Free Trial",
   },
   {
     name: "PHANTOM Guardian",
-    price: "$49",
-    period: " once",
+    basePrice: "$49",
+    aiPrice: "$29/mo",
     tagline: "Pass your prop firm challenge",
     description:
       "Enforces risk management rules automatically. One-click FTMO preset. Prevents you from blowing your account or failing your prop firm challenge.",
@@ -52,54 +74,84 @@ const standaloneProducts = [
       "One-click FTMO / MFF / E8 presets",
       "Max positions + equity shield",
     ],
-    badge: "Standalone — No Internet",
+    goodToKnow: [
+      "Guardian WILL close your trades when limits are hit — that is the point",
+      "Start with Easy Mode to learn the system",
+      "Saves your account from emotional decisions",
+    ],
+    aiAdds: [
+      "Pre-tilt detection (catches revenge trading before it happens)",
+      "Behavior analysis",
+      "Prop firm coaching",
+      "Weekly psychology report",
+    ],
+    badge: "base",
     cta: "Start Free Trial",
   },
-];
-
-const aiProducts = [
   {
     name: "PHANTOM Airbag",
-    price: "$99",
-    period: " once",
-    tagline: "Your EA's AI Safety Net",
+    basePrice: "$99",
+    aiPrice: "$29/mo",
+    tagline: "Your EA's AI safety net",
     description:
-      "Runs alongside ANY EA you already own. Intercepts every trade and validates it through 41 AI checks plus Haiku Brain. Bad trades get vetoed before they cost you money.",
+      "Runs alongside ANY EA you already own. Intercepts every trade and validates it through intelligent checks. Bad trades get vetoed before they cost you money.",
     whoNeedsIt: "Anyone running EAs (Quantum, Gold, any trading robot).",
     features: [
-      "41 AI checks in under 500ms",
-      "Haiku Brain explainable decisions",
+      "15+ local checks (spread, session, news, correlation)",
+      "Max positions + daily loss protection",
+      "Prop firm mode built in",
       "Works with ANY EA on MT5",
-      "Daily loss protection built in",
-      "Natural language config + FTMO ready",
+      "Fails safe — if connection drops, trades go through",
     ],
-    badge: "AI-Powered — Haiku Brain",
-    cta: "Start Free Trial",
+    goodToKnow: [
+      "Needs internet for AI checks (~500ms per trade)",
+      "Fails safe — if connection drops, trades still execute",
+      "Works with any EA, no source code access needed",
+    ],
+    aiAdds: [
+      "Full 41-check pipeline with AI validation",
+      "SMC deep analysis",
+      "Explainable decisions in plain English",
+      "Natural language config + community learning",
+    ],
+    badge: "ai",
     featured: true,
+    cta: "Start Free Trial",
   },
   {
     name: "PHANTOM Trader DSS",
-    price: "$199",
-    period: " once",
+    basePrice: "$199",
+    aiPrice: "$49/mo",
     tagline: "The AI that trades for you",
     description:
-      "Complete standalone AI trader. 13 strategies plus Haiku Brain. Generates its own signals, manages positions, learns from 100,000+ real trades. Auto, Semi-Auto, or Manual mode.",
+      "Complete standalone AI trader. Generates its own signals, manages positions, learns from 100,000+ real trades. Auto, Semi-Auto, or Manual mode.",
     whoNeedsIt: "Serious traders who want AI-powered autonomous trading.",
     features: [
-      "13 strategies + multi-symbol support",
+      "5 local strategies (breakout, trend, scalp, range, mean reversion)",
+      "ATR-based entries + position management",
       "Auto / Semi-Auto / Manual modes",
-      "Kelly Criterion position sizing",
       "Integrated SL / DCA / trail management",
       "FTMO compatible + lifetime updates",
     ],
-    badge: "AI-Powered — Haiku Brain",
-    cta: "Start Free Trial",
+    goodToKnow: [
+      "Needs internet for AI signals",
+      "Best results with $2,000+ accounts",
+      "Start in Manual Mode for the first week",
+    ],
+    aiAdds: [
+      "Full 13-strategy engine with AI decision making",
+      "Live learning from 100K+ trades",
+      "Kelly Criterion sizing + Monte Carlo simulation",
+      "Daily performance reports",
+    ],
+    badge: "ai",
     featured: false,
+    cta: "Start Free Trial",
   },
 ];
 
-function ProductCard({ product, wide = false }: { product: typeof standaloneProducts[0] & { featured?: boolean }; wide?: boolean }) {
-  const isAI = product.badge.includes("AI-Powered");
+function ProductCard({ product }: { product: typeof products[0] }) {
+  const isAI = product.badge === "ai";
 
   return (
     <div
@@ -107,7 +159,7 @@ function ProductCard({ product, wide = false }: { product: typeof standaloneProd
         background: "#111111",
         border: `1px solid ${isAI ? "rgba(212,175,55,0.25)" : "#222222"}`,
         borderRadius: 20,
-        padding: wide ? "40px 36px" : "36px 28px",
+        padding: "36px 28px",
         position: "relative",
         transition: "border-color 0.3s, transform 0.3s, box-shadow 0.3s",
         boxShadow: isAI ? "0 0 60px rgba(212,175,55,0.04)" : "none",
@@ -127,37 +179,66 @@ function ProductCard({ product, wide = false }: { product: typeof standaloneProd
         el.style.boxShadow = isAI ? "0 0 60px rgba(212,175,55,0.04)" : "none";
       }}
     >
-      {/* Badge */}
-      <div
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          alignSelf: "flex-start",
-          gap: 6,
-          fontFamily: "var(--font-jetbrains), monospace",
-          fontSize: 10,
-          fontWeight: 600,
-          letterSpacing: "1.5px",
-          textTransform: "uppercase",
-          color: isAI ? "#d4af37" : "#44ff88",
-          background: isAI ? "rgba(212,175,55,0.08)" : "rgba(68,255,136,0.06)",
-          border: `1px solid ${isAI ? "rgba(212,175,55,0.15)" : "rgba(68,255,136,0.15)"}`,
-          borderRadius: 6,
-          padding: "4px 10px",
-          marginBottom: 20,
-        }}
-      >
-        <span
+      {/* Badge row: type + upgrade indicator */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
+        <div
           style={{
-            width: 5,
-            height: 5,
-            borderRadius: "50%",
-            background: isAI ? "#d4af37" : "#44ff88",
-            display: "inline-block",
-            flexShrink: 0,
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            fontFamily: "var(--font-jetbrains), monospace",
+            fontSize: 10,
+            fontWeight: 600,
+            letterSpacing: "1.5px",
+            textTransform: "uppercase",
+            color: "#44ff88",
+            background: "rgba(68,255,136,0.06)",
+            border: "1px solid rgba(68,255,136,0.15)",
+            borderRadius: 6,
+            padding: "4px 10px",
           }}
-        />
-        {product.badge}
+        >
+          <span
+            style={{
+              width: 5,
+              height: 5,
+              borderRadius: "50%",
+              background: "#44ff88",
+              display: "inline-block",
+              flexShrink: 0,
+            }}
+          />
+          Base — One-Time
+        </div>
+        <div
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            fontFamily: "var(--font-jetbrains), monospace",
+            fontSize: 10,
+            fontWeight: 600,
+            letterSpacing: "1.5px",
+            textTransform: "uppercase",
+            color: "#d4af37",
+            background: "rgba(212,175,55,0.06)",
+            border: "1px solid rgba(212,175,55,0.15)",
+            borderRadius: 6,
+            padding: "4px 10px",
+          }}
+        >
+          <span
+            style={{
+              width: 5,
+              height: 5,
+              borderRadius: "50%",
+              background: "#d4af37",
+              display: "inline-block",
+              flexShrink: 0,
+            }}
+          />
+          + AI Upgrade
+        </div>
       </div>
 
       {/* Name + Price row */}
@@ -166,7 +247,7 @@ function ProductCard({ product, wide = false }: { product: typeof standaloneProd
           style={{
             fontFamily: "var(--font-fraunces), serif",
             fontWeight: 900,
-            fontSize: wide ? 26 : 22,
+            fontSize: 22,
             letterSpacing: "-0.02em",
             color: "#f5f5f5",
             margin: 0,
@@ -174,26 +255,46 @@ function ProductCard({ product, wide = false }: { product: typeof standaloneProd
         >
           {product.name}
         </h3>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 3 }}>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
           <span
             style={{
               fontFamily: "var(--font-fraunces), serif",
               fontWeight: 900,
-              fontSize: wide ? 36 : 32,
+              fontSize: 28,
               color: "#f5f5f5",
               letterSpacing: "-0.03em",
             }}
           >
-            {product.price}
+            {product.basePrice}
           </span>
           <span
             style={{
               fontFamily: "var(--font-jetbrains), monospace",
-              fontSize: 12,
+              fontSize: 11,
               color: "#888888",
             }}
           >
-            {product.period}
+            base
+          </span>
+          <span style={{ color: "#333333", fontSize: 14 }}>|</span>
+          <span
+            style={{
+              fontFamily: "var(--font-jetbrains), monospace",
+              fontSize: 12,
+              color: "#d4af37",
+              fontWeight: 600,
+            }}
+          >
+            +{product.aiPrice}
+          </span>
+          <span
+            style={{
+              fontFamily: "var(--font-jetbrains), monospace",
+              fontSize: 11,
+              color: "#888888",
+            }}
+          >
+            AI
           </span>
         </div>
       </div>
@@ -238,16 +339,28 @@ function ProductCard({ product, wide = false }: { product: typeof standaloneProd
         {"// " + product.whoNeedsIt}
       </p>
 
-      {/* Feature list */}
+      {/* What you get */}
+      <div
+        style={{
+          fontFamily: "var(--font-jetbrains), monospace",
+          fontSize: 10,
+          fontWeight: 600,
+          letterSpacing: "1.5px",
+          textTransform: "uppercase",
+          color: "#44ff88",
+          marginBottom: 10,
+        }}
+      >
+        What You Get
+      </div>
       <ul
         style={{
           listStyle: "none",
           padding: 0,
-          margin: "0 0 28px",
+          margin: "0 0 20px",
           display: "flex",
           flexDirection: "column",
-          gap: 9,
-          flex: 1,
+          gap: 7,
         }}
       >
         {product.features.map((feature) => (
@@ -267,14 +380,14 @@ function ProductCard({ product, wide = false }: { product: typeof standaloneProd
                 width: 15,
                 height: 15,
                 borderRadius: "50%",
-                background: isAI ? "rgba(212,175,55,0.08)" : "rgba(68,255,136,0.08)",
-                border: `1px solid ${isAI ? "rgba(212,175,55,0.25)" : "rgba(68,255,136,0.25)"}`,
+                background: "rgba(68,255,136,0.08)",
+                border: "1px solid rgba(68,255,136,0.25)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 flexShrink: 0,
                 fontSize: 8,
-                color: isAI ? "#d4af37" : "#44ff88",
+                color: "#44ff88",
               }}
             >
               ✓
@@ -284,6 +397,126 @@ function ProductCard({ product, wide = false }: { product: typeof standaloneProd
         ))}
       </ul>
 
+      {/* Good to know */}
+      <div
+        style={{
+          fontFamily: "var(--font-jetbrains), monospace",
+          fontSize: 10,
+          fontWeight: 600,
+          letterSpacing: "1.5px",
+          textTransform: "uppercase",
+          color: "#888888",
+          marginBottom: 10,
+        }}
+      >
+        Good to Know
+      </div>
+      <ul
+        style={{
+          listStyle: "none",
+          padding: 0,
+          margin: "0 0 20px",
+          display: "flex",
+          flexDirection: "column",
+          gap: 7,
+        }}
+      >
+        {product.goodToKnow.map((item) => (
+          <li
+            key={item}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              fontSize: 12,
+              color: "#888888",
+              fontFamily: "var(--font-inter), sans-serif",
+            }}
+          >
+            <span
+              style={{
+                fontSize: 10,
+                color: "#888888",
+                flexShrink: 0,
+                width: 15,
+                textAlign: "center",
+              }}
+            >
+              →
+            </span>
+            {item}
+          </li>
+        ))}
+      </ul>
+
+      {/* AI Upgrade adds */}
+      <div
+        style={{
+          background: "rgba(212,175,55,0.04)",
+          border: "1px solid rgba(212,175,55,0.12)",
+          borderRadius: 10,
+          padding: "14px 16px",
+          marginBottom: 24,
+        }}
+      >
+        <div
+          style={{
+            fontFamily: "var(--font-jetbrains), monospace",
+            fontSize: 10,
+            fontWeight: 600,
+            letterSpacing: "1.5px",
+            textTransform: "uppercase",
+            color: "#d4af37",
+            marginBottom: 10,
+          }}
+        >
+          AI Upgrade Adds ({product.aiPrice})
+        </div>
+        <ul
+          style={{
+            listStyle: "none",
+            padding: 0,
+            margin: 0,
+            display: "flex",
+            flexDirection: "column",
+            gap: 6,
+          }}
+        >
+          {product.aiAdds.map((item) => (
+            <li
+              key={item}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                fontSize: 12,
+                color: "#d4af37",
+                fontFamily: "var(--font-inter), sans-serif",
+              }}
+            >
+              <span
+                style={{
+                  width: 13,
+                  height: 13,
+                  borderRadius: "50%",
+                  background: "rgba(212,175,55,0.08)",
+                  border: "1px solid rgba(212,175,55,0.25)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                  fontSize: 7,
+                  color: "#d4af37",
+                }}
+              >
+                ✓
+              </span>
+              {item}
+            </li>
+          ))}
+        </ul>
+      </div>
+
       {/* CTA */}
       <a
         href="#trial"
@@ -291,9 +524,9 @@ function ProductCard({ product, wide = false }: { product: typeof standaloneProd
           display: "block",
           width: "100%",
           padding: "13px 0",
-          background: isAI ? "#d4af37" : "transparent",
-          border: isAI ? "none" : "1px solid rgba(255,255,255,0.12)",
-          color: isAI ? "#0a0a0a" : "#f5f5f5",
+          background: product.featured ? "#d4af37" : "transparent",
+          border: product.featured ? "none" : "1px solid rgba(255,255,255,0.12)",
+          color: product.featured ? "#0a0a0a" : "#f5f5f5",
           fontWeight: 700,
           fontSize: 13,
           fontFamily: "var(--font-jetbrains), monospace",
@@ -307,7 +540,7 @@ function ProductCard({ product, wide = false }: { product: typeof standaloneProd
         }}
         onMouseEnter={(e) => {
           const el = e.currentTarget as HTMLElement;
-          if (isAI) {
+          if (product.featured) {
             el.style.background = "#f4cf47";
             el.style.boxShadow = "0 8px 30px rgba(212,175,55,0.3)";
           } else {
@@ -319,9 +552,9 @@ function ProductCard({ product, wide = false }: { product: typeof standaloneProd
         }}
         onMouseLeave={(e) => {
           const el = e.currentTarget as HTMLElement;
-          el.style.background = isAI ? "#d4af37" : "transparent";
-          el.style.borderColor = isAI ? "none" : "rgba(255,255,255,0.12)";
-          el.style.color = isAI ? "#0a0a0a" : "#f5f5f5";
+          el.style.background = product.featured ? "#d4af37" : "transparent";
+          el.style.borderColor = product.featured ? "none" : "rgba(255,255,255,0.12)";
+          el.style.color = product.featured ? "#0a0a0a" : "#f5f5f5";
           el.style.boxShadow = "none";
           el.style.transform = "translateY(0)";
         }}
@@ -366,7 +599,7 @@ export default function SentinelProducts() {
               marginBottom: 16,
             }}
           >
-            5 Products · One Ecosystem
+            One Suite · Everything You Need
           </div>
           <h2
             style={{
@@ -378,94 +611,62 @@ export default function SentinelProducts() {
               margin: "0 0 16px",
             }}
           >
-            Choose your weapon.
+            Each tool is powerful alone.<br />Together, unstoppable.
           </h2>
           <p
             style={{
               fontFamily: "var(--font-inter), sans-serif",
               fontSize: 16,
               color: "#888888",
-              maxWidth: 600,
+              maxWidth: 640,
               margin: "0 auto",
               lineHeight: 1.7,
             }}
           >
-            From a $39 news filter to a $199 autonomous AI trader. Start with what you need, add more as you grow.
+            Every product starts with a one-time base version that works offline. Add the AI upgrade when you are ready for intelligent analysis, learning, and reports.
           </p>
         </div>
 
-        {/* Standalone Tools — 3 cards */}
-        <div style={{ marginBottom: 16 }}>
-          <div
-            style={{
-              fontFamily: "var(--font-jetbrains), monospace",
-              fontSize: 11,
-              fontWeight: 600,
-              letterSpacing: "2px",
-              textTransform: "uppercase",
-              color: "#44ff88",
-              marginBottom: 20,
-              paddingLeft: 4,
-            }}
-          >
-            Standalone Tools — No Internet Required
-          </div>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr 1fr",
-              gap: 20,
-            }}
-            className="sentinel-products-standalone"
-          >
-            {standaloneProducts.map((product) => (
-              <ProductCard key={product.name} product={product} />
-            ))}
-          </div>
+        {/* All 5 products in responsive grid */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr 1fr",
+            gap: 20,
+          }}
+          className="sentinel-products-grid"
+        >
+          {products.slice(0, 3).map((product) => (
+            <ProductCard key={product.name} product={product} />
+          ))}
         </div>
 
         {/* Spacer */}
-        <div style={{ height: 40 }} />
+        <div style={{ height: 20 }} />
 
-        {/* AI-Powered — 2 wider cards */}
-        <div>
-          <div
-            style={{
-              fontFamily: "var(--font-jetbrains), monospace",
-              fontSize: 11,
-              fontWeight: 600,
-              letterSpacing: "2px",
-              textTransform: "uppercase",
-              color: "#d4af37",
-              marginBottom: 20,
-              paddingLeft: 4,
-            }}
-          >
-            AI-Powered — Haiku Brain Inside
-          </div>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: 20,
-            }}
-            className="sentinel-products-ai"
-          >
-            {aiProducts.map((product) => (
-              <ProductCard key={product.name} product={product} wide />
-            ))}
-          </div>
+        {/* AI-heavy products — 2 wider cards */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: 20,
+          }}
+          className="sentinel-products-ai"
+        >
+          {products.slice(3).map((product) => (
+            <ProductCard key={product.name} product={product} />
+          ))}
         </div>
       </div>
 
       <style>{`
         @media (max-width: 1000px) {
-          .sentinel-products-standalone {
+          .sentinel-products-grid {
             grid-template-columns: 1fr 1fr !important;
           }
         }
         @media (max-width: 700px) {
-          .sentinel-products-standalone {
+          .sentinel-products-grid {
             grid-template-columns: 1fr !important;
           }
           .sentinel-products-ai {

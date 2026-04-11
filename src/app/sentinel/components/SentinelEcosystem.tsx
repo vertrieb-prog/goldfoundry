@@ -1,14 +1,35 @@
 'use client'
 
-const standaloneItems = [
-  { name: "News Shield", desc: "Closes trades before news events" },
-  { name: "Trail Pro", desc: "Intelligent ATR trailing stop" },
-  { name: "Guardian", desc: "Prop firm risk enforcement" },
+const baseFeatures = [
+  "One-time purchase — yours forever",
+  "Works offline, no internet needed",
+  "Rule-based protection, proven strategies",
+  "Install on MT5, configure once, done",
+  "All core features included",
 ];
 
-const aiItems = [
-  { name: "Airbag", desc: "AI filter for any EA" },
-  { name: "Trader DSS", desc: "Autonomous AI trader" },
+const aiFeatures = [
+  "Monthly subscription, cancel anytime",
+  "Intelligent context analysis",
+  "Explainable decisions in plain English",
+  "Learning from 100,000+ real trades",
+  "Natural language configuration",
+];
+
+const basePrices = [
+  { name: "News Shield", price: "$39" },
+  { name: "Trail Pro", price: "$49" },
+  { name: "Guardian", price: "$49" },
+  { name: "Airbag", price: "$99" },
+  { name: "Trader DSS", price: "$199" },
+];
+
+const aiPrices = [
+  { name: "News Shield AI", price: "$19/mo" },
+  { name: "Trail Pro AI", price: "$19/mo" },
+  { name: "Guardian AI", price: "$29/mo" },
+  { name: "Airbag AI", price: "$29/mo" },
+  { name: "Trader DSS AI", price: "$49/mo" },
 ];
 
 export default function SentinelEcosystem() {
@@ -34,7 +55,7 @@ export default function SentinelEcosystem() {
               marginBottom: 16,
             }}
           >
-            Modular by Design
+            The 2-Step Model
           </div>
           <h2
             style={{
@@ -47,7 +68,7 @@ export default function SentinelEcosystem() {
               lineHeight: 1.1,
             }}
           >
-            All tools. One ecosystem.
+            Start with the base.<br />Upgrade to AI when you are ready.
           </h2>
           <p
             style={{
@@ -59,7 +80,7 @@ export default function SentinelEcosystem() {
               lineHeight: 1.7,
             }}
           >
-            Start with any single product and add more as you need them. Every PHANTOM tool runs independently on your MT5 terminal. The AI products share the same brain. The standalone tools need nothing but your chart.
+            Every PHANTOM product follows the same model. Buy the base once — it works standalone, offline, forever. When you want AI power, add the monthly upgrade. No lock-in. Cancel anytime.
           </p>
         </div>
 
@@ -72,7 +93,7 @@ export default function SentinelEcosystem() {
           }}
           className="sentinel-ecosystem-grid"
         >
-          {/* Standalone column */}
+          {/* Step 1: Buy the Base */}
           <div
             style={{
               background: "#0a0a0a",
@@ -83,6 +104,9 @@ export default function SentinelEcosystem() {
           >
             <div
               style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
                 fontFamily: "var(--font-jetbrains), monospace",
                 fontSize: 10,
                 fontWeight: 600,
@@ -92,7 +116,23 @@ export default function SentinelEcosystem() {
                 marginBottom: 8,
               }}
             >
-              Standalone Tools
+              <span
+                style={{
+                  width: 22,
+                  height: 22,
+                  borderRadius: "50%",
+                  background: "rgba(68,255,136,0.1)",
+                  border: "1px solid rgba(68,255,136,0.3)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 11,
+                  fontWeight: 700,
+                }}
+              >
+                1
+              </span>
+              Step 1: Buy the Base
             </div>
             <p
               style={{
@@ -103,61 +143,88 @@ export default function SentinelEcosystem() {
                 lineHeight: 1.6,
               }}
             >
-              No internet. No API. No dependencies. Install on MT5, configure once, done.
+              One-time payment. Works offline. No internet, no API, no dependencies. Install on MT5, configure once, done.
             </p>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {standaloneItems.map((item) => (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
+              {baseFeatures.map((item) => (
                 <div
-                  key={item.name}
+                  key={item}
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    gap: 12,
-                    padding: "12px 14px",
-                    background: "rgba(68,255,136,0.03)",
-                    border: "1px solid rgba(68,255,136,0.08)",
-                    borderRadius: 10,
+                    gap: 10,
+                    fontSize: 13,
+                    color: "#f5f5f5",
+                    fontFamily: "var(--font-inter), sans-serif",
                   }}
                 >
                   <span
                     style={{
-                      width: 8,
-                      height: 8,
+                      width: 15,
+                      height: 15,
                       borderRadius: "50%",
-                      background: "#44ff88",
+                      background: "rgba(68,255,136,0.08)",
+                      border: "1px solid rgba(68,255,136,0.25)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
                       flexShrink: 0,
-                      boxShadow: "0 0 6px rgba(68,255,136,0.4)",
+                      fontSize: 8,
+                      color: "#44ff88",
                     }}
-                  />
-                  <div>
-                    <div
-                      style={{
-                        fontFamily: "var(--font-fraunces), serif",
-                        fontWeight: 700,
-                        fontSize: 14,
-                        color: "#f5f5f5",
-                        marginBottom: 2,
-                      }}
-                    >
-                      {item.name}
-                    </div>
-                    <div
-                      style={{
-                        fontFamily: "var(--font-inter), sans-serif",
-                        fontSize: 12,
-                        color: "#666666",
-                      }}
-                    >
-                      {item.desc}
-                    </div>
-                  </div>
+                  >
+                    ✓
+                  </span>
+                  {item}
                 </div>
               ))}
             </div>
+
+            {/* Base prices */}
+            <div
+              style={{
+                background: "rgba(68,255,136,0.03)",
+                border: "1px solid rgba(68,255,136,0.08)",
+                borderRadius: 10,
+                padding: "14px 16px",
+              }}
+            >
+              <div
+                style={{
+                  fontFamily: "var(--font-jetbrains), monospace",
+                  fontSize: 9,
+                  fontWeight: 600,
+                  letterSpacing: "1.5px",
+                  textTransform: "uppercase",
+                  color: "#44ff88",
+                  marginBottom: 10,
+                }}
+              >
+                Base Prices (One-Time)
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {basePrices.map((item) => (
+                  <div
+                    key={item.name}
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      fontFamily: "var(--font-inter), sans-serif",
+                      fontSize: 13,
+                    }}
+                  >
+                    <span style={{ color: "#f5f5f5" }}>{item.name}</span>
+                    <span style={{ color: "#44ff88", fontFamily: "var(--font-jetbrains), monospace", fontWeight: 600, fontSize: 13 }}>
+                      {item.price}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
-          {/* AI column */}
+          {/* Step 2: Add AI Power */}
           <div
             style={{
               background: "#0a0a0a",
@@ -168,6 +235,9 @@ export default function SentinelEcosystem() {
           >
             <div
               style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
                 fontFamily: "var(--font-jetbrains), monospace",
                 fontSize: 10,
                 fontWeight: 600,
@@ -177,7 +247,23 @@ export default function SentinelEcosystem() {
                 marginBottom: 8,
               }}
             >
-              AI-Powered
+              <span
+                style={{
+                  width: 22,
+                  height: 22,
+                  borderRadius: "50%",
+                  background: "rgba(212,175,55,0.1)",
+                  border: "1px solid rgba(212,175,55,0.3)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 11,
+                  fontWeight: 700,
+                }}
+              >
+                2
+              </span>
+              Step 2: Add AI Power
             </div>
             <p
               style={{
@@ -188,74 +274,84 @@ export default function SentinelEcosystem() {
                 lineHeight: 1.6,
               }}
             >
-              Same Haiku Brain. Same 41 checks. Airbag filters your EA's trades. DSS generates its own.
+              Monthly subscription. Requires internet. Adds the PHANTOM AI Brain — intelligent analysis, learning, and reporting.
             </p>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {aiItems.map((item) => (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
+              {aiFeatures.map((item) => (
                 <div
-                  key={item.name}
+                  key={item}
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    gap: 12,
-                    padding: "12px 14px",
-                    background: "rgba(212,175,55,0.03)",
-                    border: "1px solid rgba(212,175,55,0.08)",
-                    borderRadius: 10,
+                    gap: 10,
+                    fontSize: 13,
+                    color: "#f5f5f5",
+                    fontFamily: "var(--font-inter), sans-serif",
                   }}
                 >
                   <span
                     style={{
-                      width: 8,
-                      height: 8,
+                      width: 15,
+                      height: 15,
                       borderRadius: "50%",
-                      background: "#d4af37",
+                      background: "rgba(212,175,55,0.08)",
+                      border: "1px solid rgba(212,175,55,0.25)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
                       flexShrink: 0,
-                      boxShadow: "0 0 6px rgba(212,175,55,0.4)",
+                      fontSize: 8,
+                      color: "#d4af37",
                     }}
-                  />
-                  <div>
-                    <div
-                      style={{
-                        fontFamily: "var(--font-fraunces), serif",
-                        fontWeight: 700,
-                        fontSize: 14,
-                        color: "#f5f5f5",
-                        marginBottom: 2,
-                      }}
-                    >
-                      {item.name}
-                    </div>
-                    <div
-                      style={{
-                        fontFamily: "var(--font-inter), sans-serif",
-                        fontSize: 12,
-                        color: "#666666",
-                      }}
-                    >
-                      {item.desc}
-                    </div>
-                  </div>
+                  >
+                    ✓
+                  </span>
+                  {item}
                 </div>
               ))}
             </div>
 
-            {/* Shared brain note */}
+            {/* AI prices */}
             <div
               style={{
-                marginTop: 20,
-                padding: "10px 14px",
-                background: "rgba(212,175,55,0.04)",
-                border: "1px solid rgba(212,175,55,0.1)",
-                borderRadius: 8,
-                fontFamily: "var(--font-jetbrains), monospace",
-                fontSize: 11,
-                color: "#8a7020",
-                letterSpacing: "0.02em",
+                background: "rgba(212,175,55,0.03)",
+                border: "1px solid rgba(212,175,55,0.08)",
+                borderRadius: 10,
+                padding: "14px 16px",
               }}
             >
-              // Shared intelligence: Airbag + DSS use the same PHANTOM brain
+              <div
+                style={{
+                  fontFamily: "var(--font-jetbrains), monospace",
+                  fontSize: 9,
+                  fontWeight: 600,
+                  letterSpacing: "1.5px",
+                  textTransform: "uppercase",
+                  color: "#d4af37",
+                  marginBottom: 10,
+                }}
+              >
+                AI Upgrade Prices (Monthly)
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {aiPrices.map((item) => (
+                  <div
+                    key={item.name}
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      fontFamily: "var(--font-inter), sans-serif",
+                      fontSize: 13,
+                    }}
+                  >
+                    <span style={{ color: "#f5f5f5" }}>{item.name}</span>
+                    <span style={{ color: "#d4af37", fontFamily: "var(--font-jetbrains), monospace", fontWeight: 600, fontSize: 13 }}>
+                      {item.price}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -269,11 +365,11 @@ export default function SentinelEcosystem() {
             fontSize: 15,
             color: "#888888",
             lineHeight: 1.7,
-            maxWidth: 560,
+            maxWidth: 600,
             margin: "48px auto 0",
           }}
         >
-          Mix and match. Run Guardian + Trail Pro for prop firm safety. Add Airbag when you want AI filtering. Upgrade to DSS when you want the AI to trade for you.
+          Mix and match. Run Guardian + Trail Pro for prop firm safety. Add Airbag to protect your existing EAs. Upgrade any product to AI independently — only pay for what you use.
         </div>
       </div>
 

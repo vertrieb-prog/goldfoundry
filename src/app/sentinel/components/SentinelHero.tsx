@@ -10,7 +10,7 @@ export default function SentinelHero() {
     { text: "✓ News clear (next: 4h)", color: "#44ff88" },
     { text: "✗ Session hour: 42% WR", color: "#ff4444" },
     { text: "✗ Spread: 4.2 (max 3.5)", color: "#ff4444" },
-    { text: "[HAIKU] Low confidence setup", color: "#d4af37" },
+    { text: "[PHANTOM AI] Low confidence setup", color: "#d4af37" },
     { text: "DECISION: SKIP", color: "#ff4444", bold: true },
     { text: "Protected: $340 saved", color: "#44ff88", bold: true },
   ];
@@ -94,7 +94,7 @@ export default function SentinelHero() {
                 display: "inline-block",
               }}
             />
-            AI Trading Intelligence · MT5
+            The Complete EA Suite for MT5
           </div>
 
           {/* H1 */}
@@ -109,16 +109,16 @@ export default function SentinelHero() {
               margin: "0 0 24px",
             }}
           >
-            Your EA is from 2022.{" "}
+            5 tools. One suite.{" "}
             <br />
-            The market is from{" "}
+            Every trade{" "}
             <em
               style={{
                 color: "#d4af37",
                 fontStyle: "italic",
               }}
             >
-              2026.
+              protected.
             </em>
           </h1>
 
@@ -132,8 +132,8 @@ export default function SentinelHero() {
               maxWidth: 520,
             }}
           >
-            PHANTOM is the AI safety net for MT5 traders. 41 intelligent checks plus Haiku Brain
-            validation on every trade. Learning from 100,000+ real trades. Protecting capital daily.
+            Stop buying 10 different EAs. PHANTOM is the complete suite that makes every other EA better
+            and every trade safer. Each tool is powerful alone. Together, they are unstoppable.
           </p>
 
           {/* CTAs */}
@@ -168,7 +168,7 @@ export default function SentinelHero() {
                 el.style.boxShadow = "none";
               }}
             >
-              Start 14-Day Free Trial
+              Try the Full Suite Free
             </a>
             <a
               href="#products"
@@ -200,7 +200,7 @@ export default function SentinelHero() {
                 el.style.background = "transparent";
               }}
             >
-              See Products
+              See All 5 Products
             </a>
           </div>
 
@@ -213,8 +213,8 @@ export default function SentinelHero() {
             }}
           >
             {[
-              "5 Products",
-              "41 AI Checks",
+              "5 Products, 1 Suite",
+              "Base + AI Upgrade Model",
               "14-Day Free Trial",
             ].map((stat) => (
               <div
@@ -284,7 +284,7 @@ export default function SentinelHero() {
                   color: "#444444",
                 }}
               >
-                phantom-engine · live
+                phantom-suite · live
               </span>
             </div>
 

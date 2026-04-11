@@ -1,82 +1,11 @@
 'use client'
 
 const products = [
-  {
-    name: "News Shield",
-    price: "$39",
-    period: " once",
-    tagline: "News protection",
-    type: "standalone" as const,
-    features: [
-      "Auto-close before high-impact news",
-      "Tighten SL or pause EAs",
-      "Impact level filter",
-      "Customizable buffer",
-      "No internet needed",
-    ],
-    cta: "Start Free Trial",
-  },
-  {
-    name: "Trail Pro",
-    price: "$49",
-    period: " once",
-    tagline: "Smart trailing stop",
-    type: "standalone" as const,
-    features: [
-      "4-step ATR trailing",
-      "Break Even with buffer",
-      "Partial profit taking",
-      "Min SL distance",
-      "No internet needed",
-    ],
-    cta: "Start Free Trial",
-  },
-  {
-    name: "Guardian",
-    price: "$49",
-    period: " once",
-    tagline: "Prop firm compliance",
-    type: "standalone" as const,
-    features: [
-      "Daily loss + drawdown limits",
-      "Anti-tilt protection",
-      "FTMO / MFF / E8 presets",
-      "Weekend close + hours filter",
-      "No internet needed",
-    ],
-    cta: "Start Free Trial",
-  },
-  {
-    name: "Airbag",
-    price: "$99",
-    period: " once",
-    tagline: "AI trade filter",
-    type: "ai" as const,
-    featured: true,
-    features: [
-      "41 AI checks in <500ms",
-      "Haiku Brain decisions",
-      "Works with ANY EA",
-      "Daily loss protection",
-      "FTMO ready",
-    ],
-    cta: "Start Free Trial",
-  },
-  {
-    name: "Trader DSS",
-    price: "$199",
-    period: " once",
-    tagline: "Autonomous AI trader",
-    type: "ai" as const,
-    features: [
-      "13 strategies + Haiku Brain",
-      "Auto / Semi / Manual modes",
-      "Multi-symbol support",
-      "Kelly Criterion sizing",
-      "Lifetime updates",
-    ],
-    cta: "Start Free Trial",
-  },
+  { name: "News Shield", basePrice: "$39", aiPrice: "$19/mo", tagline: "News protection" },
+  { name: "Trail Pro", basePrice: "$49", aiPrice: "$19/mo", tagline: "Smart trailing stop" },
+  { name: "Guardian", basePrice: "$49", aiPrice: "$29/mo", tagline: "Prop firm compliance" },
+  { name: "Airbag", basePrice: "$99", aiPrice: "$29/mo", tagline: "AI trade filter", featured: true },
+  { name: "Trader DSS", basePrice: "$199", aiPrice: "$49/mo", tagline: "Autonomous AI trader" },
 ];
 
 export default function SentinelPricing() {
@@ -112,7 +41,7 @@ export default function SentinelPricing() {
               marginBottom: 16,
             }}
           >
-            Launch Pricing · One-Time Payment
+            Transparent Pricing · Base + AI Upgrade
           </div>
           <h2
             style={{
@@ -124,19 +53,19 @@ export default function SentinelPricing() {
               margin: "0 0 16px",
             }}
           >
-            Early adopters win.
+            Start with the base. Add AI when ready.
           </h2>
           <p
             style={{
               fontFamily: "var(--font-inter), sans-serif",
               fontSize: 16,
               color: "#888888",
-              maxWidth: 540,
+              maxWidth: 580,
               margin: "0 auto",
               lineHeight: 1.7,
             }}
           >
-            All products are one-time purchases with lifetime updates. 14-day free trial on everything. No subscriptions.
+            Every product has a one-time base version that works standalone. The AI upgrade is a monthly add-on that requires the base. 14-day free trial on everything.
           </p>
         </div>
 
@@ -151,14 +80,13 @@ export default function SentinelPricing() {
           className="sentinel-pricing-grid"
         >
           {products.map((plan) => {
-            const isAI = plan.type === "ai";
             const isFeatured = (plan as any).featured;
             return (
               <div
                 key={plan.name}
                 style={{
                   background: "#111111",
-                  border: `1px solid ${isFeatured ? "#d4af37" : isAI ? "rgba(212,175,55,0.2)" : "#222222"}`,
+                  border: `1px solid ${isFeatured ? "#d4af37" : "#222222"}`,
                   borderRadius: 18,
                   padding: "28px 20px",
                   position: "relative",
@@ -183,7 +111,7 @@ export default function SentinelPricing() {
                   el.style.boxShadow = isFeatured
                     ? "0 0 80px rgba(212,175,55,0.08), inset 0 0 40px rgba(212,175,55,0.02)"
                     : "none";
-                  el.style.borderColor = isFeatured ? "#d4af37" : isAI ? "rgba(212,175,55,0.2)" : "#222222";
+                  el.style.borderColor = isFeatured ? "#d4af37" : "#222222";
                 }}
               >
                 {/* Featured badge */}
@@ -209,21 +137,6 @@ export default function SentinelPricing() {
                   </div>
                 )}
 
-                {/* Type label */}
-                <div
-                  style={{
-                    fontFamily: "var(--font-jetbrains), monospace",
-                    fontSize: 9,
-                    fontWeight: 600,
-                    color: isAI ? "#d4af37" : "#44ff88",
-                    letterSpacing: "1.5px",
-                    textTransform: "uppercase",
-                    marginBottom: 12,
-                  }}
-                >
-                  {isAI ? "AI-Powered" : "Standalone"}
-                </div>
-
                 {/* Plan name */}
                 <div
                   style={{
@@ -244,86 +157,116 @@ export default function SentinelPricing() {
                     fontFamily: "var(--font-inter), sans-serif",
                     fontSize: 12,
                     color: "#666666",
-                    marginBottom: 16,
+                    marginBottom: 20,
                   }}
                 >
                   {plan.tagline}
                 </div>
 
-                {/* Price */}
-                <div style={{ marginBottom: 8 }}>
-                  <div style={{ display: "flex", alignItems: "baseline", gap: 3 }}>
+                {/* Base Price */}
+                <div
+                  style={{
+                    background: "rgba(68,255,136,0.04)",
+                    border: "1px solid rgba(68,255,136,0.12)",
+                    borderRadius: 10,
+                    padding: "14px 16px",
+                    marginBottom: 8,
+                  }}
+                >
+                  <div
+                    style={{
+                      fontFamily: "var(--font-jetbrains), monospace",
+                      fontSize: 9,
+                      fontWeight: 600,
+                      letterSpacing: "1.5px",
+                      textTransform: "uppercase",
+                      color: "#44ff88",
+                      marginBottom: 6,
+                    }}
+                  >
+                    Base (One-Time)
+                  </div>
+                  <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
                     <span
                       style={{
                         fontFamily: "var(--font-fraunces), serif",
                         fontWeight: 900,
-                        fontSize: 40,
+                        fontSize: 32,
                         color: "#f5f5f5",
                         letterSpacing: "-0.03em",
                       }}
                     >
-                      {plan.price}
+                      {plan.basePrice}
                     </span>
                     <span
                       style={{
                         fontFamily: "var(--font-jetbrains), monospace",
-                        fontSize: 12,
+                        fontSize: 11,
                         color: "#888888",
                       }}
                     >
-                      {plan.period}
+                      once
                     </span>
+                  </div>
+                  <div
+                    style={{
+                      fontFamily: "var(--font-inter), sans-serif",
+                      fontSize: 11,
+                      color: "#666666",
+                      marginTop: 4,
+                    }}
+                  >
+                    Works offline, no internet needed
                   </div>
                 </div>
 
-                {/* Divider */}
+                {/* AI Upgrade Price */}
                 <div
                   style={{
-                    height: 1,
-                    background: isFeatured ? "rgba(212,175,55,0.15)" : "#222222",
-                    margin: "16px 0",
-                  }}
-                />
-
-                {/* Features */}
-                <ul
-                  style={{
-                    listStyle: "none",
-                    padding: 0,
-                    margin: "0 0 24px",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 10,
-                    flex: 1,
+                    background: "rgba(212,175,55,0.04)",
+                    border: "1px solid rgba(212,175,55,0.12)",
+                    borderRadius: 10,
+                    padding: "14px 16px",
+                    marginBottom: 20,
                   }}
                 >
-                  {plan.features.map((feature) => (
-                    <li
-                      key={feature}
+                  <div
+                    style={{
+                      fontFamily: "var(--font-jetbrains), monospace",
+                      fontSize: 9,
+                      fontWeight: 600,
+                      letterSpacing: "1.5px",
+                      textTransform: "uppercase",
+                      color: "#d4af37",
+                      marginBottom: 6,
+                    }}
+                  >
+                    + AI Upgrade (Monthly)
+                  </div>
+                  <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
+                    <span
                       style={{
-                        display: "flex",
-                        alignItems: "flex-start",
-                        gap: 8,
-                        fontSize: 12,
-                        color: "#f5f5f5",
-                        fontFamily: "var(--font-inter), sans-serif",
-                        lineHeight: 1.4,
+                        fontFamily: "var(--font-fraunces), serif",
+                        fontWeight: 900,
+                        fontSize: 24,
+                        color: "#d4af37",
+                        letterSpacing: "-0.03em",
                       }}
                     >
-                      <span
-                        style={{
-                          color: isAI ? "#d4af37" : "#44ff88",
-                          fontSize: 10,
-                          flexShrink: 0,
-                          marginTop: 2,
-                        }}
-                      >
-                        ✓
-                      </span>
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
+                      {plan.aiPrice}
+                    </span>
+                  </div>
+                  <div
+                    style={{
+                      fontFamily: "var(--font-inter), sans-serif",
+                      fontSize: 11,
+                      color: "#666666",
+                      marginTop: 4,
+                    }}
+                  >
+                    Requires base. Internet required.
+                  </div>
+                </div>
 
                 {/* CTA */}
                 <a
@@ -367,11 +310,121 @@ export default function SentinelPricing() {
                     el.style.transform = "translateY(0)";
                   }}
                 >
-                  {plan.cta}
+                  Start Free Trial
                 </a>
               </div>
             );
           })}
+        </div>
+
+        {/* PHANTOM Complete bundle */}
+        <div
+          style={{
+            marginTop: 32,
+            background: "#111111",
+            border: "1px solid rgba(212,175,55,0.3)",
+            borderRadius: 18,
+            padding: "32px 36px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: 24,
+            boxShadow: "0 0 80px rgba(212,175,55,0.04)",
+          }}
+          className="sentinel-bundle"
+        >
+          <div>
+            <div
+              style={{
+                fontFamily: "var(--font-jetbrains), monospace",
+                fontSize: 10,
+                fontWeight: 600,
+                letterSpacing: "2px",
+                textTransform: "uppercase",
+                color: "#d4af37",
+                marginBottom: 8,
+              }}
+            >
+              PHANTOM Complete Bundle
+            </div>
+            <div
+              style={{
+                fontFamily: "var(--font-fraunces), serif",
+                fontWeight: 900,
+                fontSize: 24,
+                color: "#f5f5f5",
+                letterSpacing: "-0.02em",
+                marginBottom: 4,
+              }}
+            >
+              All 5 base products + all AI upgrades
+            </div>
+            <div
+              style={{
+                fontFamily: "var(--font-inter), sans-serif",
+                fontSize: 14,
+                color: "#888888",
+              }}
+            >
+              Save 20% vs. buying individually. One license, one dashboard, everything included.
+            </div>
+          </div>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 8, justifyContent: "center" }}>
+              <span
+                style={{
+                  fontFamily: "var(--font-fraunces), serif",
+                  fontWeight: 900,
+                  fontSize: 40,
+                  color: "#d4af37",
+                  letterSpacing: "-0.03em",
+                }}
+              >
+                $349
+              </span>
+              <span
+                style={{
+                  fontFamily: "var(--font-jetbrains), monospace",
+                  fontSize: 12,
+                  color: "#888888",
+                }}
+              >
+                base
+              </span>
+              <span style={{ color: "#333333", fontSize: 16 }}>+</span>
+              <span
+                style={{
+                  fontFamily: "var(--font-fraunces), serif",
+                  fontWeight: 900,
+                  fontSize: 28,
+                  color: "#d4af37",
+                  letterSpacing: "-0.03em",
+                }}
+              >
+                $119/mo
+              </span>
+              <span
+                style={{
+                  fontFamily: "var(--font-jetbrains), monospace",
+                  fontSize: 12,
+                  color: "#888888",
+                }}
+              >
+                AI
+              </span>
+            </div>
+            <div
+              style={{
+                fontFamily: "var(--font-jetbrains), monospace",
+                fontSize: 11,
+                color: "#666666",
+                marginTop: 4,
+              }}
+            >
+              vs. $436 + $146/mo individually
+            </div>
+          </div>
         </div>
 
         {/* Bottom note */}
@@ -385,7 +438,7 @@ export default function SentinelPricing() {
             letterSpacing: "0.03em",
           }}
         >
-          // All prices are one-time. 14-day free trial. No credit card required. Prices increase after first 10 sales.
+          // Base = one-time purchase, yours forever. AI = monthly, cancel anytime. 14-day free trial. No credit card required.
         </div>
       </div>
 
@@ -398,6 +451,10 @@ export default function SentinelPricing() {
         @media (max-width: 750px) {
           .sentinel-pricing-grid {
             grid-template-columns: 1fr 1fr !important;
+          }
+          .sentinel-bundle {
+            flex-direction: column !important;
+            text-align: center !important;
           }
         }
         @media (max-width: 500px) {

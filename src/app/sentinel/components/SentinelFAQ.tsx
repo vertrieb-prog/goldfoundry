@@ -4,24 +4,32 @@ import { useState } from "react";
 
 const faqs = [
   {
-    q: "Does AIRBAG work with my existing EA?",
-    a: "Yes. PHANTOM AIRBAG is broker- and EA-agnostic. It runs as a separate Expert Advisor on the same chart and intercepts signals via a shared memory bridge. No source code access required. If your EA fires signals on MT5, AIRBAG catches them.",
+    q: "Does PHANTOM Airbag work with my existing EA?",
+    a: "Yes. PHANTOM Airbag is broker- and EA-agnostic. It runs as a separate Expert Advisor on the same chart and intercepts signals via a shared memory bridge. No source code access required. If your EA fires signals on MT5, Airbag catches them.",
+  },
+  {
+    q: "What is the difference between the base version and the AI upgrade?",
+    a: "The base version of every product is a one-time purchase that works completely offline — no internet, no API, no dependencies. It includes all core features and rule-based protection. The AI upgrade is a monthly subscription that adds intelligent analysis, learning from 100,000+ trades, explainable decisions, and natural language configuration. You need the base before you can add the AI upgrade.",
   },
   {
     q: "Is this compatible with prop firms like FTMO?",
-    a: "Yes. PHANTOM includes a dedicated Prop Firm mode that enforces challenge rules automatically — daily loss limits, max drawdown, news lockouts. It was built with FTMO, MyForexFunds, and E8 Funding rules in mind. Full compliance documentation available.",
+    a: "Yes. PHANTOM includes a dedicated Prop Firm mode that enforces challenge rules automatically — daily loss limits, max drawdown, news lockouts. It was built with FTMO, MyForexFunds, and E8 Funding rules in mind. Guardian has one-click presets for all major prop firms.",
   },
   {
     q: "How does the 14-day trial work?",
-    a: "Sign up with your email, receive your license key instantly. Install the EA on your MT5 terminal, enter the key, and PHANTOM activates. Full functionality — live trading, all 41 checks, Haiku Brain enabled. No credit card. No commitment. Cancel by simply not activating after the trial.",
+    a: "Sign up with your email, receive your license key instantly. Install the EA on your MT5 terminal, enter the key, and PHANTOM activates. Full functionality — live trading, all features, AI enabled. No credit card. No commitment. Cancel by simply not activating after the trial.",
+  },
+  {
+    q: "Do I need to buy all 5 products?",
+    a: "No. Every product works independently. Start with what you need — most traders begin with Airbag or Guardian. You can add more products at any time, and each one has its own base + AI upgrade path. They are designed to work together, but none requires another.",
   },
   {
     q: "What data do you collect?",
-    a: "Only trade metadata: entry/exit prices, timestamps, check results, and Haiku verdicts. Never account credentials, never your broker login. All data is anonymized and used solely to improve the learning models. Fully GDPR compliant. Data stored on EU servers.",
+    a: "Only trade metadata: entry/exit prices, timestamps, check results, and AI verdicts. Never account credentials, never your broker login. All data is anonymized and used solely to improve the AI models. Fully GDPR compliant. Data stored on EU servers.",
   },
   {
-    q: "Why is the price going up?",
-    a: "Standard MQL5 marketplace launch pricing. We launch low to reward early adopters and build social proof. Once we hit 10 sales, prices increase to $69/mo (AIRBAG) and $299 lifetime (DSS). These are locked-in prices for everyone who signs up before the threshold.",
+    q: "What happens if I lose internet while using an AI upgrade?",
+    a: "PHANTOM fails safe. If the connection drops, Airbag lets trades through rather than blocking them. DSS will pause AI signals but your base strategies keep running. Your trades are never stuck or locked because of a connection issue.",
   },
   {
     q: "Can I run this on multiple accounts?",

@@ -15,9 +15,9 @@ const steps = [
   },
   {
     number: "03",
-    title: "Haiku Decides",
+    title: "AI Brain Decides",
     description:
-      "Anthropic's Haiku AI reviews the full context snapshot and renders a verdict with natural language reasoning you can read.",
+      "The PHANTOM AI reviews the full context snapshot and renders a verdict with natural language reasoning you can read.",
   },
   {
     number: "04",

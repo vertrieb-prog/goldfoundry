@@ -21,7 +21,7 @@ export default function SentinelTrialForm() {
       const res = await fetch("/api/sentinel/trial/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, product: "AIRBAG" }),
+        body: JSON.stringify({ email, product: "PHANTOM_SUITE" }),
       });
 
       const data = await res.json();
@@ -82,7 +82,7 @@ export default function SentinelTrialForm() {
             marginBottom: 16,
           }}
         >
-          14 Days Free · No Credit Card
+          14 Days Free · Full Suite · No Credit Card
         </div>
 
         {/* H2 */}
@@ -97,7 +97,7 @@ export default function SentinelTrialForm() {
             lineHeight: 1.1,
           }}
         >
-          See PHANTOM live on your own account.
+          Try the full PHANTOM suite free for 14 days.
         </h2>
 
         {/* Subtext */}
@@ -109,7 +109,7 @@ export default function SentinelTrialForm() {
             marginBottom: 48,
           }}
         >
-          Full functionality. Live trading. Real decisions. Your data stays yours. Cancel anytime.
+          All 5 products. All AI upgrades. Full functionality. Live trading. Real decisions. Your data stays yours.
         </p>
 
         {/* Form card */}
@@ -306,7 +306,7 @@ export default function SentinelTrialForm() {
                   letterSpacing: "0.03em",
                 }}
               >
-                // No credit card · Instant activation · Full features · 14 days
+                // No credit card · Instant activation · All 5 products · 14 days
               </div>
             </form>
           )}

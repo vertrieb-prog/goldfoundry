@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { Fraunces, Inter, JetBrains_Mono } from "next/font/google";
 
 export const metadata: Metadata = {
-  title: "PHANTOM — AI Trading Intelligence for MT5",
-  description: "PHANTOM is the AI safety net for MT5 traders. 41 intelligent checks plus Haiku Brain validation on every trade. Protecting capital daily.",
-  keywords: "phantom trading, mt5 ea, trading ai, airbag ea, prop firm, xauusd, forex protection, metatrader filter",
+  title: "PHANTOM — The Complete EA Suite for MT5 Traders",
+  description: "PHANTOM is the only EA suite you need for MT5. 5 tools that work together to make every trade safer. Base versions work offline. Add AI power when you are ready.",
+  keywords: "phantom trading, mt5 ea suite, trading ai, airbag ea, prop firm, xauusd, forex protection, metatrader filter, ea suite",
 };
 
 const fraunces = Fraunces({
