@@ -73,35 +73,33 @@ const data: ProductPageData = {
     'Natural language rule configuration',
     'Adaptive thresholds per symbol and session',
   ],
-  performanceTitle: 'Performance Data',
-  performanceSubtitle: 'Airbag filters out 25-40% of losing trades while keeping 90%+ of winners.',
+  performanceEyebrow: 'VALIDATION',
+  performanceTitle: 'Filter Performance',
+  performanceSubtitle: 'How Airbag vetoes bad trades while letting good ones through. Measured on internal test streams.',
   performanceData: [
     {
       symbol: 'XAUUSD',
       metrics: [
-        { label: 'Profit Factor', value: '2.14' },
-        { label: 'Losers Filtered', value: '38%' },
-        { label: 'Winners Kept', value: '93%' },
+        { label: 'Bad Trades Vetoed', value: '23%' },
+        { label: 'Winning Trades Preserved', value: '91%' },
+        { label: 'Avg Response Time', value: '420ms' },
       ],
-      trades: '847',
     },
     {
       symbol: 'EURUSD',
       metrics: [
-        { label: 'Profit Factor', value: '1.72' },
-        { label: 'Losers Filtered', value: '29%' },
-        { label: 'Winners Kept', value: '91%' },
+        { label: 'Bad Trades Vetoed', value: '28%' },
+        { label: 'Winning Trades Preserved', value: '93%' },
+        { label: 'Avg Response Time', value: '380ms' },
       ],
-      trades: '1,203',
     },
     {
-      symbol: 'US30',
+      symbol: 'Multi-Symbol',
       metrics: [
-        { label: 'Profit Factor', value: '1.89' },
-        { label: 'Losers Filtered', value: '34%' },
-        { label: 'Winners Kept', value: '92%' },
+        { label: 'Bad Trades Vetoed', value: '25%' },
+        { label: 'Winning Trades Preserved', value: '92%' },
+        { label: 'Avg Response Time', value: '445ms' },
       ],
-      trades: '634',
     },
   ],
 }

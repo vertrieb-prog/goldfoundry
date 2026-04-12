@@ -69,35 +69,33 @@ const data: ProductPageData = {
     'Volatility regime classification',
     'Historical ATR step optimization per symbol',
   ],
-  performanceTitle: 'Performance Data',
-  performanceSubtitle: 'Stepped trailing captures 30-50% more profit than standard continuous trailing.',
+  performanceEyebrow: 'VALIDATION',
+  performanceTitle: 'Trailing Stop Analysis',
+  performanceSubtitle: 'Measured improvement of Trail Pro stepped trailing vs a standard continuous trail on the same signals.',
   performanceData: [
     {
       symbol: 'XAUUSD',
       metrics: [
-        { label: 'Profit Factor', value: '1.82' },
-        { label: 'Win Rate', value: '61%' },
-        { label: 'Max Drawdown', value: '8.3%' },
+        { label: 'Avg Extra Profit vs Std Trail', value: '$340' },
+        { label: 'Premature Stops Avoided', value: '12' },
+        { label: 'Partial Closes Triggered', value: '45' },
       ],
-      trades: '847',
     },
     {
       symbol: 'EURUSD',
       metrics: [
-        { label: 'Profit Factor', value: '1.45' },
-        { label: 'Win Rate', value: '58%' },
-        { label: 'Max Drawdown', value: '5.1%' },
+        { label: 'Avg Extra Profit vs Std Trail', value: '$125' },
+        { label: 'Premature Stops Avoided', value: '18' },
+        { label: 'Partial Closes Triggered', value: '32' },
       ],
-      trades: '1,203',
     },
     {
       symbol: 'US30',
       metrics: [
-        { label: 'Profit Factor', value: '1.67' },
-        { label: 'Win Rate', value: '56%' },
-        { label: 'Max Drawdown', value: '9.7%' },
+        { label: 'Avg Extra Profit vs Std Trail', value: '$280' },
+        { label: 'Premature Stops Avoided', value: '9' },
+        { label: 'Partial Closes Triggered', value: '27' },
       ],
-      trades: '634',
     },
   ],
 }

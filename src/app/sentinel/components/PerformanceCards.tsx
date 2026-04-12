@@ -3,21 +3,26 @@
 export interface PerformanceData {
   symbol: string
   metrics: { label: string; value: string }[]
-  trades: string
+  trades?: string
+  footer?: string
 }
 
 interface PerformanceCardsProps {
   title?: string
   subtitle?: string
+  eyebrow?: string
   data: PerformanceData[]
   dateRange?: string
+  disclaimer?: string
 }
 
 export default function PerformanceCards({
   title = 'Performance Data',
   subtitle,
+  eyebrow = 'VALIDATION',
   data,
-  dateRange = 'Jan 2024 - Mar 2026',
+  dateRange,
+  disclaimer = 'Validation data from internal testing. Real-world results depend on broker, market conditions, and configuration. Past performance is not indicative of future results.',
 }: PerformanceCardsProps) {
   return (
     <section
@@ -39,7 +44,7 @@ export default function PerformanceCards({
             marginBottom: 12,
           }}
         >
-          BACKTESTS
+          {eyebrow}
         </div>
         <h2
           style={{
@@ -127,18 +132,20 @@ export default function PerformanceCards({
                   </div>
                 ))}
               </div>
-              <div
-                style={{
-                  marginTop: 16,
-                  paddingTop: 14,
-                  borderTop: '1px solid #1a1a1a',
-                  fontFamily: "'JetBrains Mono', monospace",
-                  fontSize: 11,
-                  color: '#888888',
-                }}
-              >
-                {card.trades} total trades
-              </div>
+              {(card.footer || card.trades) && (
+                <div
+                  style={{
+                    marginTop: 16,
+                    paddingTop: 14,
+                    borderTop: '1px solid #1a1a1a',
+                    fontFamily: "'JetBrains Mono', monospace",
+                    fontSize: 11,
+                    color: '#888888',
+                  }}
+                >
+                  {card.footer ? card.footer : `${card.trades} total trades`}
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -152,7 +159,7 @@ export default function PerformanceCards({
             lineHeight: 1.6,
           }}
         >
-          Based on backtests from {dateRange}. Past performance is not indicative of future results.
+          {dateRange ? `Based on data from ${dateRange}. ` : ''}{disclaimer}
         </p>
       </div>
 

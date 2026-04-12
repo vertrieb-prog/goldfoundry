@@ -32,8 +32,10 @@ export interface ProductPageData {
   aiFeatures: string[]
   performanceTitle?: string
   performanceSubtitle?: string
+  performanceEyebrow?: string
   performanceData: PerformanceData[]
   performanceDateRange?: string
+  performanceDisclaimer?: string
 }
 
 export default function ProductPageLayout({ data }: { data: ProductPageData }) {
@@ -65,8 +67,10 @@ export default function ProductPageLayout({ data }: { data: ProductPageData }) {
         <PerformanceCards
           title={data.performanceTitle}
           subtitle={data.performanceSubtitle}
+          eyebrow={data.performanceEyebrow}
           data={data.performanceData}
           dateRange={data.performanceDateRange}
+          disclaimer={data.performanceDisclaimer}
         />
         <ProductCTA />
       </main>
