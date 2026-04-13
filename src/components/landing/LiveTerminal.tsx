@@ -21,19 +21,29 @@ function elapsed(iso: string): string {
 }
 
 export default function LiveTerminal() {
-  const [range, setRange] = useState<Range>("72h");
+  const [range, setRange] = useState<Range>("7d");
   const [data, setData] = useState<any>(null);
   const [stats, setStats] = useState<any>(null);
+  const [userSelected, setUserSelected] = useState(false);
 
   useEffect(() => {
     const load = () => {
-      fetch(`/api/trades/live?range=${range}`).then(r => r.json()).then(setData).catch(() => {});
+      fetch(`/api/trades/live?range=${range}`).then(r => r.json()).then((d) => {
+        setData(d);
+        // Auto-fallback: wenn aktueller Range leer ist, switch zu größerem (nur initial)
+        if (!userSelected && d?.history?.length === 0) {
+          const next: Range = range === "24h" ? "72h" : range === "72h" ? "7d" : range === "7d" ? "all" : "all";
+          if (next !== range) setRange(next);
+        }
+      }).catch(() => {});
       fetch("/api/lp/stats").then(r => r.json()).then(setStats).catch(() => {});
     };
     load();
     const iv = setInterval(load, 15000);
     return () => clearInterval(iv);
-  }, [range]);
+  }, [range, userSelected]);
+
+  const onRangeChange = (r: Range) => { setUserSelected(true); setRange(r); };
 
   if (!data?.summary) return null;
 
@@ -136,7 +146,7 @@ export default function LiveTerminal() {
             <span className="text-[10px] font-bold text-[#8a90a5] uppercase">History</span>
             <div className="flex gap-1">
               {(["24h", "72h", "7d", "all"] as Range[]).map(r => (
-                <button key={r} onClick={() => setRange(r)}
+                <button key={r} onClick={() => onRangeChange(r)}
                   className="text-[9px] font-bold px-2 py-1 rounded transition-all"
                   style={{ background: range === r ? "#2196f3" : "transparent", color: range === r ? "#fff" : "#5d6588" }}>
                   {r === "all" ? "ALL" : r.toUpperCase()}
