@@ -311,6 +311,65 @@ export default function SentinelTrialForm() {
             </form>
           )}
         </div>
+
+        {/* MQL5 Marketplace alternative */}
+        <div
+          style={{
+            marginTop: 28,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 12,
+          }}
+        >
+          <div
+            style={{
+              fontFamily: "'JetBrains Mono', monospace",
+              fontSize: 11,
+              color: "#666666",
+              letterSpacing: "0.15em",
+              textTransform: "uppercase",
+            }}
+          >
+            Prefer one-click purchase?
+          </div>
+          <a
+            href="https://www.mql5.com/en/users/goldfoundry/seller"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 10,
+              padding: "14px 28px",
+              background: "#d4af37",
+              color: "#0a0a0a",
+              fontWeight: 700,
+              fontSize: 14,
+              fontFamily: "'JetBrains Mono', monospace",
+              borderRadius: 12,
+              textDecoration: "none",
+              transition: "all 0.25s",
+              letterSpacing: "0.01em",
+              boxShadow: "0 4px 20px rgba(212,175,55,0.15)",
+            }}
+            onMouseEnter={(e) => {
+              const el = e.currentTarget as HTMLElement;
+              el.style.background = "#f4cf47";
+              el.style.transform = "translateY(-2px)";
+              el.style.boxShadow = "0 12px 40px rgba(212,175,55,0.35)";
+            }}
+            onMouseLeave={(e) => {
+              const el = e.currentTarget as HTMLElement;
+              el.style.background = "#d4af37";
+              el.style.transform = "translateY(0)";
+              el.style.boxShadow = "0 4px 20px rgba(212,175,55,0.15)";
+            }}
+          >
+            <span style={{ fontSize: 10, opacity: 0.6 }}>MQL5</span>
+            Browse all 14 EAs on MQL5 Market →
+          </a>
+        </div>
       </div>
 
       <style>{`

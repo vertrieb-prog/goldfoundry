@@ -9,6 +9,7 @@ import SentinelTrialForm from "./components/SentinelTrialForm";
 import SentinelFAQ from "./components/SentinelFAQ";
 import SentinelFooter from "./components/SentinelFooter";
 import SentinelNav from "./components/SentinelNav";
+import MQL5TrustStrip from "./components/MQL5TrustStrip";
 
 export default function SentinelPage() {
   return (
@@ -16,6 +17,7 @@ export default function SentinelPage() {
       <SentinelNav />
       <main>
         <SentinelHero />
+        <MQL5TrustStrip />
         <SentinelProducts />
         <SentinelEcosystem />
         <SentinelProductLinks />

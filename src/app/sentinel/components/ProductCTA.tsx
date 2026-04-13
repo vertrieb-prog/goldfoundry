@@ -1,6 +1,9 @@
 'use client'
 
-export default function ProductCTA() {
+import MQL5Buttons from './MQL5Buttons'
+import type { SentinelSlug } from '../_data/mql5-links'
+
+export default function ProductCTA({ slug }: { slug: SentinelSlug }) {
   return (
     <section
       style={{
@@ -21,7 +24,7 @@ export default function ProductCTA() {
             letterSpacing: '-0.02em',
           }}
         >
-          Start your 14-day free trial
+          Get it on MQL5 Market
         </h2>
         <p
           style={{
@@ -32,40 +35,44 @@ export default function ProductCTA() {
             lineHeight: 1.6,
           }}
         >
-          No credit card required. Full access to the base version. Cancel anytime.
+          Instant activation via your MQL5 account. Choose MT5 or MT4.
         </p>
-        <a
-          href="/sentinel#trial"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '16px 40px',
-            background: '#d4af37',
-            color: '#0a0a0a',
-            fontWeight: 700,
-            fontSize: 15,
-            fontFamily: "'JetBrains Mono', monospace",
-            borderRadius: 12,
-            textDecoration: 'none',
-            transition: 'all 0.25s',
-            letterSpacing: '0.01em',
-          }}
-          onMouseEnter={(e) => {
-            const el = e.currentTarget as HTMLElement
-            el.style.background = '#f4cf47'
-            el.style.transform = 'translateY(-2px)'
-            el.style.boxShadow = '0 12px 40px rgba(212,175,55,0.3)'
-          }}
-          onMouseLeave={(e) => {
-            const el = e.currentTarget as HTMLElement
-            el.style.background = '#d4af37'
-            el.style.transform = 'translateY(0)'
-            el.style.boxShadow = 'none'
-          }}
-        >
-          Start 14-Day Free Trial →
-        </a>
+
+        <MQL5Buttons slug={slug} variant="primary" size="lg" />
+
+        <div style={{ marginTop: 28 }}>
+          <a
+            href="/sentinel#trial"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '10px 22px',
+              background: 'transparent',
+              border: '1px solid rgba(212,175,55,0.25)',
+              color: '#d4af37',
+              fontWeight: 500,
+              fontSize: 12,
+              fontFamily: "'JetBrains Mono', monospace",
+              borderRadius: 10,
+              textDecoration: 'none',
+              transition: 'all 0.25s',
+              letterSpacing: '0.01em',
+            }}
+            onMouseEnter={(e) => {
+              const el = e.currentTarget as HTMLElement
+              el.style.background = 'rgba(212,175,55,0.06)'
+              el.style.borderColor = 'rgba(212,175,55,0.5)'
+            }}
+            onMouseLeave={(e) => {
+              const el = e.currentTarget as HTMLElement
+              el.style.background = 'transparent'
+              el.style.borderColor = 'rgba(212,175,55,0.25)'
+            }}
+          >
+            Or try free on goldfoundry →
+          </a>
+        </div>
       </div>
     </section>
   )
