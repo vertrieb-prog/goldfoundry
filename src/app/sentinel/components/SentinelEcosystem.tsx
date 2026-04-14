@@ -1,19 +1,19 @@
 'use client'
 
 const baseFeatures = [
-  "One-time purchase — yours forever",
-  "Works offline, no internet needed",
-  "Rule-based protection, proven strategies",
-  "Install on MT5, configure once, done",
-  "All core features included",
+  "One-time payment. Yours forever.",
+  "No internet, no API keys, no phone-home",
+  "Every core feature included",
+  "Works on MT4 and MT5 from the same license",
+  "Ships as a compiled EX5/EX4 from MQL5 Market",
 ];
 
 const aiFeatures = [
-  "Monthly subscription, cancel anytime",
-  "Intelligent context analysis",
-  "Explainable decisions in plain English",
-  "Learning from 100,000+ real trades",
-  "Natural language configuration",
+  "Monthly. Cancel from the dashboard.",
+  "Pattern recognition on your actual trade log",
+  "Plain-English reason for every SKIP or MODIFY",
+  "Weekly report mailed Sunday 20:00 UTC",
+  "You can buy Base and never touch this",
 ];
 
 const basePrices = [
@@ -68,7 +68,7 @@ export default function SentinelEcosystem() {
               lineHeight: 1.1,
             }}
           >
-            Start with the base.<br />Upgrade to AI when you are ready.
+            Buy the Base.<br />Skip the AI if you want.
           </h2>
           <p
             style={{
@@ -80,7 +80,7 @@ export default function SentinelEcosystem() {
               lineHeight: 1.7,
             }}
           >
-            Every PHANTOM product follows the same model. Buy the base once — it works standalone, offline, forever. When you want AI power, add the monthly upgrade. No lock-in. Cancel anytime.
+            Same deal on every EA. Base is a one-time MQL5 purchase that runs offline. If you ever want adaptive thresholds and weekly reports, there's a monthly upgrade. If you don't, Base keeps working — no degraded mode, no nag screens.
           </p>
         </div>
 
@@ -143,7 +143,7 @@ export default function SentinelEcosystem() {
                 lineHeight: 1.6,
               }}
             >
-              One-time payment. Works offline. No internet, no API, no dependencies. Install on MT5, configure once, done.
+              Buy it once on the MQL5 Market. Drop the EX5 on a chart. Configure. That's the install.
             </p>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
@@ -274,7 +274,7 @@ export default function SentinelEcosystem() {
                 lineHeight: 1.6,
               }}
             >
-              Monthly subscription. Requires internet. Adds the PHANTOM AI Brain — intelligent analysis, learning, and reporting.
+              Optional. Monthly. Needs internet. Adds pattern recognition from your trade log plus a weekly report. Cancel whenever.
             </p>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
@@ -369,7 +369,7 @@ export default function SentinelEcosystem() {
             margin: "48px auto 0",
           }}
         >
-          Mix and match. Run Guardian + Trail Pro for prop firm safety. Add Airbag to protect your existing EAs. Upgrade any product to AI independently — only pay for what you use.
+          A typical FTMO setup: Guardian (rules) + Trail Pro (exits) + News Shield (NFP). About $137 one-time, nothing monthly. Add Airbag if you're running a paid EA you don't fully trust.
         </div>
       </div>
 

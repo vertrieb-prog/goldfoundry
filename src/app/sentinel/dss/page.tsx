@@ -6,13 +6,13 @@ import type { ProductPageData } from '../components/ProductPageLayout'
 const data: ProductPageData = {
   slug: 'dss',
   name: 'DSS',
-  tagline: 'Decision Support System. 13 strategies. One brain.',
+  tagline: '13 strategies vote. Majority wins.',
   description:
-    'DSS analyzes the market continuously with 13 independent strategies, scores setups by confidence, and executes automatically. Auto, Semi-Auto, or Manual — you choose how much control to keep.',
+    'DSS runs 13 independent strategies (SMC, FVG, order blocks, divergence, 9 more) across 6 symbols. When enough of them agree on the same setup, and the market regime lines up, it fires an entry. Auto mode trades it, Semi pings you, Manual just shows the signal.',
   basePrice: '$199',
   aiPrice: '+$49/mo',
-  problem:
-    'You spend hours analyzing charts. You miss setups because you are sleeping. You second-guess your entries. Your emotions cost you thousands every year. You need a system that does not sleep, does not doubt, and does not revenge trade.',
+    problem:
+    'You see a textbook XAUUSD setup at 3am Frankfurt time and you\'re asleep. You see one at 14:30 and you second-guess it until it\'s gone. You journal your best trades and 80% of them are ones you didn\'t take. DSS isn\'t smarter than you — it\'s just awake and unbothered.',
   steps: [
     { title: 'Continuous analysis', description: 'DSS runs 13 independent strategies across your configured symbols 24/5.' },
     { title: 'AI Brain evaluates context', description: 'Each setup gets a confidence score based on strategy agreement, market regime, and historical accuracy.' },
@@ -46,10 +46,10 @@ const data: ProductPageData = {
     { title: 'Dashboard control', description: 'Start, stop, switch modes, and confirm trades directly from the MT5 dashboard.' },
   ],
   goodToKnow: [
-    'DSS needs internet for AI-powered analysis and signal generation. Without internet, 5 local strategies still work.',
-    'Best with $2,000+ accounts. Smaller accounts limit Kelly Criterion sizing effectiveness.',
-    'Start in Manual mode for your first week. Understand the signals before letting DSS trade for you.',
-    'DSS is not "set and forget" — monitor the first week actively, then reduce oversight as you build confidence.',
+    'Needs internet for the full 13-strategy model. Offline, 5 local strategies still run.',
+    'Under $2k accounts starve the Kelly sizing. You\'ll get the same signals but disproportionate risk.',
+    'Run Manual for week one. Watch the signals. If you don\'t agree with most of them, don\'t switch to Auto.',
+    'Not set-and-forget. Check the log weekly. Broker spread changes at 17:00 NY kill the M15 US30 signals.',
   ],
   basePriceDisplay: '$199',
   aiPriceDisplay: '+$49/mo',

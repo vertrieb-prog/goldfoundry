@@ -5,10 +5,10 @@ const products = [
     name: "PHANTOM News Shield",
     basePrice: "$39",
     aiPrice: "$19/mo",
-    tagline: "Never get caught by news again",
+    tagline: "The EA that reads the economic calendar.",
     description:
-      "Automatically closes or protects your trades before high-impact news events. Reads MT5's built-in economic calendar. Set it and forget it.",
-    whoNeedsIt: "Every MT5 trader who has ever been burned by a news spike.",
+      "15 minutes before NFP, CPI, FOMC: closes USD positions, tightens stops, pauses other EAs. Then waits out the buffer and resumes. Uses MT5's built-in calendar, so no API keys.",
+    whoNeedsIt: "Anyone who has watched a 340-pip NFP candle eat their month.",
     features: [
       "Auto-close before NFP, FOMC, CPI",
       "SL tightening + EA pause during events",
@@ -34,10 +34,10 @@ const products = [
     name: "PHANTOM Trail Pro",
     basePrice: "$49",
     aiPrice: "$19/mo",
-    tagline: "The SL manager your EA should have built in",
+    tagline: "Stop getting tagged out at break-even.",
     description:
-      "Intelligent trailing stop that gives your trades room to breathe. Stepped ATR trailing, break even with buffer, partial profit taking.",
-    whoNeedsIt: "Anyone tired of getting stopped out too early.",
+      "4-step ATR trail that moves in jumps, not ticks. BE with a buffer (not exact entry). 30/30/40 partial closes at your targets. Replaces the garbage trailing built into most EAs.",
+    whoNeedsIt: "Traders who keep watching +$500 trades close at +$50.",
     features: [
       "4-step ATR trailing (not continuous)",
       "Break Even with configurable buffer",
@@ -63,10 +63,10 @@ const products = [
     name: "PHANTOM Guardian",
     basePrice: "$49",
     aiPrice: "$29/mo",
-    tagline: "Pass your prop firm challenge",
+    tagline: "The rule nobody enforces at 2am.",
     description:
-      "Enforces risk management rules automatically. One-click FTMO preset. Prevents you from blowing your account or failing your prop firm challenge.",
-    whoNeedsIt: "Prop firm traders (FTMO, MFF, E8, FundedNext).",
+      "Hard cap on daily loss. Auto-close at 96% of your limit. Anti-tilt cooldown after 3 losses in a row. FTMO/MFF/E8 presets so you don't have to do math. Runs offline.",
+    whoNeedsIt: "FTMO challenge takers who've failed on day 3 before.",
     features: [
       "Daily loss limit + max drawdown",
       "Anti-tilt: pause after 3 losses",
@@ -92,10 +92,10 @@ const products = [
     name: "PHANTOM Airbag",
     basePrice: "$99",
     aiPrice: "$29/mo",
-    tagline: "Your EA's AI safety net",
+    tagline: "Vetoes the trades your EA shouldn't take.",
     description:
-      "Runs alongside ANY EA you already own. Intercepts every trade and validates it through intelligent checks. Bad trades get vetoed before they cost you money.",
-    whoNeedsIt: "Anyone running EAs (Quantum, Gold, any trading robot).",
+      "Sits between your existing EA and the broker. Before any order fires, Airbag checks 41 things (spread, session, correlation, news, drawdown). If the context is wrong, the order is vetoed. If your connection drops, trades go through — fail-safe, not fail-closed.",
+    whoNeedsIt: "Anyone running a $1,500 MQL5 EA they don't fully trust.",
     features: [
       "15+ local checks (spread, session, news, correlation)",
       "Max positions + daily loss protection",
@@ -122,10 +122,10 @@ const products = [
     name: "PHANTOM Trader DSS",
     basePrice: "$199",
     aiPrice: "$49/mo",
-    tagline: "The AI that trades for you",
+    tagline: "13 strategies voting on every entry.",
     description:
-      "Complete standalone AI trader. Generates its own signals, manages positions, learns from 100,000+ real trades. Auto, Semi-Auto, or Manual mode.",
-    whoNeedsIt: "Serious traders who want AI-powered autonomous trading.",
+      "Scans 6 symbols 24/5. Each setup scored by how many strategies agree plus market regime. Above 70%, it fires. Auto mode trades, Semi pings you to confirm, Manual just shows the signal. Kelly sizing, integrated SL/DCA/trail.",
+    whoNeedsIt: "$10k+ accounts. Smaller ones starve the Kelly sizing.",
     features: [
       "5 local strategies (breakout, trend, scalp, range, mean reversion)",
       "ATR-based entries + position management",
@@ -599,7 +599,7 @@ export default function SentinelProducts() {
               marginBottom: 16,
             }}
           >
-            One Suite · Everything You Need
+            Six EAs. Pick What You Need.
           </div>
           <h2
             style={{
@@ -611,7 +611,7 @@ export default function SentinelProducts() {
               margin: "0 0 16px",
             }}
           >
-            Each tool is powerful alone.<br />Together, unstoppable.
+            One problem each.<br />Run them solo or stack them.
           </h2>
           <p
             style={{
@@ -623,7 +623,7 @@ export default function SentinelProducts() {
               lineHeight: 1.7,
             }}
           >
-            Every product starts with a one-time base version that works offline. Add the AI upgrade when you are ready for intelligent analysis, learning, and reports.
+            Every EA ships with a one-time Base (offline, no API keys, no phone-home). The optional AI Upgrade adds pattern recognition and weekly reports. You never have to buy it.
           </p>
         </div>
 

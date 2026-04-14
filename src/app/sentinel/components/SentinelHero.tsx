@@ -94,7 +94,7 @@ export default function SentinelHero() {
                 display: "inline-block",
               }}
             />
-            The Complete EA Suite for MT5
+            14 EAs. 28 Listings on MQL5.
           </div>
 
           {/* H1 */}
@@ -109,16 +109,16 @@ export default function SentinelHero() {
               margin: "0 0 24px",
             }}
           >
-            5 tools. One suite.{" "}
+            Your EA doesn&apos;t know{" "}
             <br />
-            Every trade{" "}
+            it&apos;s about to{" "}
             <em
               style={{
                 color: "#d4af37",
                 fontStyle: "italic",
               }}
             >
-              protected.
+              blow up.
             </em>
           </h1>
 
@@ -132,8 +132,8 @@ export default function SentinelHero() {
               maxWidth: 520,
             }}
           >
-            Stop buying 10 different EAs. PHANTOM is the complete suite that makes every other EA better
-            and every trade safer. Each tool is powerful alone. Together, they are unstoppable.
+            I built PHANTOM because my own EA blew a $50k FTMO account on a Wednesday FOMC. Six tools,
+            each solving one specific way an MT5 account dies. Run them with any EA you already paid for.
           </p>
 
           {/* CTAs */}
@@ -168,7 +168,7 @@ export default function SentinelHero() {
                 el.style.boxShadow = "none";
               }}
             >
-              Try the Full Suite Free
+              14-Day Trial. No Card.
             </a>
             <a
               href="#products"
@@ -200,7 +200,7 @@ export default function SentinelHero() {
                 el.style.background = "transparent";
               }}
             >
-              See All 5 Products
+              Browse the 6 EAs
             </a>
           </div>
 
@@ -213,9 +213,9 @@ export default function SentinelHero() {
             }}
           >
             {[
-              "5 Products, 1 Suite",
-              "Base + AI Upgrade Model",
-              "14-Day Free Trial",
+              "Live on MQL5 Market",
+              "MT4 + MT5 builds",
+              "Buy once. Runs offline.",
             ].map((stat) => (
               <div
                 key={stat}

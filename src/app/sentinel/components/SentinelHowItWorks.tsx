@@ -3,27 +3,27 @@
 const steps = [
   {
     number: "01",
-    title: "Signal Arrives",
+    title: "Order Intercepted",
     description:
-      "Your EA fires a signal, or PHANTOM generates one. Every entry attempt passes through the engine — no exceptions.",
+      "Your EA sends OrderSend(). Before it reaches the broker, Airbag catches it. Holds the order for up to 500ms while it thinks.",
   },
   {
     number: "02",
-    title: "41 Checks Run",
+    title: "41 Things Checked",
     description:
-      "SMC direction, session analysis, news proximity, spread, correlation, drawdown state — all evaluated in under 500ms.",
+      "Spread vs 14-day average, session/hour winrate, minutes to next red news, open correlation with other positions, daily drawdown state, ATR regime.",
   },
   {
     number: "03",
-    title: "AI Brain Decides",
+    title: "Verdict",
     description:
-      "The PHANTOM AI reviews the full context snapshot and renders a verdict with natural language reasoning you can read.",
+      "A pass/fail per check plus an overall confidence score. If you're on the AI plan, plain English for why (\"Skipped: spread 4.2, EURUSD at 14:28 before CPI\").",
   },
   {
     number: "04",
-    title: "Execute or Veto",
+    title: "ALLOW / SKIP / MODIFY",
     description:
-      "ALLOW the trade, SKIP it, or MODIFY parameters. Every decision is logged with the reasoning — your edge compounds.",
+      "Order goes through untouched, gets cancelled, or gets smaller lot + tighter SL. Everything logged to CSV so you can audit next weekend.",
   },
 ];
 
@@ -82,7 +82,7 @@ export default function SentinelHowItWorks() {
               margin: 0,
             }}
           >
-            How PHANTOM thinks.
+            What Airbag actually does when your EA fires.
           </h2>
         </div>
 

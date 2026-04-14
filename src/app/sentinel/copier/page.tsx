@@ -6,13 +6,13 @@ import type { ProductPageData } from '../components/ProductPageLayout'
 const data: ProductPageData = {
   slug: 'copier',
   name: 'Copier',
-  tagline: 'One strategy. Every account. Under 2 seconds.',
+  tagline: 'Master trade to 5 follower accounts in under 2 seconds.',
   description:
-    'Copy trades from any MT5 account to any other MT5 account — same broker, different broker, even different continent. Master-Follower setup with smart lot scaling and <2 second latency.',
+    'Runs one master EA and as many followers as you want, across brokers, across VPS regions. Lot scaling per follower (fixed, equity-based, multiplier). SL and TP get copied and scaled. Symbol suffix mapping handles XAUUSD vs XAUUSD.raw automatically.',
   basePrice: '$79',
   aiPrice: '+$29/mo',
   problem:
-    'You have a winning strategy on one account. You want to copy it to your prop firm account, your second broker, your friend\'s account. But existing copiers are $200/month, break every update, and add 10+ seconds of delay. By the time the copy executes, the price has moved.',
+    'You have a working strategy on your personal IC Markets account. You want it on your FTMO challenge and your wife\'s FundedNext. Every copier on MQL5 Market is either $200/month, dies on every MT5 update, or adds 8 seconds of latency on news. By the time the FTMO account opens, XAUUSD has moved 15 pips.',
   steps: [
     { title: 'Master EA detects trade', description: 'When a new trade opens on your master account, the EA picks it up instantly.' },
     { title: 'Sends to PHANTOM cloud', description: 'Trade data is encrypted and sent to the PHANTOM relay server.' },
@@ -50,10 +50,10 @@ const data: ProductPageData = {
     { title: 'Cloud + Local mode', description: 'Cloud for cross-broker. Local mode for same-machine copying without internet.' },
   ],
   goodToKnow: [
-    'Cloud mode needs internet on both master and follower. Average latency is under 2 seconds.',
-    'Slippage is possible on fast-moving markets. The max slippage setting protects against extreme cases.',
-    'Local mode works offline but only for accounts on the same MT5 terminal / machine.',
-    'Reverse copy is powerful but risky — only use it if you understand why you are inverting the signal.',
+    'Cloud mode needs both sides online. Same-continent average is 1.2s. Cross-continent is closer to 2.8s.',
+    'Slippage happens. The max-slippage setting just caps how bad you\'re willing to let it get.',
+    'Local mode is free of latency but only works when master and follower share the same MT5 installation.',
+    'Reverse copy is not a hedging strategy. If you don\'t know why you\'d invert a signal, don\'t turn it on.',
   ],
   basePriceDisplay: '$79',
   aiPriceDisplay: '+$29/mo',

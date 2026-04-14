@@ -14,7 +14,7 @@ import MQL5TrustStrip from "./components/MQL5TrustStrip";
 
 const title = "PHANTOM Suite — 28 EAs Live on MQL5 Market | MT4+MT5";
 const description =
-  "The complete EA suite for MT4 and MT5 traders. 14 products, 28 listings live on the MQL5 Market — Guardian, News Shield, Trail Pro, Airbag, DSS, Copier and more.";
+  "14 EAs on the MQL5 Market for MT4 and MT5. Guardian enforces prop firm rules, News Shield dodges NFP, Airbag vetoes bad trades from any other EA you run. Buy once, runs offline.";
 
 export const metadata: Metadata = {
   title,

@@ -6,13 +6,13 @@ import type { ProductPageData } from '../components/ProductPageLayout'
 const data: ProductPageData = {
   slug: 'guardian',
   name: 'Guardian',
-  tagline: 'Your prop firm challenge bodyguard.',
+  tagline: 'The rule you can\'t enforce yourself at 2am.',
   description:
-    'Guardian monitors your account in real-time and enforces your risk rules automatically. Set your limits once, trade with confidence. Never blow a challenge because of one bad moment again.',
+    'Guardian watches your equity and closes trades before you breach the daily loss cap. Configure it once. After 3 losses in a row it pauses you. After 96% of your daily limit, it flattens everything. It\'s not magic — it\'s a rule with teeth.',
   basePrice: '$49',
   aiPrice: '+$29/mo',
   problem:
-    'Traders lose prop firm challenges not because of bad strategy, but because of one emotional moment. One revenge trade. One forgotten stop loss. One session where you told yourself "just one more trade" — and that trade wiped out two weeks of careful work.',
+    'Most FTMO challenges don\'t die from bad strategy. They die at 23:40 on a Tuesday, when you\'re down $380 on a $500 daily limit, and you open one more revenge trade on XAUUSD because you\'re tired and you want it back. Guardian is there because at 23:40 you are not.',
   steps: [
     { title: 'Set your limits', description: 'Pick a preset (FTMO, MFF, E8) or configure your own rules.' },
     { title: 'Guardian monitors everything', description: 'Equity, P&L, open positions, drawdown — all in real-time.' },
@@ -48,10 +48,10 @@ const data: ProductPageData = {
     { title: 'No internet needed', description: 'Base version runs 100% locally on your MT5 terminal.' },
   ],
   goodToKnow: [
-    'Guardian will close your trades when limits are reached. That is the entire point — it protects you from yourself.',
-    'Start with Easy Mode (3 inputs) and switch to Advanced when you understand each rule.',
-    'Guardian cannot prevent overnight gaps or flash crashes. It reacts to real-time price, not future price.',
-    'The anti-tilt cooldown is not a punishment — it is the highest-EV decision after consecutive losses.',
+    'Guardian will close your trades. That\'s the job. If you hate that, buy something else.',
+    'Start in Easy Mode (3 inputs). Switch to Advanced once you stop fighting the cooldown.',
+    'It reacts to tick price. Weekend gaps and flash crashes still hit — nothing in MT5 can stop those.',
+    'Don\'t buy this if you scalp and routinely break your own rules on purpose. You\'ll just disable it.',
   ],
   basePriceDisplay: '$49',
   aiPriceDisplay: '+$29/mo',

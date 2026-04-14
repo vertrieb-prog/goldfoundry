@@ -6,13 +6,13 @@ import type { ProductPageData } from '../components/ProductPageLayout'
 const data: ProductPageData = {
   slug: 'news-shield',
   name: 'News Shield',
-  tagline: 'Never get caught in a news spike again.',
+  tagline: 'Reads the MT5 calendar so you don\'t have to.',
   description:
-    'News Shield reads the MT5 economic calendar and automatically protects your trades before high-impact events. Close positions, tighten stops, or pause your EAs — all hands-free.',
+    'Scans the MT5 economic calendar every minute. 15 minutes before the next red USD event, it closes your USD positions (or tightens SL to BE, or just pauses other EAs — your pick). After the event plus your buffer, it resumes. No API key, works offline.',
   basePrice: '$39',
   aiPrice: '+$19/mo',
   problem:
-    'One NFP release. 30 seconds. Your entire month of profits — gone. Your EA did not know. You did not react fast enough. By the time you saw the spike, the damage was done. And it happens every single month.',
+    'First Friday of the month, 14:30 UTC. NFP releases. XAUUSD spikes 340 pips in 30 seconds. Your EA had an open BUY. Your stop was 80 pips away. By the time you looked up from Slack, you were down the whole month. And this happens every single month.',
   steps: [
     { title: 'Reads MT5 calendar', description: 'News Shield scans the built-in economic calendar for upcoming events.' },
     { title: 'Detects high-impact event', description: 'Filters by impact level (High/Medium/Low) and affected currency.' },
@@ -45,10 +45,10 @@ const data: ProductPageData = {
     { title: 'No internet needed', description: 'Uses MT5 built-in calendar. Works 100% offline.' },
   ],
   goodToKnow: [
-    'News Shield only protects against scheduled events (NFP, CPI, FOMC, etc.).',
-    'It cannot predict or protect against surprise events (war, natural disasters, emergency rate decisions).',
-    'The MT5 economic calendar can be 1-2 minutes delayed. The 15-minute buffer accounts for this.',
-    'If you trade news as a strategy, News Shield is not for you — it is designed to avoid news, not trade it.',
+    'Scheduled events only: NFP, CPI, FOMC, ECB, BoE, etc. If it\'s on the calendar, it\'s covered.',
+    'Unscheduled events (war, SNB unpegging, bank failures) will still hit you. Nothing protects against those.',
+    'The MT5 calendar lags 1-2 minutes. The default 15-minute buffer absorbs that. Don\'t tighten it below 10.',
+    'If you trade news (breakout plays on NFP), uninstall this. It\'s designed for people who want to sit news out.',
   ],
   basePriceDisplay: '$39',
   aiPriceDisplay: '+$19/mo',

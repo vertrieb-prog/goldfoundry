@@ -6,13 +6,13 @@ import type { ProductPageData } from '../components/ProductPageLayout'
 const data: ProductPageData = {
   slug: 'trail-pro',
   name: 'Trail Pro',
-  tagline: 'Stop leaving money on the table.',
+  tagline: '4 steps. Not continuous. Not symmetric. Not yours to worry about.',
   description:
-    'Trail Pro replaces your basic trailing stop with a 4-step ATR-based system that locks in profit in stages. Partial closes, break-even with buffer, and symbol-aware defaults — all automatic.',
+    'Replaces the continuous trailing stop that keeps tagging you out at break-even. Trail Pro moves in ATR-sized jumps with a cooldown between jumps. BE is entry + small buffer (not exact entry, because noise). Default 30/30/40 partial close schedule.',
   basePrice: '$49',
   aiPrice: '+$19/mo',
   problem:
-    'You watch a trade go +$500 in profit. Then it retraces. Your trailing stop was too tight. Stopped out at +$50. The trade then goes to +$800 without you. Standard trailing stops are a blunt instrument. They either lock in too little or get hit too early.',
+    'XAUUSD BUY, +$500 on the screen. You set a 20-pip trailing stop. A 12-pip wick during the London/NY handoff tags it. +$50 closed. The trade runs another 300 pips without you, and you watch it on a different account. Continuous trailing stops are too tight or too loose — never the right number.',
   steps: [
     { title: 'Trade reaches profit threshold', description: 'Trail Pro activates once your trade hits the minimum profit level you set.' },
     { title: 'Break Even with buffer', description: 'SL moves to entry + buffer (not exact entry). Small cushion prevents premature stop-outs.' },
@@ -45,10 +45,10 @@ const data: ProductPageData = {
     { title: 'Easy / Advanced mode', description: 'Easy: pick your symbol, Trail Pro handles the rest. Advanced: full control.' },
   ],
   goodToKnow: [
-    'Trail Pro works best in trending markets. In choppy/ranging conditions, stepped trailing may lock less profit than a wider fixed SL.',
-    'Stepped trailing means SL jumps (not continuous movement). This is by design — continuous trailing gets stopped out more often.',
-    'The buffer at break-even means a small loss is possible at BE level. This trade-off prevents the most common stop-out scenario.',
-    'Partial closes reduce total position size. Your remaining trail rides with less volume but more room.',
+    'Works best in trends. In a ranging Asia session, a fixed wider SL might outperform. Know your market.',
+    'Stepped means SL jumps in chunks. That\'s intentional. If you want continuous trailing, MT5 already has that built in.',
+    'The BE buffer means you can still lose a few pips at "break-even". That\'s the tradeoff for not getting wicked out.',
+    'Partial closes shrink your position. The runner rides with less size and more room — by design.',
   ],
   basePriceDisplay: '$49',
   aiPriceDisplay: '+$19/mo',

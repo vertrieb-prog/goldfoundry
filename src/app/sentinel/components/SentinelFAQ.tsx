@@ -4,36 +4,36 @@ import { useState } from "react";
 
 const faqs = [
   {
-    q: "Does PHANTOM Airbag work with my existing EA?",
-    a: "Yes. PHANTOM Airbag is broker- and EA-agnostic. It runs as a separate Expert Advisor on the same chart and intercepts signals via a shared memory bridge. No source code access required. If your EA fires signals on MT5, Airbag catches them.",
+    q: "Will Airbag work with the paid EA I already bought on MQL5?",
+    a: "Yes. Airbag doesn't need your EA's source. It runs as its own Expert Advisor on the same chart and hooks OrderSend via a shared-memory bridge. Any EA that places orders through the standard MT5 trade pool gets intercepted. Magic number filters let you pick which EAs get checked and which pass through.",
   },
   {
-    q: "What is the difference between the base version and the AI upgrade?",
-    a: "The base version of every product is a one-time purchase that works completely offline — no internet, no API, no dependencies. It includes all core features and rule-based protection. The AI upgrade is a monthly subscription that adds intelligent analysis, learning from 100,000+ trades, explainable decisions, and natural language configuration. You need the base before you can add the AI upgrade.",
+    q: "What's the actual difference between Base and AI?",
+    a: "Base is a compiled EX5 from the MQL5 Market, one payment, no internet, no keys. Every rule-based feature is in Base — the daily loss cap, the ATR trail, the news-shield logic. AI is a separate monthly subscription that pattern-matches on your own trade log and sends a weekly PDF. You can own Base for a year and never touch AI. Nothing degrades if you don't.",
   },
   {
-    q: "Is this compatible with prop firms like FTMO?",
-    a: "Yes. PHANTOM includes a dedicated Prop Firm mode that enforces challenge rules automatically — daily loss limits, max drawdown, news lockouts. It was built with FTMO, MyForexFunds, and E8 Funding rules in mind. Guardian has one-click presets for all major prop firms.",
+    q: "Does this actually pass FTMO rules?",
+    a: "Guardian has presets for FTMO, MyForexFunds, E8, and FundedNext. It enforces daily loss, max drawdown from peak equity, minimum trading days, and weekend flat. News Shield handles the news-lockout windows where FTMO bans trading. If you want the exact rule mapping, the Guardian page has it documented.",
   },
   {
     q: "How does the 14-day trial work?",
-    a: "Sign up with your email, receive your license key instantly. Install the EA on your MT5 terminal, enter the key, and PHANTOM activates. Full functionality — live trading, all features, AI enabled. No credit card. No commitment. Cancel by simply not activating after the trial.",
+    a: "Email in, license key out. Install the EA, paste the key, done. Full functionality, live accounts allowed, AI features on. No card, no auto-charge. If you don't like it, don't buy the MQL5 listing — the license just stops working on day 15.",
   },
   {
-    q: "Do I need to buy all 5 products?",
-    a: "No. Every product works independently. Start with what you need — most traders begin with Airbag or Guardian. You can add more products at any time, and each one has its own base + AI upgrade path. They are designed to work together, but none requires another.",
+    q: "Do I have to buy all six?",
+    a: "No. Most people start with one. FTMO candidates buy Guardian first. Traders running a paid EA they mistrust start with Airbag. Scalpers buy Trail Pro. Everything works standalone.",
   },
   {
-    q: "What data do you collect?",
-    a: "Only trade metadata: entry/exit prices, timestamps, check results, and AI verdicts. Never account credentials, never your broker login. All data is anonymized and used solely to improve the AI models. Fully GDPR compliant. Data stored on EU servers.",
+    q: "What do you collect?",
+    a: "Order metadata: symbol, lot, entry, SL, TP, check results, verdict. No login credentials, no broker passwords, no MT5 investor access. Hosted in Frankfurt. GDPR compliant because it's built in Germany by someone who has to live under those rules.",
   },
   {
-    q: "What happens if I lose internet while using an AI upgrade?",
-    a: "PHANTOM fails safe. If the connection drops, Airbag lets trades through rather than blocking them. DSS will pause AI signals but your base strategies keep running. Your trades are never stuck or locked because of a connection issue.",
+    q: "My internet dropped mid-trade. What now?",
+    a: "Airbag fails open — if it can't reach the cloud for AI checks, the trade goes through. DSS pauses AI signals and keeps running its 5 local strategies. Guardian and News Shield don't need internet at all. Nothing stays locked because of a dead connection.",
   },
   {
-    q: "Can I run this on multiple accounts?",
-    a: "Up to 5 activations per license. This covers demo + live, multiple brokers, or multiple MT5 installations. If you need more activations for a trading firm or team setup, contact us — we offer volume licensing.",
+    q: "How many accounts per license?",
+    a: "5 activations. Covers demo + live, two brokers, a laptop and a VPS — that kind of setup. Firms and prop teams, email and ask for volume licensing.",
   },
 ];
 
@@ -83,7 +83,7 @@ export default function SentinelFAQ() {
               margin: 0,
             }}
           >
-            Frequently asked.
+            Things people actually ask.
           </h2>
         </div>
 

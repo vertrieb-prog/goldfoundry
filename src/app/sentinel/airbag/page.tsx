@@ -6,13 +6,13 @@ import type { ProductPageData } from '../components/ProductPageLayout'
 const data: ProductPageData = {
   slug: 'airbag',
   name: 'Airbag',
-  tagline: '41 checks. Every trade. Under 500ms.',
+  tagline: 'Catches bad trades your EA shouldn\'t have taken.',
   description:
-    'Airbag intercepts every trade before execution and runs 41 AI-powered checks in real-time. Spread, session, news, volume, correlation — if the context is wrong, the trade does not go through.',
+    'Airbag sits between your existing EA and the broker. Before OrderSend completes, it runs 41 checks on context: spread vs 14d average, session winrate, correlation with open trades, minutes to red news, daily drawdown state. Wrong context, order cancelled. Right context, order through in under 500ms.',
   basePrice: '$99',
   aiPrice: '+$29/mo',
-  problem:
-    'You paid $1,500 for a Gold EA. It makes money for 3 months. Then it takes one bad trade in the wrong session with high spread during news — and blows 2 weeks of profit in 5 minutes. The EA does not know context. It only knows its strategy.',
+    problem:
+    'You paid $1,500 for GoldMaster v3 on MQL5. Three green months. Then one Wednesday at 14:28 it opens XAUUSD BUY 0.5 lot, spread is 4.2 because CPI is two minutes out, and five minutes later you\'re down $1,800. The EA didn\'t know about the news. The dev who sold it to you assumed you\'d handle news yourself.',
   steps: [
     { title: 'Your EA opens a trade', description: 'Any expert advisor sends a trade order to MT5 as normal.' },
     { title: 'Airbag intercepts', description: 'Before execution, Airbag catches the order and holds it for validation.' },
@@ -48,10 +48,10 @@ const data: ProductPageData = {
     { title: 'Push alerts', description: 'Real-time MT5 push notifications for every ALLOW, SKIP, and MODIFY decision.' },
   ],
   goodToKnow: [
-    'Airbag needs internet for the full 41-check AI validation (~500ms per check). Without internet, 15+ local checks still run.',
-    'If the connection drops mid-check, Airbag fails safe — trades go through. Protection > blocking everything.',
-    'Airbag does not guarantee all bad trades are caught. It significantly reduces low-quality entries, not eliminates them.',
-    'Paper mode is recommended for the first week. See what Airbag would filter before letting it block real trades.',
+    'Full 41-check pipeline needs internet (about 450ms median). Offline, 15 local checks still run.',
+    'Fails open. If the cloud is unreachable, trades go through — I\'d rather let a bad one pass than lock you out of exits.',
+    'This reduces the worst trades. It does not turn a losing EA into a winner. If your EA has a real edge problem, Airbag won\'t fix it.',
+    'Run Paper Mode for week one. It logs what it would have blocked without blocking anything. Check the CSV, then flip to live.',
   ],
   basePriceDisplay: '$99',
   aiPriceDisplay: '+$29/mo',
