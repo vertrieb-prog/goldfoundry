@@ -367,7 +367,7 @@ export default function SentinelTrialForm() {
             }}
           >
             <span style={{ fontSize: 10, opacity: 0.6 }}>MQL5</span>
-            Browse all 14 EAs on MQL5 Market →
+            Browse all 14 EAs (28 listings) on MQL5 Market →
           </a>
         </div>
       </div>
