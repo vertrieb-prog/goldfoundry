@@ -43,7 +43,7 @@ const data: ProductPageData = {
     { title: 'Integrated SL / DCA / Trail', description: 'Complete trade management from entry to exit. No extra EAs needed.' },
     { title: 'FTMO compatible', description: 'Respects prop firm drawdown rules. Auto-pauses when approaching limits.' },
     { title: 'Learning from 100K+ trades', description: 'AI model trained on historical trade outcomes. Continuously improving.' },
-    { title: 'Telegram control', description: 'Start, stop, switch modes, and confirm trades directly from Telegram.' },
+    { title: 'Dashboard control', description: 'Start, stop, switch modes, and confirm trades directly from the MT5 dashboard.' },
   ],
   goodToKnow: [
     'DSS needs internet for AI-powered analysis and signal generation. Without internet, 5 local strategies still work.',
@@ -59,7 +59,7 @@ const data: ProductPageData = {
     'Auto / Semi / Manual modes',
     'Integrated SL and TP management',
     'Basic position sizing',
-    'Telegram alerts',
+    'Push alerts',
     'FTMO-compatible rules',
     'Runs offline for local strategies',
   ],

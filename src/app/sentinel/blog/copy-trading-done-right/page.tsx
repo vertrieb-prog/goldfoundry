@@ -71,7 +71,7 @@ export default function CopyTradingPage() {
         <strong style={{ color: '#f5f5f5' }}>Copy your own accounts.</strong> You trade on your personal account and want the same trades on your funded account. Or you have two funded accounts with different firms. Instead of placing the same trade manually on each account (risking delays and mistakes), the copier handles it automatically.
       </P>
       <P>
-        <strong style={{ color: '#f5f5f5' }}>Share with friends or team members.</strong> You are part of a trading group. One person generates the signals, and the others copy automatically. No signal service needed, no Telegram delays, no manual execution from a phone while you are at work.
+        <strong style={{ color: '#f5f5f5' }}>Share with friends or team members.</strong> You are part of a trading group. One person generates the signals, and the others copy automatically. No signal service needed, no messaging delays, no manual execution from a phone while you are at work.
       </P>
       <P>
         <strong style={{ color: '#f5f5f5' }}>Manage client accounts.</strong> If you manage money for others (with appropriate legal arrangements), the copier lets you trade once on your master account and have every client account follow automatically. Lot scaling ensures each account trades proportionally to its balance.

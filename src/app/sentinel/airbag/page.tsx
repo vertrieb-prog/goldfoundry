@@ -45,7 +45,7 @@ const data: ProductPageData = {
     { title: 'FTMO ready', description: 'Pre-configured to respect prop firm rules. Never breach by accident.' },
     { title: 'Paper mode', description: 'Test Airbag without blocking real trades. See what would have been filtered.' },
     { title: 'Magic number filter', description: 'Only intercept specific EAs. Leave others untouched.' },
-    { title: 'Telegram alerts', description: 'Real-time notifications for every ALLOW, SKIP, and MODIFY decision.' },
+    { title: 'Push alerts', description: 'Real-time MT5 push notifications for every ALLOW, SKIP, and MODIFY decision.' },
   ],
   goodToKnow: [
     'Airbag needs internet for the full 41-check AI validation (~500ms per check). Without internet, 15+ local checks still run.',
@@ -62,7 +62,7 @@ const data: ProductPageData = {
     'Magic number filter',
     'Paper mode for testing',
     'FTMO-compatible rules',
-    'Telegram alerts',
+    'Push alerts',
     'Runs offline for local checks',
   ],
   aiFeatures: [
