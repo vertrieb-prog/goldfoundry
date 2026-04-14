@@ -4,6 +4,7 @@ import ProductPageLayout from '../components/ProductPageLayout'
 import type { ProductPageData } from '../components/ProductPageLayout'
 
 const data: ProductPageData = {
+  slug: 'dss',
   name: 'DSS',
   tagline: 'Decision Support System. 13 strategies. One brain.',
   description:

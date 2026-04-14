@@ -4,6 +4,7 @@ import ProductPageLayout from '../components/ProductPageLayout'
 import type { ProductPageData } from '../components/ProductPageLayout'
 
 const data: ProductPageData = {
+  slug: 'news-shield',
   name: 'News Shield',
   tagline: 'Never get caught in a news spike again.',
   description:

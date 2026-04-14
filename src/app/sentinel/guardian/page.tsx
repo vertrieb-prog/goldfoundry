@@ -4,6 +4,7 @@ import ProductPageLayout from '../components/ProductPageLayout'
 import type { ProductPageData } from '../components/ProductPageLayout'
 
 const data: ProductPageData = {
+  slug: 'guardian',
   name: 'Guardian',
   tagline: 'Your prop firm challenge bodyguard.',
   description:

@@ -4,6 +4,7 @@ import ProductPageLayout from '../components/ProductPageLayout'
 import type { ProductPageData } from '../components/ProductPageLayout'
 
 const data: ProductPageData = {
+  slug: 'copier',
   name: 'Copier',
   tagline: 'One strategy. Every account. Under 2 seconds.',
   description:

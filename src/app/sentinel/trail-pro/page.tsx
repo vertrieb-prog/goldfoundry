@@ -4,6 +4,7 @@ import ProductPageLayout from '../components/ProductPageLayout'
 import type { ProductPageData } from '../components/ProductPageLayout'
 
 const data: ProductPageData = {
+  slug: 'trail-pro',
   name: 'Trail Pro',
   tagline: 'Stop leaving money on the table.',
   description:

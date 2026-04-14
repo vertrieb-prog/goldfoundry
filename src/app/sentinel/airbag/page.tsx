@@ -4,6 +4,7 @@ import ProductPageLayout from '../components/ProductPageLayout'
 import type { ProductPageData } from '../components/ProductPageLayout'
 
 const data: ProductPageData = {
+  slug: 'airbag',
   name: 'Airbag',
   tagline: '41 checks. Every trade. Under 500ms.',
   description:

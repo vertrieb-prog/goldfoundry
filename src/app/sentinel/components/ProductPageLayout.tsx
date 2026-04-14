@@ -13,8 +13,10 @@ import ProductCTA from './ProductCTA'
 import type { Step, TerminalLine } from './HowItWorksAnimated'
 import type { Feature } from './FeaturesGrid'
 import type { PerformanceData } from './PerformanceCards'
+import type { SentinelSlug } from '../_data/mql5-links'
 
 export interface ProductPageData {
+  slug: SentinelSlug
   name: string
   tagline: string
   description: string
@@ -44,6 +46,7 @@ export default function ProductPageLayout({ data }: { data: ProductPageData }) {
       <SentinelNav />
       <main>
         <ProductHero
+          slug={data.slug}
           name={data.name}
           tagline={data.tagline}
           description={data.description}
@@ -72,7 +75,7 @@ export default function ProductPageLayout({ data }: { data: ProductPageData }) {
           dateRange={data.performanceDateRange}
           disclaimer={data.performanceDisclaimer}
         />
-        <ProductCTA />
+        <ProductCTA slug={data.slug} />
       </main>
       <SentinelFooter />
     </>
