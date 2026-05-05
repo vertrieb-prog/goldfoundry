@@ -28,95 +28,99 @@ interface Props {
 function numColor(v: number) { return v >= 0 ? "#22c55e" : "#ef4444"; }
 function fmtMoney(v: number) { return `${Math.abs(Math.round(v)).toLocaleString("de-DE")}€`; }
 
-const cardVariants = {
-  hidden: { opacity: 0, y: 30 },
-  visible: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.08, duration: 0.4 } }),
-} as any;
-
 export default function StrategyEngine({ accounts }: Props) {
-  if (!accounts?.length) return null;
+  const acc = accounts?.[0];
+  const isNew = !acc || (acc.gain === 0 && acc.profit === 0);
 
   return (
-    <section id="strategies" style={{ padding: "80px 20px", maxWidth: 1000, margin: "0 auto" }}>
+    <section id="strategies" style={{ padding: "80px 20px", maxWidth: 900, margin: "0 auto" }}>
       <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} style={{ textAlign: "center", marginBottom: 48 }}>
         <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.2em", color: "#d4a537", marginBottom: 12, fontWeight: 600 }}>
           Die PHANTOM Engine
         </div>
         <h2 style={{ fontSize: "clamp(28px, 5vw, 44px)", fontWeight: 800, lineHeight: 1.15, marginBottom: 16, color: "#fafafa" }}>
           <span style={{ background: "linear-gradient(135deg, #d4a537, #f0d060)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-            {accounts.length} Strategien
+            Eine Strategie.
           </span>{" "}
-          handeln gerade für dich
+          Ein Asset. Volle Transparenz.
         </h2>
-        <p style={{ color: "#a1a1aa", fontSize: "clamp(14px, 2vw, 16px)", maxWidth: 520, margin: "0 auto", lineHeight: 1.7 }}>
-          Jede Strategie laeuft auf einem eigenen Account — alle live verifiziert.
-          {accounts.length > 6 && " Neue Strategien werden laufend ergaenzt."}
+        <p style={{ color: "#a1a1aa", fontSize: "clamp(14px, 2vw, 16px)", maxWidth: 560, margin: "0 auto", lineHeight: 1.7 }}>
+          PHANTOM tradet ausschließlich Gold (XAUUSD). Live-Account bei Tegas FX, jede Position direkt aus MetaApi gestreamt.
         </p>
       </motion.div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(280px, 100%), 1fr))", gap: 16 }}>
-        {accounts.map((acc, i) => {
-          const isNew = acc.gain === 0 && acc.profit === 0;
-          return (
-            <motion.div key={acc.name} custom={i} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={cardVariants}
-              style={{ background: "rgba(10,8,6,0.7)", border: "1px solid rgba(212,165,55,0.08)", borderRadius: 16, padding: "20px 22px", position: "relative" }}>
+      {acc && (
+        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          style={{ background: "rgba(10,8,6,0.7)", border: "1px solid rgba(212,165,55,0.15)", borderRadius: 20, padding: "32px 36px", position: "relative", maxWidth: 640, margin: "0 auto" }}>
 
-              {/* LIVE indicator */}
-              <div style={{ position: "absolute", top: 14, right: 14, display: "flex", alignItems: "center", gap: 5 }}>
-                <span style={{ width: 6, height: 6, borderRadius: "50%", background: isNew ? "#6d6045" : "#22c55e", animation: isNew ? "none" : "sp-pulse 2s ease-in-out infinite" }} />
-                <span style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", color: isNew ? "#6d6045" : "#22c55e", letterSpacing: "0.08em" }}>
-                  {isNew ? "NEU" : "LIVE"}
-                </span>
+          <div style={{ position: "absolute", top: 18, right: 18, display: "flex", alignItems: "center", gap: 6 }}>
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: isNew ? "#6d6045" : "#22c55e", animation: isNew ? "none" : "sp-pulse 2s ease-in-out infinite" }} />
+            <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: isNew ? "#6d6045" : "#22c55e", letterSpacing: "0.08em" }}>
+              {isNew ? "NEU" : "LIVE"}
+            </span>
+          </div>
+
+          <h3 style={{ fontSize: 22, fontWeight: 800, color: "#fafafa", marginBottom: 4 }}>{acc.name}</h3>
+          <div style={{ fontSize: 12, color: "#6d6045", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 24 }}>
+            XAUUSD · Gold
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "20px 24px", marginBottom: 20 }}>
+            <div>
+              <div style={{ fontSize: 10, color: "#6d6045", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>Gain</div>
+              <div style={{ fontSize: 24, fontWeight: 800, fontFamily: "'JetBrains Mono', monospace", color: isNew ? "#6d6045" : numColor(acc.gain) }}>
+                {isNew ? "—" : `${acc.gain >= 0 ? "+" : ""}${acc.gain.toFixed(1)}%`}
               </div>
-
-              {/* Strategy name */}
-              <h3 style={{ fontSize: 17, fontWeight: 700, color: "#fafafa", marginBottom: 14, paddingRight: 50 }}>{acc.name}</h3>
-
-              {/* Key metrics grid */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px 16px" }}>
-                <div>
-                  <div style={{ fontSize: 10, color: "#6d6045", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>Gain</div>
-                  <div style={{ fontSize: 18, fontWeight: 800, fontFamily: "'JetBrains Mono', monospace", color: isNew ? "#6d6045" : numColor(acc.gain) }}>
-                    {isNew ? "—" : `${acc.gain >= 0 ? "+" : ""}${acc.gain.toFixed(1)}%`}
-                  </div>
-                </div>
-                <div>
-                  <div style={{ fontSize: 10, color: "#6d6045", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>Profit</div>
-                  <div style={{ fontSize: 18, fontWeight: 800, fontFamily: "'JetBrains Mono', monospace", color: isNew ? "#6d6045" : numColor(acc.profit) }}>
-                    {isNew ? "—" : <>{acc.profit >= 0 ? "+" : "-"}{fmtMoney(acc.profit)}</>}
-                  </div>
-                </div>
-                <div>
-                  <div style={{ fontSize: 10, color: "#6d6045", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>Drawdown</div>
-                  <div style={{ fontSize: 14, fontWeight: 600, fontFamily: "'JetBrains Mono', monospace", color: (acc.drawdown ?? 0) > 10 ? "#ef4444" : "#a1a1aa" }}>
-                    {(acc.drawdown ?? 0) === 0 ? "—" : `${(acc.drawdown ?? 0).toFixed(1)}%`}
-                  </div>
-                </div>
-                <div>
-                  <div style={{ fontSize: 10, color: "#6d6045", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>Balance</div>
-                  <div style={{ fontSize: 14, fontWeight: 600, fontFamily: "'JetBrains Mono', monospace", color: "#d4a537" }}>
-                    {fmtMoney(acc.balance)}
-                  </div>
-                </div>
+            </div>
+            <div>
+              <div style={{ fontSize: 10, color: "#6d6045", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>Profit</div>
+              <div style={{ fontSize: 24, fontWeight: 800, fontFamily: "'JetBrains Mono', monospace", color: isNew ? "#6d6045" : numColor(acc.profit) }}>
+                {isNew ? "—" : <>{acc.profit >= 0 ? "+" : "-"}{fmtMoney(acc.profit)}</>}
               </div>
+            </div>
+            <div>
+              <div style={{ fontSize: 10, color: "#6d6045", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>Drawdown</div>
+              <div style={{ fontSize: 18, fontWeight: 700, fontFamily: "'JetBrains Mono', monospace", color: (acc.drawdown ?? 0) > 10 ? "#ef4444" : "#a1a1aa" }}>
+                {(acc.drawdown ?? 0) === 0 ? "—" : `${(acc.drawdown ?? 0).toFixed(1)}%`}
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: 10, color: "#6d6045", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>Balance</div>
+              <div style={{ fontSize: 18, fontWeight: 700, fontFamily: "'JetBrains Mono', monospace", color: "#d4a537" }}>
+                {fmtMoney(acc.balance)}
+              </div>
+            </div>
+          </div>
 
-              {/* Daily badge */}
-              {(acc.daily ?? acc.pnl24h ?? 0) !== 0 && (
-                <div style={{ marginTop: 12, display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 10px", background: "rgba(34,197,94,0.06)", borderRadius: 6, border: "1px solid rgba(34,197,94,0.1)" }}>
-                  <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: numColor(acc.pnl24h ?? acc.daily ?? 0), fontWeight: 600 }}>
-                    {(acc.pnl24h ?? acc.daily ?? 0) >= 0 ? "+" : ""}{Math.abs(acc.pnl24h ?? 0).toFixed(2)}€ heute
-                  </span>
-                </div>
-              )}
-            </motion.div>
-          );
-        })}
-      </div>
+          {(acc.pnl24h ?? acc.daily ?? 0) !== 0 && (
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 14px", background: "rgba(34,197,94,0.06)", borderRadius: 8, border: "1px solid rgba(34,197,94,0.1)" }}>
+              <span style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", color: numColor(acc.pnl24h ?? acc.daily ?? 0), fontWeight: 600 }}>
+                {(acc.pnl24h ?? acc.daily ?? 0) >= 0 ? "+" : ""}{Math.abs(acc.pnl24h ?? 0).toFixed(2)}€ heute
+              </span>
+            </div>
+          )}
+        </motion.div>
+      )}
+
+      <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+        style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16, marginTop: 40 }}>
+        {[
+          { icon: "🎯", title: "Klarer Edge", desc: "Ein Setup, immer wieder. Kein Asset-Hopping, keine Dilettanten-Strategie." },
+          { icon: "📊", title: "Ein Asset", desc: "Nur Gold (XAUUSD). Maximale Spezialisierung statt Streuung über 10 Märkte." },
+          { icon: "🔍", title: "100% verifiziert", desc: "Live-Account bei Tegas FX, jede Position direkt aus MetaApi. Nichts wird schöngerechnet." },
+        ].map((b) => (
+          <div key={b.title} style={{ background: "rgba(10,8,6,0.4)", border: "1px solid rgba(212,165,55,0.06)", borderRadius: 12, padding: "20px 22px" }}>
+            <div style={{ fontSize: 24, marginBottom: 10 }}>{b.icon}</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: "#fafafa", marginBottom: 6 }}>{b.title}</div>
+            <div style={{ fontSize: 12, color: "#a1a1aa", lineHeight: 1.6 }}>{b.desc}</div>
+          </div>
+        ))}
+      </motion.div>
 
       <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.3 }}
         style={{ textAlign: "center", marginTop: 40 }}>
         <a href="#performance" style={{ display: "inline-block", padding: "14px 36px", fontSize: 15, fontWeight: 700, color: "#0a0806", background: "linear-gradient(135deg, #d4a537, #f0d060)", borderRadius: 10, textDecoration: "none" }}>
-          Alle Live-Ergebnisse ansehen
+          Live-Performance ansehen
         </a>
       </motion.div>
 
