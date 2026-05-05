@@ -343,22 +343,12 @@ export default function HomePage() {
 
           <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.15 }}
             style={{ fontSize: "clamp(32px, 6vw, 56px)", fontWeight: 800, lineHeight: 1.1, marginBottom: 16, maxWidth: 700 }}>
-            {isLoading ? (
-              <span style={{ color: "#d4a537" }}>
-                <span className="animate-pulse" style={{ display: "inline-block", width: "clamp(180px, 30vw, 280px)", height: "clamp(32px, 5vw, 56px)", background: "linear-gradient(90deg, rgba(212,165,55,0.1), rgba(212,165,55,0.2), rgba(212,165,55,0.1))", borderRadius: 8 }} />
-              </span>
-            ) : (
-              <><span style={{ color: "#d4a537" }}>{fmtEquity}</span> Portfolio.</>
-            )}
+            Ein Trader. Ein Asset. <span style={{ color: "#d4a537" }}>Live verifiziert.</span>
           </motion.h1>
 
           <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
-            style={{ color: "#a1a1aa", fontSize: "clamp(16px, 2.5vw, 20px)", marginBottom: 40, maxWidth: 500, margin: "0 auto 40px" }}>
-            {isLoading
-              ? "Lade Live-Daten..."
-              : equity > 0
-                ? <>{accs.length || 7} Strategien. <span style={{ color: "#22c55e", fontWeight: 700 }}>{winrate}% Winrate.</span> Live verifiziert.</>
-                : "7 Strategien. 1 Engine. Live verifiziert."}
+            style={{ color: "#a1a1aa", fontSize: "clamp(16px, 2.5vw, 20px)", marginBottom: 40, maxWidth: 560, margin: "0 auto 40px" }}>
+            PHANTOM tradet ausschließlich Gold. Live-Account, MetaApi-verifiziert, jede Position transparent.
           </motion.p>
 
           {/* Live Counters */}
@@ -398,7 +388,7 @@ export default function HomePage() {
           {/* Trust line */}
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.2 }}
             style={{ marginTop: 32, display: "flex", justifyContent: "center", gap: 20, flexWrap: "wrap" }}>
-            {["Live verifiziert", winrate > 0 ? `${winrate}% Winrate` : "Multi-Strategie", "100% Kostenlos"].map((t) => (
+            {["Live verifiziert", "Tegas FX White-Label", "100% kostenlos"].map((t) => (
               <span key={t} style={{ fontSize: 11, color: "#52525b", display: "flex", alignItems: "center", gap: 4 }}>
                 <span style={{ color: "#22c55e" }}>&#x2713;</span> {t}
               </span>
