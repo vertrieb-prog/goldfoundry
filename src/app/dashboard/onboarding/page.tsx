@@ -1,15 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 const TOTAL_STEPS = 3;
 
 const TRADERS = [
-  { id: "phantom", name: "PHANTOM", asset: "XAUUSD", perf: "+1.0%/Tag", wr: "72%" },
-  { id: "nexus", name: "NEXUS", asset: "US500", perf: "+0.7%/Tag", wr: "68%" },
-  { id: "sentinel", name: "SENTINEL", asset: "DAX40", perf: "+0.8%/Tag", wr: "65%" },
-  { id: "spectre", name: "SPECTRE", asset: "EURUSD", perf: "+0.5%/Tag", wr: "74%" },
+  { id: "phantom", name: "PHANTOM", asset: "XAUUSD", perf: "Live verifiziert", wr: "—" },
 ];
 
 const AMOUNTS = [250, 500, 1000, 5000];
@@ -19,6 +16,10 @@ export default function OnboardingPage() {
   const [tegasAccount, setTegasAccount] = useState("");
   const [depositAmount, setDepositAmount] = useState<number | "demo" | null>(null);
   const [selectedTraders, setSelectedTraders] = useState<string[]>([]);
+  // Auto-select PHANTOM (einziger Trader)
+  useEffect(() => {
+    setSelectedTraders(["phantom"]);
+  }, []);
   const [saving, setSaving] = useState(false);
   const [animDir, setAnimDir] = useState<"forward" | "back">("forward");
   const [animating, setAnimating] = useState(false);
@@ -223,9 +224,9 @@ export default function OnboardingPage() {
           {/* Step 3: Trader waehlen */}
           {step === 3 && (
             <div>
-              <h2 className="gf-heading text-2xl mb-2">Waehle deine Trader</h2>
+              <h2 className="gf-heading text-2xl mb-2">Dein Trader</h2>
               <p className="text-sm text-zinc-400 mb-8 leading-relaxed">
-                Mindestens einen Trader aktivieren.
+                PHANTOM ist bereits aktiviert.
               </p>
 
               <div className="space-y-3 mb-8">
