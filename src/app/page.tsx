@@ -305,12 +305,12 @@ export default function HomePage() {
   const openFunnel = () => setFunnelOpen(true);
   const isLoading = !stats;
   const equity = stats?.equity ?? 0;
-  const pnl72h = stats?.todayPnl ?? 0;
-  const pct72h = stats?.balance ? Math.round(stats.todayPnl / stats.balance * 10000) / 100 : 0;
+  const accs = stats?.accounts ?? [];
+  const pnl72h = accs[0]?.pnl72h ?? stats?.todayPnl ?? 0;
+  const pct72h = stats?.balance ? Math.round(pnl72h / stats.balance * 10000) / 100 : 0;
   const gain = stats?.gain ?? 0;
   const winrate = stats?.winrate ?? 0;
   const fmtEquity = equity > 0 ? `${Math.round(equity).toLocaleString("de-DE")}€` : (isLoading ? "" : "0€");
-  const accs = stats?.accounts ?? [];
 
   return (
     <div style={{ background: "#040302", color: "#fafafa", minHeight: "100vh", fontFamily: "'Inter', sans-serif", position: "relative" }}>

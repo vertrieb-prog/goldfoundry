@@ -18,12 +18,14 @@ const LEVERAGE_OPTIONS = ["1x", "2x", "4x", "8x", "12x", "24x"];
 
 interface TraderState { leverage: string; risk: number; active: boolean; }
 interface AccountData { id: string; equity: number; copierActive: boolean; firmProfile: string; mtLogin: string; }
+interface LiveStats { name: string; gain: number; winrate: number; drawdown: number; profit: number; trades: number }
 
 export default function TraderPage() {
   const [states, setStates] = useState<Record<string, TraderState>>(
     Object.fromEntries(TRADERS.map(t => [t.name, { leverage: "8x", risk: 1, active: false }]))
   );
   const [accounts, setAccounts] = useState<AccountData[]>([]);
+  const [liveStats, setLiveStats] = useState<Record<string, LiveStats>>({});
   const [loading, setLoading] = useState(true);
   const [toggling, setToggling] = useState<string | null>(null);
 
@@ -33,6 +35,15 @@ export default function TraderPage() {
       .then(d => setAccounts(d.accounts ?? []))
       .catch(() => {})
       .finally(() => setLoading(false));
+
+    fetch("/api/lp/stats")
+      .then(r => r.json())
+      .then(d => {
+        const map: Record<string, LiveStats> = {};
+        for (const a of (d.accounts ?? [])) map[a.name] = a;
+        setLiveStats(map);
+      })
+      .catch(() => {});
   }, []);
 
   const totalEquity = accounts.reduce((s, a) => s + (a.equity ?? 0), 0);
@@ -132,11 +143,17 @@ export default function TraderPage() {
                   }
                 >{s.active ? "Aktiv" : "Inaktiv"}</button>
               </div>
+              {(() => {
+                const live = liveStats[t.name];
+                const livePerf = live ? `${live.gain >= 0 ? "+" : ""}${live.gain.toFixed(2)}%` : null;
+                const liveWr = live && live.trades > 0 ? `${Math.round(live.winrate)}%` : null;
+                const liveDd = live && live.drawdown > 0 ? `${live.drawdown.toFixed(2)}%` : null;
+                return (
               <div className="grid grid-cols-4 gap-2 mb-4">
                 {[
-                  { label: "Performance", value: t.perf === "0%" ? "—" : t.perf },
-                  { label: "Win Rate", value: t.wr === "0%" ? "—" : t.wr },
-                  { label: "Max DD", value: t.dd === "0%" ? "—" : t.dd },
+                  { label: "Performance", value: livePerf ?? (t.perf === "0%" ? "—" : t.perf) },
+                  { label: "Win Rate", value: liveWr ?? (t.wr === "0%" ? "—" : t.wr) },
+                  { label: "Max DD", value: liveDd ?? (t.dd === "0%" ? "—" : t.dd) },
                   { label: "Seit", value: t.since },
                 ].map(st => (
                   <div key={st.label} className="text-center p-2 rounded-lg" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
@@ -145,6 +162,8 @@ export default function TraderPage() {
                   </div>
                 ))}
               </div>
+                );
+              })()}
               <div className="mb-3">
                 <label className="text-[10px] text-zinc-500 mb-1 block">Hebel</label>
                 <select className="gf-input text-sm" value={s.leverage} onChange={e => update(t.name, { leverage: e.target.value })}>
