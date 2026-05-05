@@ -2,13 +2,17 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { TRADER_CONFIG } from "@/lib/trader-config";
 
-const TRADERS = [
-  { name: "PHANTOM", asset: "XAUUSD", perf: "+1.0%/Tag", wr: "72%", dd: "4.5%", since: "2022", color: "#d4a537" },
-  { name: "NEXUS", asset: "US500", perf: "+0.7%/Tag", wr: "68%", dd: "3.8%", since: "2023", color: "#3b82f6" },
-  { name: "SENTINEL", asset: "DAX40", perf: "+0.8%/Tag", wr: "65%", dd: "5.2%", since: "2023", color: "#a855f7" },
-  { name: "SPECTRE", asset: "EURUSD", perf: "+0.5%/Tag", wr: "74%", dd: "3.2%", since: "2022", color: "#22c55e" },
-];
+const TRADERS = TRADER_CONFIG.map((t) => ({
+  name: t.codename,
+  asset: t.asset,
+  perf: t.perf,
+  wr: t.wr,
+  dd: t.maxDd,
+  since: t.since,
+  color: t.color,
+}));
 
 const LEVERAGE_OPTIONS = ["1x", "2x", "4x", "8x", "12x", "24x"];
 
@@ -65,7 +69,7 @@ export default function TraderPage() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="gf-heading text-2xl">Forge Trader</h1>
-          <p className="text-sm text-zinc-500 mt-1">Waehle einen Trader und konfiguriere Hebel und Risiko.</p>
+          <p className="text-sm text-zinc-500 mt-1">Konfiguriere Hebel und Risiko fuer PHANTOM.</p>
         </div>
         {loading ? (
           <span className="text-xs text-zinc-500">Laden...</span>
@@ -129,7 +133,12 @@ export default function TraderPage() {
                 >{s.active ? "Aktiv" : "Inaktiv"}</button>
               </div>
               <div className="grid grid-cols-4 gap-2 mb-4">
-                {[{ label: "Ø/Tag", value: t.perf }, { label: "Win Rate", value: t.wr }, { label: "Max DD", value: t.dd }, { label: "Seit", value: t.since }].map(st => (
+                {[
+                  { label: "Performance", value: t.perf === "0%" ? "—" : t.perf },
+                  { label: "Win Rate", value: t.wr === "0%" ? "—" : t.wr },
+                  { label: "Max DD", value: t.dd === "0%" ? "—" : t.dd },
+                  { label: "Seit", value: t.since },
+                ].map(st => (
                   <div key={st.label} className="text-center p-2 rounded-lg" style={{ background: "var(--gf-obsidian)", border: "1px solid var(--gf-border)" }}>
                     <div className="text-xs font-bold text-white">{st.value}</div>
                     <div className="text-[9px] text-zinc-600 mt-0.5">{st.label}</div>
