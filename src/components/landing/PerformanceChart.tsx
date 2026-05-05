@@ -230,124 +230,6 @@ function SingleChart({ data, tab }: { data: { date: string; value: number }[]; t
   );
 }
 
-function TotalCell({ accounts }: { accounts: MyfxAccount[] }) {
-  const tp = accounts.reduce((s, a) => s + a.profit, 0);
-  const tg = accounts.reduce((s, a) => s + a.gain, 0) / Math.max(accounts.length, 1);
-  return (
-    <div style={{ fontSize: 12, fontFamily: MONO, padding: "8px 8px", fontWeight: 700, color: numColor(tp) }}>
-      <div>{tp >= 0 ? "+" : ""}{fmtMoney(tp)}</div>
-      <div style={{ fontSize: 9, color: numColor(tg), opacity: 0.7 }}>{tg >= 0 ? "+" : ""}{tg.toFixed(1)}%</div>
-    </div>
-  );
-}
-
-/* ─── Trading Periods Table — per account with 24h/72h/Woche/Monat ─── */
-function TradingPeriods({ accounts, dailyGains }: { accounts: MyfxAccount[]; dailyGains?: { accountId: number; accountName: string; dailyGain: DailyGainEntry[] }[] }) {
-  const hdr = { fontSize: 10, fontWeight: 600 as const, color: "#6d6045", textTransform: "uppercase" as const, letterSpacing: "0.06em", padding: "10px 8px" };
-  const cellStyle = { fontSize: 12, fontFamily: MONO, padding: "10px 8px", fontWeight: 500 as const };
-  const periodLabels = ["24h", "72h", "7 Tage", "30 Tage"];
-  const periodDays = [1, 3, 7, 30];
-  const cols = `2fr ${periodLabels.map(() => "1.2fr").join(" ")} 1.2fr`;
-
-  const getProfit = (accId: number | undefined, days: number) => {
-    if (!dailyGains?.length || !accId) return 0;
-    const dg = dailyGains.find((d) => d.accountId === accId);
-    if (!dg?.dailyGain?.length) return 0;
-    const slice = dg.dailyGain.slice(-days);
-    return Math.round(slice.reduce((s, d) => s + (d.profit ?? 0), 0) * 100) / 100;
-  };
-
-  const getGainPct = (accId: number | undefined, days: number) => {
-    if (!dailyGains?.length || !accId) return 0;
-    const dg = dailyGains.find((d) => d.accountId === accId);
-    if (!dg?.dailyGain?.length) return 0;
-    const data = dg.dailyGain;
-    const endVal = data[data.length - 1]?.value ?? 0;
-    const startIdx = Math.max(0, data.length - days - 1);
-    const startVal = data[startIdx]?.value ?? 0;
-    return Math.round((endVal - startVal) * 100) / 100;
-  };
-
-  // Fallback: berechne aus Account-Metriken wenn dailyGains fehlen
-  const getProfitFallback = (a: MyfxAccount, days: number) => {
-    if (days <= 1) return Math.round(a.balance * a.daily / 100 * 100) / 100;
-    if (days <= 3) return Math.round(a.balance * a.daily / 100 * Math.min(days, 3) * 100) / 100;
-    if (days <= 7) return Math.round(a.profit * 0.25 * 100) / 100; // ~25% vom Gesamtprofit als Wochenschaetzung
-    return Math.round(a.profit * 100) / 100; // Monat = Gesamtprofit (da Accounts meist <30 Tage alt)
-  };
-
-  const getPctFallback = (a: MyfxAccount, days: number) => {
-    if (days <= 1) return Math.round(a.daily * 100) / 100;
-    if (days <= 3) return Math.round(a.daily * Math.min(days, 3) * 100) / 100;
-    if (days <= 7) return Math.round(a.gain * 0.25 * 100) / 100;
-    return Math.round(a.gain * 100) / 100;
-  };
-
-  const getVal = (a: MyfxAccount, days: number) => {
-    const fromDG = getProfit(a.id, days);
-    if (fromDG !== 0) return { profit: fromDG, pct: getGainPct(a.id, days) };
-    return { profit: getProfitFallback(a, days), pct: getPctFallback(a, days) };
-  };
-
-  const totalVal = (days: number) => {
-    let profit = 0, pctSum = 0;
-    const totalDep = accounts.reduce((s, a) => s + a.deposits, 0);
-    for (const a of accounts) {
-      const v = getVal(a, days);
-      profit += v.profit;
-      pctSum += totalDep > 0 ? v.pct * (a.deposits / totalDep) : 0;
-    }
-    return { profit: Math.round(profit * 100) / 100, pct: Math.round(pctSum * 100) / 100 };
-  };
-
-  return (
-    <div style={{ background: "#0a0906", border: "1px solid rgba(212,165,55,0.08)", borderRadius: 10, overflow: "hidden" }}>
-      <div style={{ padding: "12px 14px", fontSize: 12, fontWeight: 700, color: "#d4a537", borderBottom: "1px solid rgba(212,165,55,0.08)" }}>
-        Profit nach Zeitraum
-      </div>
-      <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" as any }}>
-      {/* Header */}
-      <div style={{ display: "grid", gridTemplateColumns: cols, borderBottom: "1px solid rgba(212,165,55,0.08)", minWidth: 700 }}>
-        <div style={hdr}>Name</div>
-        {periodLabels.map((l) => <div key={l} style={hdr}>{l}</div>)}
-        <div style={hdr}>Gesamt</div>
-      </div>
-      {/* Rows per account */}
-      <div style={{ minWidth: 700 }}>
-        {accounts.map((a, i) => (
-          <div key={a.name} style={{ display: "grid", gridTemplateColumns: cols, borderTop: i > 0 ? "1px solid rgba(255,255,255,0.03)" : "none" }}>
-            <div style={{ ...cellStyle, color: "#e0d4b8", fontWeight: 600 }}>{a.name}</div>
-            {periodDays.map((d, j) => {
-              const v = getVal(a, d);
-              return <div key={periodLabels[j]} style={{ ...cellStyle, color: numColor(v.profit) }}>
-                <div>{v.profit >= 0 ? "+" : ""}{fmtMoney(v.profit)}</div>
-                <div style={{ fontSize: 9, color: numColor(v.pct), opacity: 0.8 }}>{v.pct >= 0 ? "+" : ""}{v.pct.toFixed(2)}%</div>
-              </div>;
-            })}
-            <div style={{ ...cellStyle, color: numColor(a.profit), fontWeight: 700 }}>
-              <div>{a.profit >= 0 ? "+" : ""}{fmtMoney(a.profit)}</div>
-              <div style={{ fontSize: 9, color: numColor(a.gain), opacity: 0.8 }}>{a.gain >= 0 ? "+" : ""}{a.gain.toFixed(2)}%</div>
-            </div>
-          </div>
-        ))}
-        {/* Total row */}
-        <div style={{ display: "grid", gridTemplateColumns: cols, borderTop: "2px solid rgba(212,165,55,0.15)", background: "rgba(212,165,55,0.04)" }}>
-          <div style={{ ...cellStyle, color: "#d4a537", fontWeight: 700, fontSize: 13 }}>Total:</div>
-          {periodDays.map((d, j) => {
-            const v = totalVal(d);
-            return <div key={periodLabels[j]} style={{ ...cellStyle, color: numColor(v.profit), fontWeight: 700 }}>
-              <div>{v.profit >= 0 ? "+" : ""}{fmtMoney(v.profit)}</div>
-              <div style={{ fontSize: 9, color: numColor(v.pct), opacity: 0.8 }}>{v.pct >= 0 ? "+" : ""}{v.pct.toFixed(2)}%</div>
-            </div>;
-          })}
-          <TotalCell accounts={accounts} />
-        </div>
-      </div>
-      </div>
-    </div>
-  );
-}
-
 /* ─── Stats Panel (Left Side) ─── */
 function StatsPanel({ account, total }: { account: MyfxAccount | null; total: MyfxData }) {
   const n = total.accounts.length || 1;
@@ -367,9 +249,9 @@ function StatsPanel({ account, total }: { account: MyfxAccount | null; total: My
   const sections = [
     [
       { label: "Gain", value: fmtPct(a.gain), color: numColor(a.gain) },
-      { label: "Drawdown", value: a.drawdown > 0 ? `${a.drawdown.toFixed(2)}%` : "\u2014", color: a.drawdown > 0 ? "#ef4444" : "#6d6045" },
-      { label: "Winrate", value: wr ? `${wr}%` : "\u2014", color: wr >= 50 ? "#22c55e" : "#6d6045" },
-      { label: "Trades", value: trades ? String(trades) : "\u2014", color: "#e0d4b8" },
+      { label: "Drawdown", value: a.drawdown > 0 ? `${a.drawdown.toFixed(2)}%` : "—", color: a.drawdown > 0 ? "#ef4444" : "#6d6045" },
+      { label: "Winrate", value: wr ? `${wr}%` : "—", color: wr >= 50 ? "#22c55e" : "#6d6045" },
+      { label: "Trades", value: trades ? String(trades) : "—", color: "#e0d4b8" },
     ],
     [
       { label: "Balance", value: fmtMoney(a.balance), color: "#e0d4b8" },
@@ -390,87 +272,6 @@ function StatsPanel({ account, total }: { account: MyfxAccount | null; total: My
           ))}
         </div>
       ))}
-    </div>
-  );
-}
-
-/* ─── Systems Table (Below Chart — like MyFXBook) ─── */
-function SystemsTable({ accounts, total, selectedName, onSelect }: {
-  accounts: MyfxAccount[];
-  total: MyfxData;
-  selectedName: string | null;
-  onSelect: (name: string | null) => void;
-}) {
-  const cols = ["Name", "Gain", "Drawdown", "Winrate", "Trades", "Balance", "Equity", "Profit"];
-  const colWidths = "2.2fr 1fr 1fr 0.8fr 0.8fr 1.3fr 1.3fr 1.2fr";
-  const headerStyle = { fontSize: 10, fontWeight: 600 as const, color: "#6d6045", textTransform: "uppercase" as const, letterSpacing: "0.06em", padding: "8px 8px" };
-  const cellStyle = { fontSize: 12, fontFamily: MONO, padding: "8px 8px", fontWeight: 500 as const };
-
-  // Build 72h profit map from dailyGains (sum of last 3 entries)
-  const last72hProfitMap = useMemo(() => {
-    const map: Record<string, number> = {};
-    if (total.dailyGains) {
-      for (const dg of total.dailyGains) {
-        const data = dg.dailyGain;
-        const last3 = data.slice(-3);
-        map[String(dg.accountId)] = Math.round(last3.reduce((s, d) => s + d.profit, 0) * 100) / 100;
-      }
-    }
-    return map;
-  }, [total.dailyGains]);
-
-  const get72hProfit = (a: MyfxAccount) => {
-    if (a.id && last72hProfitMap[String(a.id)] !== undefined) return last72hProfitMap[String(a.id)];
-    // Fallback: balance * daily%
-    return Math.round(a.balance * a.daily / 100 * 100) / 100;
-  };
-
-  const renderRow = (a: MyfxAccount, isTotal: boolean, idx?: number) => {
-    return (
-    <div
-      key={a.name + (isTotal ? "-total" : "")}
-      style={{
-        display: "grid", gridTemplateColumns: colWidths,
-        background: isTotal ? "rgba(212,165,55,0.03)" : selectedName === a.name ? "rgba(212,165,55,0.05)" : "transparent",
-        borderTop: isTotal ? "1px solid rgba(212,165,55,0.1)" : idx !== undefined && idx > 0 ? "1px solid rgba(255,255,255,0.02)" : "none",
-        cursor: "pointer",
-      }}
-      onClick={() => isTotal ? onSelect(null) : onSelect(selectedName === a.name ? null : a.name)}
-    >
-      <div style={{ ...cellStyle, color: isTotal ? "#d4a537" : selectedName === a.name ? "#d4a537" : "#e0d4b8", fontWeight: isTotal ? 700 : 600 }}>
-        {isTotal ? (selectedName ? "\u2190 Alle anzeigen" : "Total:") : a.name}
-      </div>
-      <div style={{ ...cellStyle, color: numColor(a.gain) }}>{a.gain >= 0 ? "+" : ""}{a.gain.toFixed(2)}%</div>
-      <div style={{ ...cellStyle, color: a.drawdown > 0 ? "#ef4444" : "#6d6045" }}>{a.drawdown > 0 ? a.drawdown.toFixed(2) + "%" : "\u2014"}</div>
-      <div style={{ ...cellStyle, color: (a as any).winrate >= 50 ? "#22c55e" : "#6d6045" }}>{(a as any).winrate ? (a as any).winrate + "%" : "\u2014"}</div>
-      <div style={{ ...cellStyle, color: "#e0d4b8" }}>{(a as any).trades || "\u2014"}</div>
-      <div style={{ ...cellStyle, color: "#e0d4b8" }}>{fmtMoney(a.balance)}</div>
-      <div style={{ ...cellStyle, color: "#e0d4b8" }}>{fmtMoney(a.equity)}</div>
-      <div style={{ ...cellStyle, color: numColor(a.profit) }}>{a.profit >= 0 ? "+" : ""}{fmtMoney(a.profit)}</div>
-    </div>
-    );
-  };
-
-  const totalRow: MyfxAccount = {
-    name: "Total", gain: total.totalGain, absGain: total.totalGain,
-    daily: total.totalDaily, monthly: total.totalMonthly, drawdown: total.totalDrawdown,
-    balance: total.totalBalance, equity: total.totalEquity, profit: total.totalProfit,
-    pips: accounts.reduce((s, a) => s + a.pips, 0), deposits: accounts.reduce((s, a) => s + a.deposits, 0),
-  };
-
-  return (
-    <div style={{ background: "#0a0906", border: "1px solid rgba(212,165,55,0.08)", borderRadius: 10, overflow: "hidden" }}>
-      <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" as any }}>
-      {/* Header */}
-      <div style={{ display: "grid", gridTemplateColumns: colWidths, borderBottom: "1px solid rgba(212,165,55,0.08)", minWidth: 900 }}>
-        {cols.map((c) => <div key={c} style={headerStyle}>{c}</div>)}
-      </div>
-      {/* Rows */}
-      <div style={{ minWidth: 900 }}>
-        {accounts.map((a, i) => renderRow(a, false, i))}
-        {renderRow(totalRow, true)}
-      </div>
-      </div>
     </div>
   );
 }
@@ -535,7 +336,7 @@ export default function PerformanceChart({ growthCurve, drawdownCurve, equityCur
       });
     }
     if (tab === "drawdown") {
-      // Pro-Account DD wenn ausgewählt
+      // Pro-Account DD wenn ausgewaehlt
       if (accName && mfx?.dailyGains) {
         const accDg = (mfx.dailyGains as any[]).find((d: any) => d.accountName === accName);
         if (accDg?.drawdownCurve?.length) {
@@ -633,34 +434,8 @@ export default function PerformanceChart({ growthCurve, drawdownCurve, equityCur
 
         {/* Right: Chart */}
         <div style={{ flex: 1, minWidth: 320 }}>
-          {/* Account Selector + Chart Tabs */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, flexWrap: "wrap", gap: 8 }}>
-            {/* Account pills */}
-            {mfx && mfx.accounts.length > 1 && (
-              <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
-                <button
-                  onClick={() => setSelectedAccount(null)}
-                  style={{
-                    padding: "4px 12px", fontSize: 11, fontWeight: 600, borderRadius: 6, cursor: "pointer", border: "none",
-                    background: !selectedAccount ? "rgba(212,165,55,0.12)" : "rgba(255,255,255,0.03)",
-                    color: !selectedAccount ? "#d4a537" : "#6d6045",
-                  }}
-                >Alle</button>
-                {mfx.accounts.map((a) => (
-                  <button
-                    key={a.name}
-                    onClick={() => setSelectedAccount(selectedAccount === a.name ? null : a.name)}
-                    style={{
-                      padding: "4px 12px", fontSize: 11, fontWeight: 600, borderRadius: 6, cursor: "pointer", border: "none",
-                      background: selectedAccount === a.name ? "rgba(212,165,55,0.12)" : "rgba(255,255,255,0.03)",
-                      color: selectedAccount === a.name ? "#d4a537" : "#6d6045",
-                    }}
-                  >{a.name}</button>
-                ))}
-              </div>
-            )}
-
-            {/* Chart Tabs */}
+          {/* Chart Tabs */}
+          <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", marginBottom: 12, flexWrap: "wrap", gap: 8 }}>
             <div style={{ display: "flex", gap: 0 }}>
               {tabs.map((t) => (
                 <button
@@ -685,20 +460,6 @@ export default function PerformanceChart({ growthCurve, drawdownCurve, equityCur
           />
         </div>
       </div>
-
-      {/* Systems Table */}
-      {mfx && (
-        <div style={{ marginTop: 1 }}>
-          <SystemsTable
-            accounts={mfx.accounts}
-            total={mfx}
-            selectedName={selectedAccount}
-            onSelect={setSelectedAccount}
-          />
-        </div>
-      )}
-
-      {/* Profit-Tabelle ist jetzt direkt in page.tsx */}
 
       {/* Recent Trades */}
       {recentTrades.length > 0 && (
