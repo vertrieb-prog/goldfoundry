@@ -117,7 +117,7 @@ function ProfitCalculator({ onStart }: { onStart: () => void }) {
         Was waere <span style={{ color: "#d4a537" }}>moeglich</span>?
       </h2>
       <p style={{ textAlign: "center", color: "#a1a1aa", marginBottom: 32, fontSize: 15 }}>
-        Basierend auf PHANTOMs historischer Performance
+        Basierend auf PHANTOMs Live-Performance — Gold, MetaApi-verifiziert
       </p>
 
       <motion.div
@@ -261,7 +261,6 @@ function SocialProof({ gain, equity, accounts }: { gain: number; equity: number;
   const spStats = [
     { label: "Verwaltetes Kapital", value: `${Math.round(equity).toLocaleString("de-DE")}€`, color: "#d4a537" },
     { label: "Gesamt-Gain", value: `${gain >= 0 ? "+" : ""}${gain.toFixed(2)}%`, color: "#22c55e" },
-    { label: "Aktive Strategien", value: String(accs.length || 7), color: "#fafafa" },
     { label: "Gesamt-Profit", value: `${totalProfit >= 0 ? "+" : ""}${Math.abs(Math.round(totalProfit)).toLocaleString("de-DE")}€`, color: totalProfit >= 0 ? "#22c55e" : "#ef4444" },
   ];
 
@@ -441,75 +440,6 @@ export default function HomePage() {
           } : undefined}
         />
       </div>
-
-      {/* ═══ PROFIT TABELLE — 24h/72h/7d/30d pro Account (MetaApi) ═══ */}
-      {accs.length > 0 && (
-        <section style={{ padding: "20px 20px 60px", maxWidth: 1100, margin: "0 auto" }}>
-          <div style={{ background: "#0a0906", border: "1px solid rgba(212,165,55,0.08)", borderRadius: 10, overflow: "hidden" }}>
-            <div style={{ padding: "12px 14px", fontSize: 12, fontWeight: 700, color: "#d4a537", borderBottom: "1px solid rgba(212,165,55,0.08)" }}>
-              Profit nach Zeitraum
-            </div>
-            <div style={{ overflowX: "auto" }}>
-              <div style={{ display: "grid", gridTemplateColumns: "2fr 1.2fr 1.2fr 1.2fr 1.2fr 0.8fr 1.2fr", borderBottom: "1px solid rgba(212,165,55,0.08)", minWidth: 800 }}>
-                {["Trader", "24h", "72h", "7 Tage", "30 Tage", "Win%", "Gesamt"].map((h) => (
-                  <div key={h} style={{ fontSize: 10, fontWeight: 600, color: "#6d6045", textTransform: "uppercase", letterSpacing: "0.06em", padding: "10px 8px" }}>{h}</div>
-                ))}
-              </div>
-              <div style={{ minWidth: 800 }}>
-                {accs.map((a: any, i: number) => {
-                  const nc = (v: number) => v > 0 ? "#22c55e" : v < 0 ? "#ef4444" : "#e0d4b8";
-                  const fm = (v: number) => `${Math.abs(v).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€`;
-                  const periods = [a.pnl24h ?? 0, a.pnl72h ?? 0, a.pnl7d ?? 0, a.pnl30d ?? 0];
-                  return (
-                    <div key={a.name} style={{ display: "grid", gridTemplateColumns: "2fr 1.2fr 1.2fr 1.2fr 1.2fr 0.8fr 1.2fr", borderTop: i > 0 ? "1px solid rgba(255,255,255,0.03)" : "none" }}>
-                      <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", padding: "10px 8px", fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
-                        <span style={{ width: 6, height: 6, borderRadius: "50%", background: a.color ?? "#d4a537" }} />
-                        <span style={{ color: a.color ?? "#e0d4b8" }}>{a.name}</span>
-                      </div>
-                      {periods.map((p: number, j: number) => (
-                        <div key={j} style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", padding: "10px 8px", fontWeight: 500, color: p === 0 ? "#6d6045" : nc(p) }}>
-                          {p === 0 ? "—" : <>{p >= 0 ? "+" : "-"}{fm(p)}</>}
-                        </div>
-                      ))}
-                      <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", padding: "10px 8px", fontWeight: 600, color: (a.winrate ?? 0) === 0 ? "#6d6045" : (a.winrate ?? 0) >= 50 ? "#22c55e" : "#ef4444" }}>
-                        {(a.winrate ?? 0) === 0 && (a.trades ?? 0) === 0 ? "—" : `${a.winrate ?? 0}%`}
-                      </div>
-                      <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", padding: "10px 8px", fontWeight: 700, color: nc(a.profit) }}>
-                        <div>{a.profit === 0 && (a.trades ?? 0) === 0 ? "—" : <>{a.profit >= 0 ? "+" : "-"}{fm(a.profit)}</>}</div>
-                        {(a.gain ?? 0) !== 0 && <div style={{ fontSize: 9, color: nc(a.gain), opacity: 0.8 }}>{a.gain >= 0 ? "+" : ""}{(a.gain ?? 0).toFixed(2)}%</div>}
-                      </div>
-                    </div>
-                  );
-                })}
-                {/* Total */}
-                <div style={{ display: "grid", gridTemplateColumns: "2fr 1.2fr 1.2fr 1.2fr 1.2fr 0.8fr 1.2fr", borderTop: "2px solid rgba(212,165,55,0.15)", background: "rgba(212,165,55,0.04)" }}>
-                  <div style={{ fontSize: 13, fontFamily: "'JetBrains Mono', monospace", padding: "10px 8px", color: "#d4a537", fontWeight: 700 }}>Total:</div>
-                  {["pnl24h", "pnl72h", "pnl7d", "pnl30d"].map((key, j) => {
-                    const total = accs.reduce((s: number, a: any) => s + (a[key] ?? 0), 0);
-                    const nc = (v: number) => v > 0 ? "#22c55e" : v < 0 ? "#ef4444" : "#e0d4b8";
-                    const fm = (v: number) => `${Math.abs(v).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€`;
-                    return (
-                      <div key={j} style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", padding: "10px 8px", fontWeight: 700, color: nc(total) }}>
-                        {total >= 0 ? "+" : "-"}{fm(total)}
-                      </div>
-                    );
-                  })}
-                  <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", padding: "10px 8px", fontWeight: 700, color: "#22c55e" }}>
-                    {winrate}%
-                  </div>
-                  <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", padding: "10px 8px", fontWeight: 700, color: "#22c55e" }}>
-                    +{Math.abs(accs.reduce((s: number, a: any) => s + (a.profit ?? 0), 0)).toLocaleString("de-DE", { minimumFractionDigits: 2 })}€
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div style={{ padding: "12px 14px", borderTop: "1px solid rgba(212,165,55,0.06)", display: "flex", justifyContent: "center", alignItems: "center", gap: 8 }}>
-            <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#22c55e", display: "inline-block" }} />
-            <span style={{ fontSize: 11, color: "#6d6045" }}>Live-Daten via MetaApi — direkt vom Broker synchronisiert</span>
-          </div>
-        </section>
-      )}
 
       {/* ═══ LIVE TERMINAL — Echte Trades direkt nach Performance ═══ */}
       <LiveTerminal />
