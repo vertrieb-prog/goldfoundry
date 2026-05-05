@@ -130,8 +130,8 @@ export default function FunnelOverlay({ open, onClose, liveData }: Props) {
               borderBottom: "1px solid rgba(255,255,255,0.05)",
             }}>
               {[
-                { label: "Live Gain", value: `+${totalGain.toFixed(1)}%`, color: "#22c55e" },
-                { label: "Max DD", value: `${maxDd.toFixed(2)}%`, color: "#ef4444" },
+                { label: "Live Gain", value: totalGain === 0 ? "—" : `${totalGain >= 0 ? "+" : ""}${totalGain.toFixed(1)}%`, color: totalGain >= 0 ? "#22c55e" : "#ef4444" },
+                { label: "Max DD", value: maxDd === 0 ? "—" : `${maxDd.toFixed(2)}%`, color: "#ef4444" },
               ].map((s) => (
                 <div key={s.label} style={{ textAlign: "center" }}>
                   <div style={{ fontSize: 9, color: "#6d6045", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 2 }}>{s.label}</div>
