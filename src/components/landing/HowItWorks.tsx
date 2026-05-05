@@ -22,14 +22,14 @@ const steps = [
 
 export default function HowItWorks() {
   return (
-    <section style={{ padding: "80px 20px", maxWidth: 1000, margin: "0 auto" }}>
+    <section style={{ padding: "50px 20px", maxWidth: 1000, margin: "0 auto" }}>
       <h2
         style={{
           textAlign: "center",
           fontSize: "clamp(24px, 4vw, 36px)",
           fontWeight: 700,
           color: "#fafafa",
-          marginBottom: 56,
+          marginBottom: 36,
         }}
       >
         So startest du in{" "}

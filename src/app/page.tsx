@@ -5,18 +5,16 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import LandingNavbar from "@/components/landing/LandingNavbar";
-import LiveStatsBar from "@/components/landing/LiveStatsBar";
 import HowItWorks from "@/components/landing/HowItWorks";
 import StrategyEngine from "@/components/landing/StrategyEngine";
 import TrustCards from "@/components/landing/TrustCards";
 import CTASection from "@/components/landing/CTASection";
 import FunnelOverlay from "@/components/landing/FunnelOverlay";
+import PerformancePanel from "@/components/landing/PerformancePanel";
 import Card3D from "@/components/ui/Card3D";
 import HoloPanel from "@/components/ui/HoloPanel";
 
 const HeroBackground3D = dynamic(() => import("@/components/landing/HeroBackground3D"), { ssr: false });
-const PerformanceChart = dynamic(() => import("@/components/landing/PerformanceChart"), { ssr: false });
-const LiveTerminal = dynamic(() => import("@/components/landing/LiveTerminal"), { ssr: false });
 
 interface MyfxAccount {
   id?: number;
@@ -112,7 +110,7 @@ function ProfitCalculator({ onStart }: { onStart: () => void }) {
   const yearly = Math.round(capital * Math.pow(1 + monthlyReturn, 12) - capital);
 
   return (
-    <section style={{ padding: "80px 20px", maxWidth: 700, margin: "0 auto" }}>
+    <section style={{ padding: "50px 20px", maxWidth: 700, margin: "0 auto" }}>
       <h2 style={{ textAlign: "center", fontSize: "clamp(24px, 4vw, 36px)", fontWeight: 700, color: "#fafafa", marginBottom: 8 }}>
         Was waere <span style={{ color: "#d4a537" }}>moeglich</span>?
       </h2>
@@ -191,7 +189,7 @@ function LeverageCards({ onStart }: { onStart: () => void }) {
   ];
 
   return (
-    <section style={{ padding: "80px 20px", maxWidth: 1000, margin: "0 auto" }}>
+    <section style={{ padding: "50px 20px", maxWidth: 1000, margin: "0 auto" }}>
       <h2 style={{ textAlign: "center", fontSize: "clamp(24px, 4vw, 36px)", fontWeight: 700, color: "#fafafa", marginBottom: 8 }}>
         Wähle dein <span style={{ color: "#d4a537" }}>Risikoprofil</span>
       </h2>
@@ -322,7 +320,7 @@ export default function HomePage() {
       <FunnelOverlay open={funnelOpen} onClose={() => setFunnelOpen(false)} liveData={stats ? { totalGain: gain, totalMonthly: 0, totalEquity: equity, totalProfit: pnl72h, totalDrawdown: stats.maxDd, totalDaily: pct72h } : null} />
 
       {/* ═══ HERO ═══ */}
-      <section style={{ minHeight: "85vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "80px 20px 40px", position: "relative" }}>
+      <section style={{ minHeight: "60vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "60px 20px 30px", position: "relative" }}>
         {/* Floating Gold Bar Elements */}
         <div style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none", zIndex: 0 }}>
           <div className="animate-float" style={{ position: "absolute", top: "15%", left: "8%", width: 80, height: 24, background: "linear-gradient(135deg, rgba(212,165,55,0.15), rgba(240,208,96,0.08))", borderRadius: 6, transform: "rotate3d(1, 1, 0, 35deg)", filter: "blur(1px)" }} />
@@ -399,50 +397,16 @@ export default function HomePage() {
       {/* ═══ GLASS CONTENT AREA — readable over particle background ═══ */}
       <div className="gf-glass-section" style={{ position: "relative", zIndex: 2 }}>
 
-      {/* ═══ LIVE STATS BAR ═══ */}
-      {stats && (
-        <LiveStatsBar
-          pnl72h={stats.todayPnl}
-          pct72h={pct72h}
-          winrate={stats.winrate}
-          dd72h={stats.maxDd}
-          maxDd={stats.maxDd}
-          activePositions={stats.activePositions}
-        />
-      )}
-
-      {/* ═══ 1. STRATEGY ENGINE — Was macht PHANTOM? (direkt nach Stats Bar) ═══ */}
+      {/* ═══ 1. STRATEGY ENGINE — Was macht PHANTOM? ═══ */}
       <StrategyEngine accounts={accs} />
 
-      {/* ═══ 2. PERFORMANCE — Beweis dass es funktioniert ═══ */}
-      <div id="performance">
-        <PerformanceChart
-          growthCurve={stats?.growthCurve ?? []} drawdownCurve={stats?.drawdownCurve ?? []}
-          equityCurve={stats?.equityCurve ?? []} recentTrades={stats?.recentTrades ?? []}
-          gain={stats?.gain ?? 0} maxDd={stats?.maxDd ?? 0}
-          todayTrades={stats?.todayTrades ?? 0} winrate={stats?.winrate ?? 0}
-          myfxbook={accs.length > 0 ? {
-            accounts: accs.map((a: any) => ({
-              name: a.name, gain: a.gain ?? 0, absGain: a.gain ?? 0,
-              daily: a.daily ?? 0, monthly: a.monthly ?? 0, drawdown: a.drawdown ?? 0,
-              balance: a.balance ?? 0, equity: a.equity ?? 0, profit: a.profit ?? 0,
-              pips: a.pips ?? 0, deposits: a.deposits ?? 0,
-              winrate: a.winrate ?? 0, trades: a.trades ?? 0,
-            })),
-            totalGain: stats?.gain ?? 0,
-            totalBalance: stats?.balance ?? 0,
-            totalEquity: stats?.equity ?? 0,
-            totalProfit: accs.reduce((s: number, a: any) => s + (a.profit ?? 0), 0),
-            totalDrawdown: stats?.maxDd ?? 0,
-            totalDaily: 0,
-            totalMonthly: 0,
-            dailyGains: (stats as any)?.dailyGains ?? [],
-          } : undefined}
-        />
-      </div>
-
-      {/* ═══ LIVE TERMINAL — Echte Trades direkt nach Performance ═══ */}
-      <LiveTerminal />
+      {/* ═══ 2. PERFORMANCE — kompakt, alles in einer Card ═══ */}
+      <PerformancePanel
+        account={(accs[0] as any) ?? null}
+        growthCurve={(stats as any)?.dailyGains?.[0]?.dailyGain?.map((d: any) => ({ date: d.date, value: d.value })) ?? stats?.growthCurve?.map((g) => ({ date: g.date, value: g.growth })) ?? []}
+        recentTrades={stats?.recentTrades ?? []}
+        sinceDate="2026-05-04"
+      />
 
       {/* ═══ 3. HOW IT WORKS — Wie starte ich? ═══ */}
       <HowItWorks />
@@ -459,7 +423,7 @@ export default function HomePage() {
       />
 
       {/* ═══ 7. BROKER-PARTNER — 3 Broker ═══ */}
-      <section style={{ padding: "60px 20px", maxWidth: 1000, margin: "0 auto" }}>
+      <section style={{ padding: "40px 20px", maxWidth: 1000, margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: 32 }}>
           <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.15em", color: "#6d6045", marginBottom: 8 }}>Diversifizierte Broker-Partner</div>
           <h3 style={{ fontSize: "clamp(20px, 3vw, 28px)", fontWeight: 700, color: "#fafafa", marginBottom: 8 }}>

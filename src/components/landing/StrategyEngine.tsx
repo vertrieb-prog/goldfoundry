@@ -33,8 +33,8 @@ export default function StrategyEngine({ accounts }: Props) {
   const isNew = !acc || (acc.gain === 0 && acc.profit === 0);
 
   return (
-    <section id="strategies" style={{ padding: "80px 20px", maxWidth: 900, margin: "0 auto" }}>
-      <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} style={{ textAlign: "center", marginBottom: 48 }}>
+    <section id="strategies" style={{ padding: "50px 20px", maxWidth: 900, margin: "0 auto" }}>
+      <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} style={{ textAlign: "center", marginBottom: 32 }}>
         <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.2em", color: "#d4a537", marginBottom: 12, fontWeight: 600 }}>
           Die PHANTOM Engine
         </div>
@@ -103,7 +103,7 @@ export default function StrategyEngine({ accounts }: Props) {
       )}
 
       <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-        style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16, marginTop: 40 }}>
+        style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16, marginTop: 28 }}>
         {[
           { icon: "🎯", title: "Klarer Edge", desc: "Ein Setup, immer wieder. Kein Asset-Hopping, keine Dilettanten-Strategie." },
           { icon: "📊", title: "Ein Asset", desc: "Nur Gold (XAUUSD). Maximale Spezialisierung statt Streuung über 10 Märkte." },
@@ -118,7 +118,7 @@ export default function StrategyEngine({ accounts }: Props) {
       </motion.div>
 
       <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.3 }}
-        style={{ textAlign: "center", marginTop: 40 }}>
+        style={{ textAlign: "center", marginTop: 28 }}>
         <a href="#performance" style={{ display: "inline-block", padding: "14px 36px", fontSize: 15, fontWeight: 700, color: "#0a0806", background: "linear-gradient(135deg, #d4a537, #f0d060)", borderRadius: 10, textDecoration: "none" }}>
           Live-Performance ansehen
         </a>
