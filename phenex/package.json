@@ -1,0 +1,21 @@
+{
+  "name": "gf-phenex-trading",
+  "version": "1.0.0",
+  "description": "PHENEX Telegram Signal Copier + Adaptive Trade Management for XAUUSD via MetaApi",
+  "type": "module",
+  "main": "phenex-listener.mjs",
+  "scripts": {
+    "start:listener": "node phenex-listener.mjs",
+    "start:scanner": "node phenex-market-scanner.mjs",
+    "pm2:start": "pm2 start ecosystem.config.cjs",
+    "pm2:stop": "pm2 stop ecosystem.config.cjs",
+    "pm2:logs": "pm2 logs"
+  },
+  "dependencies": {
+    "telegram": "^2.22.2",
+    "input": "^1.0.1"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
