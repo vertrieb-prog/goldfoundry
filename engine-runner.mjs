@@ -24,11 +24,22 @@ const RE_ENTRY_URL = "https://goldfoundry.de/api/cron/re-entry";
 const TP1_RELOAD_URL = "https://goldfoundry.de/api/cron/tp1-reload";
 const INTERVAL = 30_000;
 
+const DRY_RUN = process.argv.includes("--dry-run");
+if (DRY_RUN) console.log("🧪 DRY RUN MODE ACTIVE - No trades will be executed");
+
 let tickCount = 0;
 let totalMods = 0;
 let consecutiveErrors = 0;
 
 async function safeFetch(url, label) {
+  if (DRY_RUN) {
+    console.log(`  [DRY-RUN] Would fetch ${label} from ${url}`);
+    // Fall through to real fetch but with a flag?
+    // No, let's just simulate a successful response so the loop continues
+    // but maybe we want to see what's happening.
+    // For now, let's keep it as is but return more "realistic" empty data
+    return { ticked: 0, results: [], reloads: [], modifications: [] };
+  }
   try {
     const r = await fetch(url, {
       headers: { Authorization: `Bearer ${CRON_SECRET}` },

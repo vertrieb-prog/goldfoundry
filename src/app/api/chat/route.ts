@@ -5,9 +5,10 @@ import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server
 import { buildMentorPrompt, extractMemoryUpdates, cleanResponseForUser, saveMemoryUpdate } from "@/lib/forge-ai-mentor";
 import { MENTOR_TOOLS, executeTool } from "@/lib/mentor-tools";
 import Anthropic from "@anthropic-ai/sdk";
+import { getAnthropic } from "@/lib/ai/cached-client";
 import { NextResponse } from "next/server";
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
+const anthropic = getAnthropic();
 
 export async function POST(request: Request) {
   try {

@@ -22,6 +22,8 @@
 // TYPES
 // ─────────────────────────────────────────────────────────────
 
+import { jsonCall } from "./ai/cached-client";
+
 type MarketMode = "TREND" | "RANGE" | "SQUEEZE";
 type Direction = "BUY" | "SELL";
 
@@ -744,7 +746,7 @@ class AIEngine {
     reasoning: string;
     lotMultiplier: number;
   } | null> {
-    if (!this.config.aiEnabled || !this.anthropic) return null;
+    if (!this.config.aiEnabled) return null;
 
     try {
       // Compressed prompt: ~150 Input Tokens
@@ -756,16 +758,14 @@ class AIEngine {
         `CH:${(channelWinRate * 100).toFixed(0)}%`,
       ].join("\n");
 
-      const resp = await this.anthropic.messages.create({
+      const data = await jsonCall({
         model: this.config.aiModel === "sonnet" ? "claude-sonnet-4-20250514" : "claude-haiku-4-5-20251001",
-        max_tokens: 200,
-        system: "GF Signal Judge. JSON only:{v,sl?,tp?,r,lm} v=TRADE/SKIP r=reason(max15words) lm=lot multiplier 0-1",
-        messages: [{ role: "user", content: prompt }],
+        maxTokens: 200,
+        prompt: "GF Signal Judge. JSON only:{v,sl?,tp?,r,lm} v=TRADE/SKIP r=reason(max15words) lm=lot multiplier 0-1",
+        message: prompt,
       });
 
-      const text = resp.content[0]?.text || "";
-      const clean = text.replace(/```json|```/g, "").trim();
-      const data = JSON.parse(clean);
+      if (!data) return null;
 
       return {
         verdict: data.v || "TRADE",
@@ -785,7 +785,7 @@ class AIEngine {
     lesson: string;
     parameterSuggestions?: Record<string, number>;
   } | null> {
-    if (!this.config.aiEnabled || !this.anthropic) return null;
+    if (!this.config.aiEnabled) return null;
 
     try {
       const prompt = [
@@ -795,15 +795,14 @@ class AIEngine {
         `PYR:${group.pyramid.triggered ? "Y" : "N"}|Age:${((Date.now() - group.openedAt.getTime()) / 60000).toFixed(0)}m`,
       ].join("|");
 
-      const resp = await this.anthropic.messages.create({
+      const data = await jsonCall({
         model: "claude-haiku-4-5-20251001",
-        max_tokens: 100,
-        system: "GF Post-Trade. JSON:{l,p?} l=lesson(max20words) p=optional param suggestions",
-        messages: [{ role: "user", content: prompt }],
+        maxTokens: 100,
+        prompt: "GF Post-Trade. JSON:{l,p?} l=lesson(max20words) p=optional param suggestions",
+        message: prompt,
       });
 
-      const text = resp.content[0]?.text || "";
-      const data = JSON.parse(text.replace(/```json|```/g, "").trim());
+      if (!data) return null;
       return { lesson: data.l || "", parameterSuggestions: data.p || undefined };
     } catch {
       return null;
@@ -832,6 +831,7 @@ class MasterStrategyEngine {
   private grids = new Map<string, GridSession>();
   private reEntryCandidates: ReEntryCandidate[] = [];
   private locks = new Set<string>();
+  private currentIntel: any = null;
 
   // Price + Candle Cache
   private priceCache = new Map<string, { bid: number; ask: number; spread: number; ts: number }>();
@@ -859,6 +859,9 @@ class MasterStrategyEngine {
   // ═══════════════════════════════════════════════════════════
 
   async tick(): Promise<void> {
+    // 0. Update Market Intel (once per tick or cached)
+    await this.updateIntel();
+
     // Weekend → defensiv
     if (this.isWeekend()) { await this.weekendProtect(); return; }
 
@@ -930,6 +933,16 @@ class MasterStrategyEngine {
 
   async processSignal(signal: any, channelId: string): Promise<string> {
     const sym = signal.symbol;
+
+    // ── Market Intel Check ──
+    if (this.currentIntel) {
+      if (["RED", "BLACK"].includes(this.currentIntel.risk_level)) {
+        return `SKIP:HIGH_RISK:${this.currentIntel.risk_level}`;
+      }
+      if (this.currentIntel.regime === "CRISIS") {
+        return "SKIP:MARKET_CRISIS";
+      }
+    }
 
     // Grid aktiv? → skip
     if (this.grids.has(sym) && this.grids.get(sym)!.mode === "ACTIVE") {
@@ -1464,6 +1477,15 @@ class MasterStrategyEngine {
 
   private async createGroup(signal: any, channelId: string, lotMult: number): Promise<string> {
     const sym = signal.symbol;
+
+    // Adjust lotMult based on Market Intel
+    let intelMult = 1.0;
+    if (this.currentIntel) {
+      if (this.currentIntel.risk_level === "ORANGE") intelMult = 0.5;
+      if (this.currentIntel.regime === "RISK_OFF") intelMult = 0.7;
+    }
+    lotMult *= intelMult;
+
     const dir = signal.action as Direction;
     const sl = signal.stopLoss;
     const tps = signal.takeProfits || [];
@@ -1600,6 +1622,23 @@ class MasterStrategyEngine {
         created_at: new Date().toISOString(),
       });
     } catch {}
+  }
+
+  private async updateIntel() {
+    try {
+      const { data, error } = await this.supabase
+        .from("market_intel")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (!error && data) {
+        this.currentIntel = data;
+      }
+    } catch (err) {
+      console.warn("[ENGINE] Could not update market intel:", err);
+    }
   }
 
   // ═══════════════════════════════════════════════════════════

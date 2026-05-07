@@ -12,7 +12,7 @@ import { MODELS } from "@/lib/config";
 
 // ── Singleton Anthropic Client ──────────────────────────────
 let _client: Anthropic | null = null;
-function getClient(): Anthropic {
+export function getAnthropic(): Anthropic {
   if (!_client) _client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
   return _client;
 }
@@ -32,7 +32,7 @@ export async function cachedCall(opts: {
     system.push({ type: "text", text: opts.context });
   }
 
-  const resp = await getClient().messages.create({
+  const resp = await getAnthropic().messages.create({
     model: (opts.model || MODELS.fast) as any,
     max_tokens: opts.maxTokens || 500,
     system,
@@ -57,7 +57,7 @@ export async function streamCall(opts: {
     system.push({ type: "text", text: opts.context });
   }
 
-  return getClient().messages.create({
+  return getAnthropic().messages.create({
     model: (opts.model || MODELS.smart) as any,
     max_tokens: opts.maxTokens || 800,
     system,

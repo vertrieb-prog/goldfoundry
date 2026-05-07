@@ -3,7 +3,7 @@
 // Checks open positions and recommends actions
 // ═══════════════════════════════════════════════════════════════
 
-import { cachedCall, PROMPTS } from "@/lib/ai/cached-client";
+import { cachedCall, jsonCall, PROMPTS } from "@/lib/ai/cached-client";
 import { MODELS } from "@/lib/config";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import type { TradeDecision } from "./types";
@@ -120,18 +120,14 @@ async function analyzePosition(
   ].join("\n");
 
   try {
-    const result = await cachedCall({
+    const parsed = await jsonCall({
       prompt: PROMPTS.tradeManager,
       message,
       model: MODELS.fast,
       maxTokens: 150,
     });
 
-    const cleaned = result
-      .replace(/```json\n?/g, "")
-      .replace(/```/g, "")
-      .trim();
-    const parsed = JSON.parse(cleaned);
+    if (!parsed) throw new Error("AI parsing failed");
 
     return {
       decision: parsed.decision || "HOLD",

@@ -5,8 +5,8 @@
 
 // ── Models ──────────────────────────────────────────────────
 export const MODELS = {
-  fast: "claude-haiku-4-5-20251001",     // Crons, Parser, Trade Manager, SEO
-  smart: "claude-sonnet-4-20250514",     // Mentor Chat, Strategy, Complex Analysis
+  fast: "claude-3-5-haiku-20241022",     // Crons, Parser, Trade Manager, SEO
+  smart: "claude-3-5-sonnet-20241022",    // Mentor Chat, Strategy, Complex Analysis
 } as const;
 
 // ── Pricing ─────────────────────────────────────────────────
