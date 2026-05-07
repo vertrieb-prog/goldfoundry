@@ -3,7 +3,7 @@
 // Parst Telegram-Nachrichten zu strukturierten Trading-Signalen
 // ═══════════════════════════════════════════════════════════════
 
-import { cachedCall, PROMPTS } from "@/lib/ai/cached-client";
+import { cachedCall, jsonCall, PROMPTS } from "@/lib/ai/cached-client";
 import { MODELS } from "@/lib/config";
 import { normalizeSymbol } from "./symbol-resolver";
 import type { ParsedSignal } from "./types";
@@ -124,15 +124,13 @@ export async function parseSignal(message: string): Promise<ParsedSignal> {
     if (normalized.stopLoss) return normalized;
     // Wenn kein SL → versuche AI, aber Regex als Fallback behalten
     try {
-      const result = await cachedCall({
+      const parsed = await jsonCall({
         prompt: PROMPTS.signalParser,
         message: message.slice(0, 500),
         model: MODELS.fast,
         maxTokens: 200,
       });
-      const cleaned = result.replace(/```json\n?/g, "").replace(/```/g, "").trim();
-      const parsed = JSON.parse(cleaned);
-      if (parsed.action && parsed.action !== "UNKNOWN") {
+      if (parsed && parsed.action && parsed.action !== "UNKNOWN") {
         return {
           action: parsed.action || normalized.action,
           symbol: parsed.symbol ? normalizeSymbol(parsed.symbol) : normalized.symbol,
@@ -153,18 +151,14 @@ export async function parseSignal(message: string): Promise<ParsedSignal> {
   }
 
   try {
-    const result = await cachedCall({
+    const parsed = await jsonCall({
       prompt: PROMPTS.signalParser,
       message: message.slice(0, 500),
       model: MODELS.fast,
       maxTokens: 200,
     });
 
-    const cleaned = result
-      .replace(/```json\n?/g, "")
-      .replace(/```/g, "")
-      .trim();
-    const parsed = JSON.parse(cleaned);
+    if (!parsed) throw new Error("AI parsing failed");
 
     return {
       action: parsed.action || "UNKNOWN",

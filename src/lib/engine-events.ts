@@ -1,14 +1,9 @@
-import { createClient } from "@supabase/supabase-js";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
 // ═══════════════════════════════════════════════════════════════
 // GOLD FOUNDRY — ENGINE EVENT EMITTER
 // Sendet Events an Supabase für das Live Terminal
 // ═══════════════════════════════════════════════════════════════
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 export type EventType =
   | "signal" | "gate" | "score" | "ai" | "mode"
@@ -17,7 +12,7 @@ export type EventType =
 
 async function send(userId: string, groupId: string | null, type: EventType, icon: string, badge: string, text: string, detail: string, color: string, pnl?: number) {
   try {
-    await supabase.from("engine_events").insert({
+    await supabaseAdmin.from("engine_events").insert({
       user_id: userId, group_id: groupId,
       type, icon, badge, text, detail, color, pnl: pnl || null,
     });
